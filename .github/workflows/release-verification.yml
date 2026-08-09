@@ -52,7 +52,21 @@ jobs:
       - run: npm ci
       - run: npx playwright install chromium firefox webkit
       - name: Verify formatting
-        run: npm run format:check
+        shell: pwsh
+        run: |
+          $files = @(& npx prettier --list-different .)
+          $prettierExit = $LASTEXITCODE
+          if ($prettierExit -ne 0) {
+            if ($files.Count -eq 0) {
+              Write-Output "::error title=Formatting verification failed::Prettier exited with code $prettierExit without reporting a path."
+            }
+            foreach ($file in $files) {
+              if (-not [string]::IsNullOrWhiteSpace($file)) {
+                Write-Output "::error file=$file,title=Prettier formatting mismatch::Run npm run format for this file."
+              }
+            }
+            exit $prettierExit
+          }
       - name: Verify lint
         run: npm run lint
       - name: Verify types
