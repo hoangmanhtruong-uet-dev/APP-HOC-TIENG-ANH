@@ -1,0 +1,327 @@
+import type { IELTSLesson } from "../../types/lesson";
+export const WRITING_4_LESSONS: IELTSLesson[] = [
+  {
+    id: "writing-foundation-4.5-5.5-1", skill: "writing", levelId: "foundation-4.5-5.5", targetBand: 5.5, order: 1,
+    title: "Task 1 line/bar/table",
+    learningObjectives: [
+      "Nắm chắc task response ở mức trung cấp.",
+      "Áp dụng paragraphing vào dạng Academic Task 1.",
+      "Hoàn thành bài luyện có giới hạn thời gian và tự ghi lỗi vào error log.",
+    ],
+    teachingPoints: [
+      "Khái niệm trọng tâm: task response; giáo viên minh họa bằng ví dụ đúng/sai.",
+      "Chiến lược xử lý: xác định yêu cầu → dự đoán → thực hiện → kiểm tra.",
+      "Nhận diện paraphrase/cấu trúc thường xuất hiện trong Academic Task 1.",
+      "Quy tắc tự sửa: phân loại lỗi kiến thức, chiến lược, tốc độ hoặc bất cẩn.",
+      "Mỗi đoạn phải có chức năng rõ; ưu tiên chính xác và phát triển ý thay vì từ vựng phô trương.",
+      "Sau khi viết: kiểm tra task coverage, logic, collocation, verb tense, articles và punctuation.",
+    ],
+    teacherFlow: [
+      "5–10': warm-up và diagnostic nhanh.",
+      "15–20': dạy chiến lược bằng think-aloud.",
+      "20–25': guided practice, dừng ở từng bước để giải thích evidence.",
+      "20–30': timed independent practice.",
+      "10–15': chữa bài theo error categories và chốt homework.",
+    ],
+    guidedPractice: [
+      { id: "w-4-1-g1", title: "Guided drill — Academic Task 1", instruction: "Làm 6–10 mục Academic Task 1; sau mỗi câu ghi từ khóa và dấu hiệu dẫn đến đáp án.", expectedOutput: "Bảng đáp án + evidence/justification", estimatedMinutes: 18, difficulty: "medium" },
+      { id: "w-4-1-g2", title: "Paraphrase/evidence map", instruction: "Tạo hai cột: ngôn ngữ trong đề và cách diễn đạt tương đương trong input; tối thiểu 8 cặp.", expectedOutput: "8+ cặp paraphrase có ngữ cảnh", estimatedMinutes: 15, difficulty: "medium" },
+    ],
+    independentPractice: [
+      { id: "w-4-1-i1", title: "Timed set", instruction: "Viết một response theo prompt đúng dạng, có outline 5 phút và proofreading 5 phút; lưu cả bản nháp lẫn bản sửa.", expectedOutput: "Outline + bài viết hoàn chỉnh + checklist tự chấm", estimatedMinutes: 25, difficulty: "medium" },
+      { id: "w-4-1-i2", title: "Error-log repair", instruction: "Chọn tối thiểu 5 lỗi gần nhất, ghi nguyên nhân, evidence đúng và một quy tắc phòng lỗi lần sau.", expectedOutput: "5 dòng error log chất lượng", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    homework: [
+      { id: "w-4-1-h1", title: "Deliberate practice", instruction: "Viết 1 bài mới cùng dạng và rewrite 1 bài cũ sau khi nhận feedback; highlight thay đổi quan trọng.", expectedOutput: "Bài làm + tự chấm", estimatedMinutes: 30, difficulty: "medium" },
+      { id: "w-4-1-h2", title: "Review cycle", instruction: "Sau 24 giờ làm lại các câu sai mà không xem đáp án, rồi cập nhật error log.", expectedOutput: "Retest score + note cải thiện", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    masteryChecks: [
+      "Accuracy đạt ngưỡng mục tiêu của level 5.5 trong 2 lần luyện liên tiếp.",
+      "Giải thích được tại sao đáp án/cách diễn đạt đúng thay vì chỉ nhớ đáp án.",
+      "Lỗi cũ không lặp lại quá 2 lần trong cùng một tuần.",
+    ],
+    commonErrors: [
+      "Học thuộc template cứng",
+      "Dùng từ khó sai collocation",
+      "Không trả lời đủ đề",
+      "Thiếu overview hoặc thesis rõ",
+    ],
+    remediation: [
+      "Giảm độ dài set và làm chậm từng bước.",
+      "Quay lại bài paraphrase/grammar/vocabulary nền tảng liên quan.",
+      "Làm lại sau 24–48 giờ đến khi giải thích được lỗi.",
+    ],
+    estimatedMinutes: 100,
+    tags: ["Task 1 line/bar/table", "band-5.5"],
+  },
+  {
+    id: "writing-foundation-4.5-5.5-2", skill: "writing", levelId: "foundation-4.5-5.5", targetBand: 5.5, order: 2,
+    title: "Task 1 process/map",
+    learningObjectives: [
+      "Nắm chắc paragraphing ở mức trung cấp.",
+      "Áp dụng idea development vào dạng General Task 1.",
+      "Hoàn thành bài luyện có giới hạn thời gian và tự ghi lỗi vào error log.",
+    ],
+    teachingPoints: [
+      "Khái niệm trọng tâm: paragraphing; giáo viên minh họa bằng ví dụ đúng/sai.",
+      "Chiến lược xử lý: xác định yêu cầu → dự đoán → thực hiện → kiểm tra.",
+      "Nhận diện paraphrase/cấu trúc thường xuất hiện trong General Task 1.",
+      "Quy tắc tự sửa: phân loại lỗi kiến thức, chiến lược, tốc độ hoặc bất cẩn.",
+      "Mỗi đoạn phải có chức năng rõ; ưu tiên chính xác và phát triển ý thay vì từ vựng phô trương.",
+      "Sau khi viết: kiểm tra task coverage, logic, collocation, verb tense, articles và punctuation.",
+    ],
+    teacherFlow: [
+      "5–10': warm-up và diagnostic nhanh.",
+      "15–20': dạy chiến lược bằng think-aloud.",
+      "20–25': guided practice, dừng ở từng bước để giải thích evidence.",
+      "20–30': timed independent practice.",
+      "10–15': chữa bài theo error categories và chốt homework.",
+    ],
+    guidedPractice: [
+      { id: "w-4-2-g1", title: "Guided drill — General Task 1", instruction: "Làm 6–10 mục General Task 1; sau mỗi câu ghi từ khóa và dấu hiệu dẫn đến đáp án.", expectedOutput: "Bảng đáp án + evidence/justification", estimatedMinutes: 18, difficulty: "medium" },
+      { id: "w-4-2-g2", title: "Paraphrase/evidence map", instruction: "Tạo hai cột: ngôn ngữ trong đề và cách diễn đạt tương đương trong input; tối thiểu 8 cặp.", expectedOutput: "8+ cặp paraphrase có ngữ cảnh", estimatedMinutes: 15, difficulty: "medium" },
+    ],
+    independentPractice: [
+      { id: "w-4-2-i1", title: "Timed set", instruction: "Viết một response theo prompt đúng dạng, có outline 5 phút và proofreading 5 phút; lưu cả bản nháp lẫn bản sửa.", expectedOutput: "Outline + bài viết hoàn chỉnh + checklist tự chấm", estimatedMinutes: 25, difficulty: "medium" },
+      { id: "w-4-2-i2", title: "Error-log repair", instruction: "Chọn tối thiểu 5 lỗi gần nhất, ghi nguyên nhân, evidence đúng và một quy tắc phòng lỗi lần sau.", expectedOutput: "5 dòng error log chất lượng", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    homework: [
+      { id: "w-4-2-h1", title: "Deliberate practice", instruction: "Viết 1 bài mới cùng dạng và rewrite 1 bài cũ sau khi nhận feedback; highlight thay đổi quan trọng.", expectedOutput: "Bài làm + tự chấm", estimatedMinutes: 30, difficulty: "medium" },
+      { id: "w-4-2-h2", title: "Review cycle", instruction: "Sau 24 giờ làm lại các câu sai mà không xem đáp án, rồi cập nhật error log.", expectedOutput: "Retest score + note cải thiện", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    masteryChecks: [
+      "Accuracy đạt ngưỡng mục tiêu của level 5.5 trong 2 lần luyện liên tiếp.",
+      "Giải thích được tại sao đáp án/cách diễn đạt đúng thay vì chỉ nhớ đáp án.",
+      "Lỗi cũ không lặp lại quá 2 lần trong cùng một tuần.",
+    ],
+    commonErrors: [
+      "Học thuộc template cứng",
+      "Dùng từ khó sai collocation",
+      "Không trả lời đủ đề",
+      "Thiếu overview hoặc thesis rõ",
+    ],
+    remediation: [
+      "Giảm độ dài set và làm chậm từng bước.",
+      "Quay lại bài paraphrase/grammar/vocabulary nền tảng liên quan.",
+      "Làm lại sau 24–48 giờ đến khi giải thích được lỗi.",
+    ],
+    estimatedMinutes: 100,
+    tags: ["Task 1 process/map", "band-5.5"],
+  },
+  {
+    id: "writing-foundation-4.5-5.5-3", skill: "writing", levelId: "foundation-4.5-5.5", targetBand: 5.5, order: 3,
+    title: "Opinion essay",
+    learningObjectives: [
+      "Nắm chắc idea development ở mức trung cấp.",
+      "Áp dụng cohesion vào dạng Opinion essay.",
+      "Hoàn thành bài luyện có giới hạn thời gian và tự ghi lỗi vào error log.",
+    ],
+    teachingPoints: [
+      "Khái niệm trọng tâm: idea development; giáo viên minh họa bằng ví dụ đúng/sai.",
+      "Chiến lược xử lý: xác định yêu cầu → dự đoán → thực hiện → kiểm tra.",
+      "Nhận diện paraphrase/cấu trúc thường xuất hiện trong Opinion essay.",
+      "Quy tắc tự sửa: phân loại lỗi kiến thức, chiến lược, tốc độ hoặc bất cẩn.",
+      "Mỗi đoạn phải có chức năng rõ; ưu tiên chính xác và phát triển ý thay vì từ vựng phô trương.",
+      "Sau khi viết: kiểm tra task coverage, logic, collocation, verb tense, articles và punctuation.",
+    ],
+    teacherFlow: [
+      "5–10': warm-up và diagnostic nhanh.",
+      "15–20': dạy chiến lược bằng think-aloud.",
+      "20–25': guided practice, dừng ở từng bước để giải thích evidence.",
+      "20–30': timed independent practice.",
+      "10–15': chữa bài theo error categories và chốt homework.",
+    ],
+    guidedPractice: [
+      { id: "w-4-3-g1", title: "Guided drill — Opinion essay", instruction: "Làm 6–10 mục Opinion essay; sau mỗi câu ghi từ khóa và dấu hiệu dẫn đến đáp án.", expectedOutput: "Bảng đáp án + evidence/justification", estimatedMinutes: 18, difficulty: "medium" },
+      { id: "w-4-3-g2", title: "Paraphrase/evidence map", instruction: "Tạo hai cột: ngôn ngữ trong đề và cách diễn đạt tương đương trong input; tối thiểu 8 cặp.", expectedOutput: "8+ cặp paraphrase có ngữ cảnh", estimatedMinutes: 15, difficulty: "medium" },
+    ],
+    independentPractice: [
+      { id: "w-4-3-i1", title: "Timed set", instruction: "Viết một response theo prompt đúng dạng, có outline 5 phút và proofreading 5 phút; lưu cả bản nháp lẫn bản sửa.", expectedOutput: "Outline + bài viết hoàn chỉnh + checklist tự chấm", estimatedMinutes: 25, difficulty: "medium" },
+      { id: "w-4-3-i2", title: "Error-log repair", instruction: "Chọn tối thiểu 5 lỗi gần nhất, ghi nguyên nhân, evidence đúng và một quy tắc phòng lỗi lần sau.", expectedOutput: "5 dòng error log chất lượng", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    homework: [
+      { id: "w-4-3-h1", title: "Deliberate practice", instruction: "Viết 1 bài mới cùng dạng và rewrite 1 bài cũ sau khi nhận feedback; highlight thay đổi quan trọng.", expectedOutput: "Bài làm + tự chấm", estimatedMinutes: 30, difficulty: "medium" },
+      { id: "w-4-3-h2", title: "Review cycle", instruction: "Sau 24 giờ làm lại các câu sai mà không xem đáp án, rồi cập nhật error log.", expectedOutput: "Retest score + note cải thiện", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    masteryChecks: [
+      "Accuracy đạt ngưỡng mục tiêu của level 5.5 trong 2 lần luyện liên tiếp.",
+      "Giải thích được tại sao đáp án/cách diễn đạt đúng thay vì chỉ nhớ đáp án.",
+      "Lỗi cũ không lặp lại quá 2 lần trong cùng một tuần.",
+    ],
+    commonErrors: [
+      "Học thuộc template cứng",
+      "Dùng từ khó sai collocation",
+      "Không trả lời đủ đề",
+      "Thiếu overview hoặc thesis rõ",
+    ],
+    remediation: [
+      "Giảm độ dài set và làm chậm từng bước.",
+      "Quay lại bài paraphrase/grammar/vocabulary nền tảng liên quan.",
+      "Làm lại sau 24–48 giờ đến khi giải thích được lỗi.",
+    ],
+    estimatedMinutes: 100,
+    tags: ["Opinion essay", "band-5.5"],
+  },
+  {
+    id: "writing-foundation-4.5-5.5-4", skill: "writing", levelId: "foundation-4.5-5.5", targetBand: 5.5, order: 4,
+    title: "Discussion essay",
+    learningObjectives: [
+      "Nắm chắc cohesion ở mức trung cấp.",
+      "Áp dụng lexical precision vào dạng Discussion essay.",
+      "Hoàn thành bài luyện có giới hạn thời gian và tự ghi lỗi vào error log.",
+    ],
+    teachingPoints: [
+      "Khái niệm trọng tâm: cohesion; giáo viên minh họa bằng ví dụ đúng/sai.",
+      "Chiến lược xử lý: xác định yêu cầu → dự đoán → thực hiện → kiểm tra.",
+      "Nhận diện paraphrase/cấu trúc thường xuất hiện trong Discussion essay.",
+      "Quy tắc tự sửa: phân loại lỗi kiến thức, chiến lược, tốc độ hoặc bất cẩn.",
+      "Mỗi đoạn phải có chức năng rõ; ưu tiên chính xác và phát triển ý thay vì từ vựng phô trương.",
+      "Sau khi viết: kiểm tra task coverage, logic, collocation, verb tense, articles và punctuation.",
+    ],
+    teacherFlow: [
+      "5–10': warm-up và diagnostic nhanh.",
+      "15–20': dạy chiến lược bằng think-aloud.",
+      "20–25': guided practice, dừng ở từng bước để giải thích evidence.",
+      "20–30': timed independent practice.",
+      "10–15': chữa bài theo error categories và chốt homework.",
+    ],
+    guidedPractice: [
+      { id: "w-4-4-g1", title: "Guided drill — Discussion essay", instruction: "Làm 6–10 mục Discussion essay; sau mỗi câu ghi từ khóa và dấu hiệu dẫn đến đáp án.", expectedOutput: "Bảng đáp án + evidence/justification", estimatedMinutes: 18, difficulty: "medium" },
+      { id: "w-4-4-g2", title: "Paraphrase/evidence map", instruction: "Tạo hai cột: ngôn ngữ trong đề và cách diễn đạt tương đương trong input; tối thiểu 8 cặp.", expectedOutput: "8+ cặp paraphrase có ngữ cảnh", estimatedMinutes: 15, difficulty: "medium" },
+    ],
+    independentPractice: [
+      { id: "w-4-4-i1", title: "Timed set", instruction: "Viết một response theo prompt đúng dạng, có outline 5 phút và proofreading 5 phút; lưu cả bản nháp lẫn bản sửa.", expectedOutput: "Outline + bài viết hoàn chỉnh + checklist tự chấm", estimatedMinutes: 25, difficulty: "medium" },
+      { id: "w-4-4-i2", title: "Error-log repair", instruction: "Chọn tối thiểu 5 lỗi gần nhất, ghi nguyên nhân, evidence đúng và một quy tắc phòng lỗi lần sau.", expectedOutput: "5 dòng error log chất lượng", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    homework: [
+      { id: "w-4-4-h1", title: "Deliberate practice", instruction: "Viết 1 bài mới cùng dạng và rewrite 1 bài cũ sau khi nhận feedback; highlight thay đổi quan trọng.", expectedOutput: "Bài làm + tự chấm", estimatedMinutes: 30, difficulty: "medium" },
+      { id: "w-4-4-h2", title: "Review cycle", instruction: "Sau 24 giờ làm lại các câu sai mà không xem đáp án, rồi cập nhật error log.", expectedOutput: "Retest score + note cải thiện", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    masteryChecks: [
+      "Accuracy đạt ngưỡng mục tiêu của level 5.5 trong 2 lần luyện liên tiếp.",
+      "Giải thích được tại sao đáp án/cách diễn đạt đúng thay vì chỉ nhớ đáp án.",
+      "Lỗi cũ không lặp lại quá 2 lần trong cùng một tuần.",
+    ],
+    commonErrors: [
+      "Học thuộc template cứng",
+      "Dùng từ khó sai collocation",
+      "Không trả lời đủ đề",
+      "Thiếu overview hoặc thesis rõ",
+    ],
+    remediation: [
+      "Giảm độ dài set và làm chậm từng bước.",
+      "Quay lại bài paraphrase/grammar/vocabulary nền tảng liên quan.",
+      "Làm lại sau 24–48 giờ đến khi giải thích được lỗi.",
+    ],
+    estimatedMinutes: 100,
+    tags: ["Discussion essay", "band-5.5"],
+  },
+  {
+    id: "writing-foundation-4.5-5.5-5", skill: "writing", levelId: "foundation-4.5-5.5", targetBand: 5.5, order: 5,
+    title: "Cohesion & referencing",
+    learningObjectives: [
+      "Nắm chắc lexical precision ở mức trung cấp.",
+      "Áp dụng grammar control vào dạng Problem-solution essay.",
+      "Hoàn thành bài luyện có giới hạn thời gian và tự ghi lỗi vào error log.",
+    ],
+    teachingPoints: [
+      "Khái niệm trọng tâm: lexical precision; giáo viên minh họa bằng ví dụ đúng/sai.",
+      "Chiến lược xử lý: xác định yêu cầu → dự đoán → thực hiện → kiểm tra.",
+      "Nhận diện paraphrase/cấu trúc thường xuất hiện trong Problem-solution essay.",
+      "Quy tắc tự sửa: phân loại lỗi kiến thức, chiến lược, tốc độ hoặc bất cẩn.",
+      "Mỗi đoạn phải có chức năng rõ; ưu tiên chính xác và phát triển ý thay vì từ vựng phô trương.",
+      "Sau khi viết: kiểm tra task coverage, logic, collocation, verb tense, articles và punctuation.",
+    ],
+    teacherFlow: [
+      "5–10': warm-up và diagnostic nhanh.",
+      "15–20': dạy chiến lược bằng think-aloud.",
+      "20–25': guided practice, dừng ở từng bước để giải thích evidence.",
+      "20–30': timed independent practice.",
+      "10–15': chữa bài theo error categories và chốt homework.",
+    ],
+    guidedPractice: [
+      { id: "w-4-5-g1", title: "Guided drill — Problem-solution essay", instruction: "Làm 6–10 mục Problem-solution essay; sau mỗi câu ghi từ khóa và dấu hiệu dẫn đến đáp án.", expectedOutput: "Bảng đáp án + evidence/justification", estimatedMinutes: 18, difficulty: "medium" },
+      { id: "w-4-5-g2", title: "Paraphrase/evidence map", instruction: "Tạo hai cột: ngôn ngữ trong đề và cách diễn đạt tương đương trong input; tối thiểu 8 cặp.", expectedOutput: "8+ cặp paraphrase có ngữ cảnh", estimatedMinutes: 15, difficulty: "medium" },
+    ],
+    independentPractice: [
+      { id: "w-4-5-i1", title: "Timed set", instruction: "Viết một response theo prompt đúng dạng, có outline 5 phút và proofreading 5 phút; lưu cả bản nháp lẫn bản sửa.", expectedOutput: "Outline + bài viết hoàn chỉnh + checklist tự chấm", estimatedMinutes: 25, difficulty: "medium" },
+      { id: "w-4-5-i2", title: "Error-log repair", instruction: "Chọn tối thiểu 5 lỗi gần nhất, ghi nguyên nhân, evidence đúng và một quy tắc phòng lỗi lần sau.", expectedOutput: "5 dòng error log chất lượng", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    homework: [
+      { id: "w-4-5-h1", title: "Deliberate practice", instruction: "Viết 1 bài mới cùng dạng và rewrite 1 bài cũ sau khi nhận feedback; highlight thay đổi quan trọng.", expectedOutput: "Bài làm + tự chấm", estimatedMinutes: 30, difficulty: "medium" },
+      { id: "w-4-5-h2", title: "Review cycle", instruction: "Sau 24 giờ làm lại các câu sai mà không xem đáp án, rồi cập nhật error log.", expectedOutput: "Retest score + note cải thiện", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    masteryChecks: [
+      "Accuracy đạt ngưỡng mục tiêu của level 5.5 trong 2 lần luyện liên tiếp.",
+      "Giải thích được tại sao đáp án/cách diễn đạt đúng thay vì chỉ nhớ đáp án.",
+      "Lỗi cũ không lặp lại quá 2 lần trong cùng một tuần.",
+    ],
+    commonErrors: [
+      "Học thuộc template cứng",
+      "Dùng từ khó sai collocation",
+      "Không trả lời đủ đề",
+      "Thiếu overview hoặc thesis rõ",
+    ],
+    remediation: [
+      "Giảm độ dài set và làm chậm từng bước.",
+      "Quay lại bài paraphrase/grammar/vocabulary nền tảng liên quan.",
+      "Làm lại sau 24–48 giờ đến khi giải thích được lỗi.",
+    ],
+    estimatedMinutes: 100,
+    tags: ["Cohesion & referencing", "band-5.5"],
+  },
+  {
+    id: "writing-foundation-4.5-5.5-6", skill: "writing", levelId: "foundation-4.5-5.5", targetBand: 5.5, order: 6,
+    title: "Checkpoint 5.5",
+    learningObjectives: [
+      "Nắm chắc grammar control ở mức trung cấp.",
+      "Áp dụng task response vào dạng Two-part question.",
+      "Hoàn thành bài luyện có giới hạn thời gian và tự ghi lỗi vào error log.",
+    ],
+    teachingPoints: [
+      "Khái niệm trọng tâm: grammar control; giáo viên minh họa bằng ví dụ đúng/sai.",
+      "Chiến lược xử lý: xác định yêu cầu → dự đoán → thực hiện → kiểm tra.",
+      "Nhận diện paraphrase/cấu trúc thường xuất hiện trong Two-part question.",
+      "Quy tắc tự sửa: phân loại lỗi kiến thức, chiến lược, tốc độ hoặc bất cẩn.",
+      "Mỗi đoạn phải có chức năng rõ; ưu tiên chính xác và phát triển ý thay vì từ vựng phô trương.",
+      "Sau khi viết: kiểm tra task coverage, logic, collocation, verb tense, articles và punctuation.",
+    ],
+    teacherFlow: [
+      "5–10': warm-up và diagnostic nhanh.",
+      "15–20': dạy chiến lược bằng think-aloud.",
+      "20–25': guided practice, dừng ở từng bước để giải thích evidence.",
+      "20–30': timed independent practice.",
+      "10–15': chữa bài theo error categories và chốt homework.",
+    ],
+    guidedPractice: [
+      { id: "w-4-6-g1", title: "Guided drill — Two-part question", instruction: "Làm 6–10 mục Two-part question; sau mỗi câu ghi từ khóa và dấu hiệu dẫn đến đáp án.", expectedOutput: "Bảng đáp án + evidence/justification", estimatedMinutes: 18, difficulty: "medium" },
+      { id: "w-4-6-g2", title: "Paraphrase/evidence map", instruction: "Tạo hai cột: ngôn ngữ trong đề và cách diễn đạt tương đương trong input; tối thiểu 8 cặp.", expectedOutput: "8+ cặp paraphrase có ngữ cảnh", estimatedMinutes: 15, difficulty: "medium" },
+    ],
+    independentPractice: [
+      { id: "w-4-6-i1", title: "Timed set", instruction: "Viết một response theo prompt đúng dạng, có outline 5 phút và proofreading 5 phút; lưu cả bản nháp lẫn bản sửa.", expectedOutput: "Outline + bài viết hoàn chỉnh + checklist tự chấm", estimatedMinutes: 25, difficulty: "medium" },
+      { id: "w-4-6-i2", title: "Error-log repair", instruction: "Chọn tối thiểu 5 lỗi gần nhất, ghi nguyên nhân, evidence đúng và một quy tắc phòng lỗi lần sau.", expectedOutput: "5 dòng error log chất lượng", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    homework: [
+      { id: "w-4-6-h1", title: "Deliberate practice", instruction: "Viết 1 bài mới cùng dạng và rewrite 1 bài cũ sau khi nhận feedback; highlight thay đổi quan trọng.", expectedOutput: "Bài làm + tự chấm", estimatedMinutes: 30, difficulty: "medium" },
+      { id: "w-4-6-h2", title: "Review cycle", instruction: "Sau 24 giờ làm lại các câu sai mà không xem đáp án, rồi cập nhật error log.", expectedOutput: "Retest score + note cải thiện", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    masteryChecks: [
+      "Accuracy đạt ngưỡng mục tiêu của level 5.5 trong 2 lần luyện liên tiếp.",
+      "Giải thích được tại sao đáp án/cách diễn đạt đúng thay vì chỉ nhớ đáp án.",
+      "Lỗi cũ không lặp lại quá 2 lần trong cùng một tuần.",
+    ],
+    commonErrors: [
+      "Học thuộc template cứng",
+      "Dùng từ khó sai collocation",
+      "Không trả lời đủ đề",
+      "Thiếu overview hoặc thesis rõ",
+    ],
+    remediation: [
+      "Giảm độ dài set và làm chậm từng bước.",
+      "Quay lại bài paraphrase/grammar/vocabulary nền tảng liên quan.",
+      "Làm lại sau 24–48 giờ đến khi giải thích được lỗi.",
+    ],
+    estimatedMinutes: 100,
+    tags: ["Checkpoint 5.5", "band-5.5"],
+  }
+];

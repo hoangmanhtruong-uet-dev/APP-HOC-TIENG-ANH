@@ -1,0 +1,327 @@
+import type { IELTSLesson } from "../../types/lesson";
+export const READING_7_LESSONS: IELTSLesson[] = [
+  {
+    id: "reading-advanced-7.5-8.5-1", skill: "reading", levelId: "advanced-7.5-8.5", targetBand: 8.5, order: 1,
+    title: "Nuance and tone",
+    learningObjectives: [
+      "Nắm chắc skimming ở mức nâng cao.",
+      "Áp dụng scanning vào dạng True/False/Not Given.",
+      "Hoàn thành bài luyện có giới hạn thời gian và tự ghi lỗi vào error log.",
+    ],
+    teachingPoints: [
+      "Khái niệm trọng tâm: skimming; giáo viên minh họa bằng ví dụ đúng/sai.",
+      "Chiến lược xử lý: xác định yêu cầu → dự đoán → thực hiện → kiểm tra.",
+      "Nhận diện paraphrase/cấu trúc thường xuất hiện trong True/False/Not Given.",
+      "Quy tắc tự sửa: phân loại lỗi kiến thức, chiến lược, tốc độ hoặc bất cẩn.",
+      "Không dùng kiến thức ngoài văn bản; mọi đáp án phải có evidence line.",
+      "Khoanh vùng đoạn chứa đáp án trước, sau đó đọc kỹ 1–3 câu liên quan.",
+    ],
+    teacherFlow: [
+      "5–10': warm-up và diagnostic nhanh.",
+      "15–20': dạy chiến lược bằng think-aloud.",
+      "20–25': guided practice, dừng ở từng bước để giải thích evidence.",
+      "20–30': timed independent practice.",
+      "10–15': chữa bài theo error categories và chốt homework.",
+    ],
+    guidedPractice: [
+      { id: "r-7-1-g1", title: "Guided drill — True/False/Not Given", instruction: "Làm 6–10 mục True/False/Not Given; sau mỗi câu ghi từ khóa và dấu hiệu dẫn đến đáp án.", expectedOutput: "Bảng đáp án + evidence/justification", estimatedMinutes: 18, difficulty: "medium" },
+      { id: "r-7-1-g2", title: "Paraphrase/evidence map", instruction: "Tạo hai cột: ngôn ngữ trong đề và cách diễn đạt tương đương trong input; tối thiểu 8 cặp.", expectedOutput: "8+ cặp paraphrase có ngữ cảnh", estimatedMinutes: 15, difficulty: "medium" },
+    ],
+    independentPractice: [
+      { id: "r-7-1-i1", title: "Timed set", instruction: "Hoàn thành một set True/False/Not Given không dừng đồng hồ; đánh dấu câu không chắc thay vì mắc kẹt.", expectedOutput: "Điểm thô + thời gian + confidence", estimatedMinutes: 25, difficulty: "medium" },
+      { id: "r-7-1-i2", title: "Error-log repair", instruction: "Chọn tối thiểu 5 lỗi gần nhất, ghi nguyên nhân, evidence đúng và một quy tắc phòng lỗi lần sau.", expectedOutput: "5 dòng error log chất lượng", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    homework: [
+      { id: "r-7-1-h1", title: "Deliberate practice", instruction: "Làm thêm 20–30 phút bài cùng dạng True/False/Not Given; mục tiêu ưu tiên accuracy trước speed.", expectedOutput: "Bài làm + tự chấm", estimatedMinutes: 30, difficulty: "medium" },
+      { id: "r-7-1-h2", title: "Review cycle", instruction: "Sau 24 giờ làm lại các câu sai mà không xem đáp án, rồi cập nhật error log.", expectedOutput: "Retest score + note cải thiện", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    masteryChecks: [
+      "Accuracy đạt ngưỡng mục tiêu của level 8.5 trong 2 lần luyện liên tiếp.",
+      "Giải thích được tại sao đáp án/cách diễn đạt đúng thay vì chỉ nhớ đáp án.",
+      "Lỗi cũ không lặp lại quá 2 lần trong cùng một tuần.",
+    ],
+    commonErrors: [
+      "Đọc toàn bài trước khi làm",
+      "Dùng kiến thức ngoài bài",
+      "Nhầm False với Not Given",
+      "Dừng quá lâu ở một câu",
+    ],
+    remediation: [
+      "Giảm độ dài set và làm chậm từng bước.",
+      "Quay lại bài paraphrase/grammar/vocabulary nền tảng liên quan.",
+      "Làm lại sau 24–48 giờ đến khi giải thích được lỗi.",
+    ],
+    estimatedMinutes: 100,
+    tags: ["Nuance and tone", "band-8.5"],
+  },
+  {
+    id: "reading-advanced-7.5-8.5-2", skill: "reading", levelId: "advanced-7.5-8.5", targetBand: 8.5, order: 2,
+    title: "Abstract passages",
+    learningObjectives: [
+      "Nắm chắc scanning ở mức nâng cao.",
+      "Áp dụng keyword mapping vào dạng Yes/No/Not Given.",
+      "Hoàn thành bài luyện có giới hạn thời gian và tự ghi lỗi vào error log.",
+    ],
+    teachingPoints: [
+      "Khái niệm trọng tâm: scanning; giáo viên minh họa bằng ví dụ đúng/sai.",
+      "Chiến lược xử lý: xác định yêu cầu → dự đoán → thực hiện → kiểm tra.",
+      "Nhận diện paraphrase/cấu trúc thường xuất hiện trong Yes/No/Not Given.",
+      "Quy tắc tự sửa: phân loại lỗi kiến thức, chiến lược, tốc độ hoặc bất cẩn.",
+      "Không dùng kiến thức ngoài văn bản; mọi đáp án phải có evidence line.",
+      "Khoanh vùng đoạn chứa đáp án trước, sau đó đọc kỹ 1–3 câu liên quan.",
+    ],
+    teacherFlow: [
+      "5–10': warm-up và diagnostic nhanh.",
+      "15–20': dạy chiến lược bằng think-aloud.",
+      "20–25': guided practice, dừng ở từng bước để giải thích evidence.",
+      "20–30': timed independent practice.",
+      "10–15': chữa bài theo error categories và chốt homework.",
+    ],
+    guidedPractice: [
+      { id: "r-7-2-g1", title: "Guided drill — Yes/No/Not Given", instruction: "Làm 6–10 mục Yes/No/Not Given; sau mỗi câu ghi từ khóa và dấu hiệu dẫn đến đáp án.", expectedOutput: "Bảng đáp án + evidence/justification", estimatedMinutes: 18, difficulty: "medium" },
+      { id: "r-7-2-g2", title: "Paraphrase/evidence map", instruction: "Tạo hai cột: ngôn ngữ trong đề và cách diễn đạt tương đương trong input; tối thiểu 8 cặp.", expectedOutput: "8+ cặp paraphrase có ngữ cảnh", estimatedMinutes: 15, difficulty: "medium" },
+    ],
+    independentPractice: [
+      { id: "r-7-2-i1", title: "Timed set", instruction: "Hoàn thành một set Yes/No/Not Given không dừng đồng hồ; đánh dấu câu không chắc thay vì mắc kẹt.", expectedOutput: "Điểm thô + thời gian + confidence", estimatedMinutes: 25, difficulty: "medium" },
+      { id: "r-7-2-i2", title: "Error-log repair", instruction: "Chọn tối thiểu 5 lỗi gần nhất, ghi nguyên nhân, evidence đúng và một quy tắc phòng lỗi lần sau.", expectedOutput: "5 dòng error log chất lượng", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    homework: [
+      { id: "r-7-2-h1", title: "Deliberate practice", instruction: "Làm thêm 20–30 phút bài cùng dạng Yes/No/Not Given; mục tiêu ưu tiên accuracy trước speed.", expectedOutput: "Bài làm + tự chấm", estimatedMinutes: 30, difficulty: "medium" },
+      { id: "r-7-2-h2", title: "Review cycle", instruction: "Sau 24 giờ làm lại các câu sai mà không xem đáp án, rồi cập nhật error log.", expectedOutput: "Retest score + note cải thiện", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    masteryChecks: [
+      "Accuracy đạt ngưỡng mục tiêu của level 8.5 trong 2 lần luyện liên tiếp.",
+      "Giải thích được tại sao đáp án/cách diễn đạt đúng thay vì chỉ nhớ đáp án.",
+      "Lỗi cũ không lặp lại quá 2 lần trong cùng một tuần.",
+    ],
+    commonErrors: [
+      "Đọc toàn bài trước khi làm",
+      "Dùng kiến thức ngoài bài",
+      "Nhầm False với Not Given",
+      "Dừng quá lâu ở một câu",
+    ],
+    remediation: [
+      "Giảm độ dài set và làm chậm từng bước.",
+      "Quay lại bài paraphrase/grammar/vocabulary nền tảng liên quan.",
+      "Làm lại sau 24–48 giờ đến khi giải thích được lỗi.",
+    ],
+    estimatedMinutes: 100,
+    tags: ["Abstract passages", "band-8.5"],
+  },
+  {
+    id: "reading-advanced-7.5-8.5-3", skill: "reading", levelId: "advanced-7.5-8.5", targetBand: 8.5, order: 3,
+    title: "Near-synonym discrimination",
+    learningObjectives: [
+      "Nắm chắc keyword mapping ở mức nâng cao.",
+      "Áp dụng paraphrase recognition vào dạng matching headings.",
+      "Hoàn thành bài luyện có giới hạn thời gian và tự ghi lỗi vào error log.",
+    ],
+    teachingPoints: [
+      "Khái niệm trọng tâm: keyword mapping; giáo viên minh họa bằng ví dụ đúng/sai.",
+      "Chiến lược xử lý: xác định yêu cầu → dự đoán → thực hiện → kiểm tra.",
+      "Nhận diện paraphrase/cấu trúc thường xuất hiện trong matching headings.",
+      "Quy tắc tự sửa: phân loại lỗi kiến thức, chiến lược, tốc độ hoặc bất cẩn.",
+      "Không dùng kiến thức ngoài văn bản; mọi đáp án phải có evidence line.",
+      "Khoanh vùng đoạn chứa đáp án trước, sau đó đọc kỹ 1–3 câu liên quan.",
+    ],
+    teacherFlow: [
+      "5–10': warm-up và diagnostic nhanh.",
+      "15–20': dạy chiến lược bằng think-aloud.",
+      "20–25': guided practice, dừng ở từng bước để giải thích evidence.",
+      "20–30': timed independent practice.",
+      "10–15': chữa bài theo error categories và chốt homework.",
+    ],
+    guidedPractice: [
+      { id: "r-7-3-g1", title: "Guided drill — matching headings", instruction: "Làm 6–10 mục matching headings; sau mỗi câu ghi từ khóa và dấu hiệu dẫn đến đáp án.", expectedOutput: "Bảng đáp án + evidence/justification", estimatedMinutes: 18, difficulty: "medium" },
+      { id: "r-7-3-g2", title: "Paraphrase/evidence map", instruction: "Tạo hai cột: ngôn ngữ trong đề và cách diễn đạt tương đương trong input; tối thiểu 8 cặp.", expectedOutput: "8+ cặp paraphrase có ngữ cảnh", estimatedMinutes: 15, difficulty: "medium" },
+    ],
+    independentPractice: [
+      { id: "r-7-3-i1", title: "Timed set", instruction: "Hoàn thành một set matching headings không dừng đồng hồ; đánh dấu câu không chắc thay vì mắc kẹt.", expectedOutput: "Điểm thô + thời gian + confidence", estimatedMinutes: 25, difficulty: "medium" },
+      { id: "r-7-3-i2", title: "Error-log repair", instruction: "Chọn tối thiểu 5 lỗi gần nhất, ghi nguyên nhân, evidence đúng và một quy tắc phòng lỗi lần sau.", expectedOutput: "5 dòng error log chất lượng", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    homework: [
+      { id: "r-7-3-h1", title: "Deliberate practice", instruction: "Làm thêm 20–30 phút bài cùng dạng matching headings; mục tiêu ưu tiên accuracy trước speed.", expectedOutput: "Bài làm + tự chấm", estimatedMinutes: 30, difficulty: "medium" },
+      { id: "r-7-3-h2", title: "Review cycle", instruction: "Sau 24 giờ làm lại các câu sai mà không xem đáp án, rồi cập nhật error log.", expectedOutput: "Retest score + note cải thiện", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    masteryChecks: [
+      "Accuracy đạt ngưỡng mục tiêu của level 8.5 trong 2 lần luyện liên tiếp.",
+      "Giải thích được tại sao đáp án/cách diễn đạt đúng thay vì chỉ nhớ đáp án.",
+      "Lỗi cũ không lặp lại quá 2 lần trong cùng một tuần.",
+    ],
+    commonErrors: [
+      "Đọc toàn bài trước khi làm",
+      "Dùng kiến thức ngoài bài",
+      "Nhầm False với Not Given",
+      "Dừng quá lâu ở một câu",
+    ],
+    remediation: [
+      "Giảm độ dài set và làm chậm từng bước.",
+      "Quay lại bài paraphrase/grammar/vocabulary nền tảng liên quan.",
+      "Làm lại sau 24–48 giờ đến khi giải thích được lỗi.",
+    ],
+    estimatedMinutes: 100,
+    tags: ["Near-synonym discrimination", "band-8.5"],
+  },
+  {
+    id: "reading-advanced-7.5-8.5-4", skill: "reading", levelId: "advanced-7.5-8.5", targetBand: 8.5, order: 4,
+    title: "Trap analysis",
+    learningObjectives: [
+      "Nắm chắc paraphrase recognition ở mức nâng cao.",
+      "Áp dụng reference words vào dạng matching information.",
+      "Hoàn thành bài luyện có giới hạn thời gian và tự ghi lỗi vào error log.",
+    ],
+    teachingPoints: [
+      "Khái niệm trọng tâm: paraphrase recognition; giáo viên minh họa bằng ví dụ đúng/sai.",
+      "Chiến lược xử lý: xác định yêu cầu → dự đoán → thực hiện → kiểm tra.",
+      "Nhận diện paraphrase/cấu trúc thường xuất hiện trong matching information.",
+      "Quy tắc tự sửa: phân loại lỗi kiến thức, chiến lược, tốc độ hoặc bất cẩn.",
+      "Không dùng kiến thức ngoài văn bản; mọi đáp án phải có evidence line.",
+      "Khoanh vùng đoạn chứa đáp án trước, sau đó đọc kỹ 1–3 câu liên quan.",
+    ],
+    teacherFlow: [
+      "5–10': warm-up và diagnostic nhanh.",
+      "15–20': dạy chiến lược bằng think-aloud.",
+      "20–25': guided practice, dừng ở từng bước để giải thích evidence.",
+      "20–30': timed independent practice.",
+      "10–15': chữa bài theo error categories và chốt homework.",
+    ],
+    guidedPractice: [
+      { id: "r-7-4-g1", title: "Guided drill — matching information", instruction: "Làm 6–10 mục matching information; sau mỗi câu ghi từ khóa và dấu hiệu dẫn đến đáp án.", expectedOutput: "Bảng đáp án + evidence/justification", estimatedMinutes: 18, difficulty: "medium" },
+      { id: "r-7-4-g2", title: "Paraphrase/evidence map", instruction: "Tạo hai cột: ngôn ngữ trong đề và cách diễn đạt tương đương trong input; tối thiểu 8 cặp.", expectedOutput: "8+ cặp paraphrase có ngữ cảnh", estimatedMinutes: 15, difficulty: "medium" },
+    ],
+    independentPractice: [
+      { id: "r-7-4-i1", title: "Timed set", instruction: "Hoàn thành một set matching information không dừng đồng hồ; đánh dấu câu không chắc thay vì mắc kẹt.", expectedOutput: "Điểm thô + thời gian + confidence", estimatedMinutes: 25, difficulty: "medium" },
+      { id: "r-7-4-i2", title: "Error-log repair", instruction: "Chọn tối thiểu 5 lỗi gần nhất, ghi nguyên nhân, evidence đúng và một quy tắc phòng lỗi lần sau.", expectedOutput: "5 dòng error log chất lượng", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    homework: [
+      { id: "r-7-4-h1", title: "Deliberate practice", instruction: "Làm thêm 20–30 phút bài cùng dạng matching information; mục tiêu ưu tiên accuracy trước speed.", expectedOutput: "Bài làm + tự chấm", estimatedMinutes: 30, difficulty: "medium" },
+      { id: "r-7-4-h2", title: "Review cycle", instruction: "Sau 24 giờ làm lại các câu sai mà không xem đáp án, rồi cập nhật error log.", expectedOutput: "Retest score + note cải thiện", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    masteryChecks: [
+      "Accuracy đạt ngưỡng mục tiêu của level 8.5 trong 2 lần luyện liên tiếp.",
+      "Giải thích được tại sao đáp án/cách diễn đạt đúng thay vì chỉ nhớ đáp án.",
+      "Lỗi cũ không lặp lại quá 2 lần trong cùng một tuần.",
+    ],
+    commonErrors: [
+      "Đọc toàn bài trước khi làm",
+      "Dùng kiến thức ngoài bài",
+      "Nhầm False với Not Given",
+      "Dừng quá lâu ở một câu",
+    ],
+    remediation: [
+      "Giảm độ dài set và làm chậm từng bước.",
+      "Quay lại bài paraphrase/grammar/vocabulary nền tảng liên quan.",
+      "Làm lại sau 24–48 giờ đến khi giải thích được lỗi.",
+    ],
+    estimatedMinutes: 100,
+    tags: ["Trap analysis", "band-8.5"],
+  },
+  {
+    id: "reading-advanced-7.5-8.5-5", skill: "reading", levelId: "advanced-7.5-8.5", targetBand: 8.5, order: 5,
+    title: "Speed without detail loss",
+    learningObjectives: [
+      "Nắm chắc reference words ở mức nâng cao.",
+      "Áp dụng inference vào dạng multiple choice.",
+      "Hoàn thành bài luyện có giới hạn thời gian và tự ghi lỗi vào error log.",
+    ],
+    teachingPoints: [
+      "Khái niệm trọng tâm: reference words; giáo viên minh họa bằng ví dụ đúng/sai.",
+      "Chiến lược xử lý: xác định yêu cầu → dự đoán → thực hiện → kiểm tra.",
+      "Nhận diện paraphrase/cấu trúc thường xuất hiện trong multiple choice.",
+      "Quy tắc tự sửa: phân loại lỗi kiến thức, chiến lược, tốc độ hoặc bất cẩn.",
+      "Không dùng kiến thức ngoài văn bản; mọi đáp án phải có evidence line.",
+      "Khoanh vùng đoạn chứa đáp án trước, sau đó đọc kỹ 1–3 câu liên quan.",
+    ],
+    teacherFlow: [
+      "5–10': warm-up và diagnostic nhanh.",
+      "15–20': dạy chiến lược bằng think-aloud.",
+      "20–25': guided practice, dừng ở từng bước để giải thích evidence.",
+      "20–30': timed independent practice.",
+      "10–15': chữa bài theo error categories và chốt homework.",
+    ],
+    guidedPractice: [
+      { id: "r-7-5-g1", title: "Guided drill — multiple choice", instruction: "Làm 6–10 mục multiple choice; sau mỗi câu ghi từ khóa và dấu hiệu dẫn đến đáp án.", expectedOutput: "Bảng đáp án + evidence/justification", estimatedMinutes: 18, difficulty: "medium" },
+      { id: "r-7-5-g2", title: "Paraphrase/evidence map", instruction: "Tạo hai cột: ngôn ngữ trong đề và cách diễn đạt tương đương trong input; tối thiểu 8 cặp.", expectedOutput: "8+ cặp paraphrase có ngữ cảnh", estimatedMinutes: 15, difficulty: "medium" },
+    ],
+    independentPractice: [
+      { id: "r-7-5-i1", title: "Timed set", instruction: "Hoàn thành một set multiple choice không dừng đồng hồ; đánh dấu câu không chắc thay vì mắc kẹt.", expectedOutput: "Điểm thô + thời gian + confidence", estimatedMinutes: 25, difficulty: "medium" },
+      { id: "r-7-5-i2", title: "Error-log repair", instruction: "Chọn tối thiểu 5 lỗi gần nhất, ghi nguyên nhân, evidence đúng và một quy tắc phòng lỗi lần sau.", expectedOutput: "5 dòng error log chất lượng", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    homework: [
+      { id: "r-7-5-h1", title: "Deliberate practice", instruction: "Làm thêm 20–30 phút bài cùng dạng multiple choice; mục tiêu ưu tiên accuracy trước speed.", expectedOutput: "Bài làm + tự chấm", estimatedMinutes: 30, difficulty: "medium" },
+      { id: "r-7-5-h2", title: "Review cycle", instruction: "Sau 24 giờ làm lại các câu sai mà không xem đáp án, rồi cập nhật error log.", expectedOutput: "Retest score + note cải thiện", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    masteryChecks: [
+      "Accuracy đạt ngưỡng mục tiêu của level 8.5 trong 2 lần luyện liên tiếp.",
+      "Giải thích được tại sao đáp án/cách diễn đạt đúng thay vì chỉ nhớ đáp án.",
+      "Lỗi cũ không lặp lại quá 2 lần trong cùng một tuần.",
+    ],
+    commonErrors: [
+      "Đọc toàn bài trước khi làm",
+      "Dùng kiến thức ngoài bài",
+      "Nhầm False với Not Given",
+      "Dừng quá lâu ở một câu",
+    ],
+    remediation: [
+      "Giảm độ dài set và làm chậm từng bước.",
+      "Quay lại bài paraphrase/grammar/vocabulary nền tảng liên quan.",
+      "Làm lại sau 24–48 giờ đến khi giải thích được lỗi.",
+    ],
+    estimatedMinutes: 100,
+    tags: ["Speed without detail loss", "band-8.5"],
+  },
+  {
+    id: "reading-advanced-7.5-8.5-6", skill: "reading", levelId: "advanced-7.5-8.5", targetBand: 8.5, order: 6,
+    title: "Band 8+ mock",
+    learningObjectives: [
+      "Nắm chắc inference ở mức nâng cao.",
+      "Áp dụng skimming vào dạng summary/sentence completion.",
+      "Hoàn thành bài luyện có giới hạn thời gian và tự ghi lỗi vào error log.",
+    ],
+    teachingPoints: [
+      "Khái niệm trọng tâm: inference; giáo viên minh họa bằng ví dụ đúng/sai.",
+      "Chiến lược xử lý: xác định yêu cầu → dự đoán → thực hiện → kiểm tra.",
+      "Nhận diện paraphrase/cấu trúc thường xuất hiện trong summary/sentence completion.",
+      "Quy tắc tự sửa: phân loại lỗi kiến thức, chiến lược, tốc độ hoặc bất cẩn.",
+      "Không dùng kiến thức ngoài văn bản; mọi đáp án phải có evidence line.",
+      "Khoanh vùng đoạn chứa đáp án trước, sau đó đọc kỹ 1–3 câu liên quan.",
+    ],
+    teacherFlow: [
+      "5–10': warm-up và diagnostic nhanh.",
+      "15–20': dạy chiến lược bằng think-aloud.",
+      "20–25': guided practice, dừng ở từng bước để giải thích evidence.",
+      "20–30': timed independent practice.",
+      "10–15': chữa bài theo error categories và chốt homework.",
+    ],
+    guidedPractice: [
+      { id: "r-7-6-g1", title: "Guided drill — summary/sentence completion", instruction: "Làm 6–10 mục summary/sentence completion; sau mỗi câu ghi từ khóa và dấu hiệu dẫn đến đáp án.", expectedOutput: "Bảng đáp án + evidence/justification", estimatedMinutes: 18, difficulty: "medium" },
+      { id: "r-7-6-g2", title: "Paraphrase/evidence map", instruction: "Tạo hai cột: ngôn ngữ trong đề và cách diễn đạt tương đương trong input; tối thiểu 8 cặp.", expectedOutput: "8+ cặp paraphrase có ngữ cảnh", estimatedMinutes: 15, difficulty: "medium" },
+    ],
+    independentPractice: [
+      { id: "r-7-6-i1", title: "Timed set", instruction: "Hoàn thành một set summary/sentence completion không dừng đồng hồ; đánh dấu câu không chắc thay vì mắc kẹt.", expectedOutput: "Điểm thô + thời gian + confidence", estimatedMinutes: 25, difficulty: "medium" },
+      { id: "r-7-6-i2", title: "Error-log repair", instruction: "Chọn tối thiểu 5 lỗi gần nhất, ghi nguyên nhân, evidence đúng và một quy tắc phòng lỗi lần sau.", expectedOutput: "5 dòng error log chất lượng", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    homework: [
+      { id: "r-7-6-h1", title: "Deliberate practice", instruction: "Làm thêm 20–30 phút bài cùng dạng summary/sentence completion; mục tiêu ưu tiên accuracy trước speed.", expectedOutput: "Bài làm + tự chấm", estimatedMinutes: 30, difficulty: "medium" },
+      { id: "r-7-6-h2", title: "Review cycle", instruction: "Sau 24 giờ làm lại các câu sai mà không xem đáp án, rồi cập nhật error log.", expectedOutput: "Retest score + note cải thiện", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    masteryChecks: [
+      "Accuracy đạt ngưỡng mục tiêu của level 8.5 trong 2 lần luyện liên tiếp.",
+      "Giải thích được tại sao đáp án/cách diễn đạt đúng thay vì chỉ nhớ đáp án.",
+      "Lỗi cũ không lặp lại quá 2 lần trong cùng một tuần.",
+    ],
+    commonErrors: [
+      "Đọc toàn bài trước khi làm",
+      "Dùng kiến thức ngoài bài",
+      "Nhầm False với Not Given",
+      "Dừng quá lâu ở một câu",
+    ],
+    remediation: [
+      "Giảm độ dài set và làm chậm từng bước.",
+      "Quay lại bài paraphrase/grammar/vocabulary nền tảng liên quan.",
+      "Làm lại sau 24–48 giờ đến khi giải thích được lỗi.",
+    ],
+    estimatedMinutes: 100,
+    tags: ["Band 8+ mock", "band-8.5"],
+  }
+];
