@@ -147,7 +147,7 @@ select extensions.ok(
 );
 select extensions.throws_ok(
   $$select public.save_writing_draft((select id from public.writing_submissions limit 1), 'Conflicting stale text', 0)$$,
-  '40001', 'stale or conflicting writing revision',
+  'PT409', 'stale or conflicting writing revision',
   'stale autosave with a different payload is rejected'
 );
 select extensions.lives_ok(

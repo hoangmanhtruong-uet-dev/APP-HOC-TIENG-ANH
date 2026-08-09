@@ -1,0 +1,123 @@
+name: Release verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: Verification scope
+        required: true
+        default: database
+        type: choice
+        options:
+          - database
+          - full
+  push:
+    branches:
+      - codex/phase-3-ci-database-gate
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  database-release-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Verify Docker-enabled runner
+        run: docker info
+      - name: Fresh migrations, full pgTAP and schema lint
+        run: npm run verify:database
+
+  application-release-gate:
+    if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full')
+    runs-on: windows-latest
+    timeout-minutes: 40
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install chromium firefox webkit
+      - run: npm run verify:ci
+      - run: npm run test:e2e
+      - run: npm run test:visual
+
+  protected-staging-gate:
+    if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full')
+    needs: [database-release-gate, application-release-gate]
+    runs-on: windows-latest
+    timeout-minutes: 45
+    environment: release-staging
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+      E2E_EXPECTED_SUPABASE_PROJECT_REF: ${{ vars.STAGING_SUPABASE_PROJECT_REF }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install chromium firefox webkit
+      - name: Link approved staging project
+        run: npx supabase link --project-ref "$env:E2E_EXPECTED_SUPABASE_PROJECT_REF"
+      - name: Verify staging migration parity
+        run: npm run verify:remote-parity
+      - name: Authenticated data verification
+        run: npm run test:e2e:remote-authenticated:release
+      - name: Exact 55-state authenticated visual verification
+        run: npm run test:visual:remote-authenticated
+      - name: Upload 55-state evidence before the next Playwright run
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-staging-55-state-evidence
+          path: |
+            test-results
+            playwright-report
+          if-no-files-found: error
+      - name: Critical cross-browser authenticated smoke
+        run: npm run test:e2e:cross-browser
+      - name: Upload final Playwright evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-staging-playwright-evidence
+          path: |
+            test-results
+            playwright-report
+          if-no-files-found: error
+
+  release-gate:
+    if: always()
+    needs:
+      [database-release-gate, application-release-gate, protected-staging-gate]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail closed unless every required gate passed
+        env:
+          RUN_FULL: ${{ startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
+          DATABASE_RESULT: ${{ needs.database-release-gate.result }}
+          APPLICATION_RESULT: ${{ needs.application-release-gate.result }}
+          STAGING_RESULT: ${{ needs.protected-staging-gate.result }}
+        run: |
+          test "$DATABASE_RESULT" = success
+          if [ "$RUN_FULL" = true ]; then
+            test "$APPLICATION_RESULT" = success
+            test "$STAGING_RESULT" = success
+          fi
