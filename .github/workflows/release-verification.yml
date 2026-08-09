@@ -51,7 +51,16 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install chromium firefox webkit
-      - run: npm run verify:ci
+      - name: Verify formatting
+        run: npm run format:check
+      - name: Verify lint
+        run: npm run lint
+      - name: Verify types
+        run: npm run typecheck
+      - name: Verify unit tests
+        run: npm test
+      - name: Verify production build
+        run: npm run build
       - run: npm run test:e2e
       - run: npm run test:visual
 
