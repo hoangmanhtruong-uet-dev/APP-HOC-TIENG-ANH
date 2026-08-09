@@ -87,11 +87,16 @@ async function verifyDatabaseRelease() {
       "studio,imgproxy,edge-runtime,logflare,vector,supavisor",
     ]);
     await run(process.execPath, [supabaseCli, "db", "reset", "--local"]);
-    const pgTapOutput = await run(
-      process.execPath,
-      [supabaseCli, "test", "db"],
-      { capture: true },
-    );
+    let pgTapOutput = "";
+    for (const databaseTestFile of databaseTestFiles) {
+      const testPath = `supabase/tests/database/${databaseTestFile}`;
+      const testOutput = await run(
+        process.execPath,
+        [supabaseCli, "test", "db", testPath],
+        { capture: true },
+      );
+      pgTapOutput += `\n${testOutput}`;
+    }
     await run(process.execPath, [
       supabaseCli,
       "db",
@@ -110,18 +115,13 @@ async function verifyDatabaseRelease() {
       (pgTapOutput.match(/^\s*ok\s+\d+/gm) ?? []).length - skippedAssertions;
     const failedAssertions = (pgTapOutput.match(/^\s*not ok\s+\d+/gm) ?? [])
       .length;
-    const missingTestFiles = databaseTestFiles.filter(
-      (file) => !pgTapOutput.includes(file),
-    );
-
     if (
       failedAssertions > 0 ||
       skippedAssertions > 0 ||
-      passedAssertions === 0 ||
-      missingTestFiles.length > 0
+      passedAssertions === 0
     ) {
       throw new Error(
-        `pgTAP gate failed: ${passedAssertions} passed, ${failedAssertions} failed, ${skippedAssertions} skipped, ${missingTestFiles.length} test files missing from output.`,
+        `pgTAP gate failed: ${passedAssertions} passed, ${failedAssertions} failed, ${skippedAssertions} skipped.`,
       );
     }
 
