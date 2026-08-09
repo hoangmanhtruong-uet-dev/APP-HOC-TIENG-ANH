@@ -55,6 +55,13 @@ function run(command, args, { capture = false } = {}) {
   });
 }
 
+function escapeWorkflowCommand(value) {
+  return value
+    .replaceAll("%", "%25")
+    .replaceAll("\r", "%0D")
+    .replaceAll("\n", "%0A");
+}
+
 async function verifyDatabaseRelease() {
   if (databaseTestFiles.length === 0) {
     throw new Error("Database release gate requires at least one pgTAP file.");
@@ -160,5 +167,10 @@ try {
         ? error.message
         : String(error);
   console.error(`DATABASE_RELEASE_GATE=FAIL REASON=${message}`);
+  if (process.env.GITHUB_ACTIONS === "true") {
+    console.error(
+      `::error title=Database release gate::${escapeWorkflowCommand(message)}`,
+    );
+  }
   process.exitCode = 1;
 }
