@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { readdirSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 
 const supabaseCli = "node_modules/supabase/dist/supabase.js";
 const databaseTestFiles = readdirSync("supabase/tests/database", {
@@ -72,6 +72,16 @@ async function verifyDatabaseRelease() {
   if (new Set(timestamps).size !== timestamps.length) {
     throw new Error("Migration timestamps must be unique.");
   }
+  const forbiddenDirectiveFiles = databaseTestFiles.filter((file) =>
+    /#\s*(?:SKIP|TODO)\b|\b(?:skip|todo)\s*\(/i.test(
+      readFileSync(`supabase/tests/database/${file}`, "utf8"),
+    ),
+  );
+  if (forbiddenDirectiveFiles.length > 0) {
+    throw new Error(
+      `Database release gate forbids skipped or TODO pgTAP assertions: ${forbiddenDirectiveFiles.join(", ")}.`,
+    );
+  }
 
   await run("docker", ["info"]);
   let stackStartAttempted = false;
@@ -108,20 +118,26 @@ async function verifyDatabaseRelease() {
       "warning",
     ]);
 
+    const assertionSummaries = [
+      ...pgTapOutput.matchAll(/\bTests=(\d+)\b/g),
+    ].map((match) => Number.parseInt(match[1], 10));
     const skippedAssertions = (
       pgTapOutput.match(/^\s*ok\s+\d+.*#\s*SKIP\b/gim) ?? []
     ).length;
-    const passedAssertions =
-      (pgTapOutput.match(/^\s*ok\s+\d+/gm) ?? []).length - skippedAssertions;
     const failedAssertions = (pgTapOutput.match(/^\s*not ok\s+\d+/gm) ?? [])
       .length;
+    const passedAssertions = assertionSummaries.reduce(
+      (total, count) => total + count,
+      0,
+    );
     if (
       failedAssertions > 0 ||
       skippedAssertions > 0 ||
-      passedAssertions === 0
+      passedAssertions === 0 ||
+      assertionSummaries.length !== databaseTestFiles.length
     ) {
       throw new Error(
-        `pgTAP gate failed: ${passedAssertions} passed, ${failedAssertions} failed, ${skippedAssertions} skipped.`,
+        `pgTAP gate failed: ${passedAssertions} passed, ${failedAssertions} failed, ${skippedAssertions} skipped, ${assertionSummaries.length}/${databaseTestFiles.length} summaries parsed.`,
       );
     }
 
