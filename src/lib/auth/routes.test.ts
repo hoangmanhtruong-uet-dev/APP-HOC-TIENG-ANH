@@ -6,6 +6,7 @@ describe("auth route classification", () => {
   it("protects onboarding and every authenticated app surface", () => {
     for (const pathname of [
       "/onboarding",
+      "/placement-test",
       "/dashboard",
       "/learn/session",
       "/roadmap",

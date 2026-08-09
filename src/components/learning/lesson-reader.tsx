@@ -79,12 +79,12 @@ export function LessonReader({ data }: { data: LessonReaderData }) {
         </p>
       ) : null}
 
-      <div className="grid gap-8 lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start">
+      <div className="grid min-w-0 gap-8 lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start">
         <nav
           aria-label="Các phần trong bài học"
-          className="lg:sticky lg:top-24"
+          className="min-w-0 lg:sticky lg:top-24"
         >
-          <ol className="flex gap-2 overflow-x-auto pb-2 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
+          <ol className="flex max-w-full gap-2 overflow-x-auto pb-2 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
             {sections.map((section) => {
               const current = section.id === activeSection.id;
               return (

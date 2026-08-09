@@ -355,6 +355,148 @@ export async function getRecentWritingSubmissions(limit = 8) {
   });
 }
 
+type WritingFeedbackSnapshot = {
+  overallBandEstimate: number;
+  criteria: ReturnType<typeof writingCriterionRecordSchema.parse>;
+  strengths: string[];
+  priorityIssues: ReturnType<typeof writingPriorityIssuesSchema.parse>;
+  revisionPlan: string[];
+  correctedExamples: ReturnType<typeof writingCorrectedExamplesSchema.parse>;
+};
+
+function parseWritingFeedbackSnapshot(feedback: {
+  overall_band_estimate: number;
+  criteria: unknown;
+  strengths: unknown;
+  priority_issues: unknown;
+  revision_plan: unknown;
+  corrected_examples: unknown;
+}): WritingFeedbackSnapshot {
+  return {
+    overallBandEstimate: feedback.overall_band_estimate,
+    criteria: writingCriterionRecordSchema.parse(feedback.criteria),
+    strengths: writingStringListSchema.parse(feedback.strengths),
+    priorityIssues: writingPriorityIssuesSchema.parse(feedback.priority_issues),
+    revisionPlan: writingStringListSchema.parse(feedback.revision_plan),
+    correctedExamples: writingCorrectedExamplesSchema.parse(
+      feedback.corrected_examples,
+    ),
+  };
+}
+
+export async function getWritingHistoryDashboard(limit = 24) {
+  const submissions = await getRecentWritingSubmissions(limit);
+  if (submissions.length === 0) return [];
+
+  const supabase = await createSupabaseServerClient();
+  const { data: runs, error: runsError } = await supabase
+    .from("writing_feedback_runs")
+    .select("id, submission_id, requested_at")
+    .in(
+      "submission_id",
+      submissions.map((submission) => submission.id),
+    )
+    .eq("status", "ready")
+    .order("requested_at", { ascending: false });
+  if (runsError) throw new WritingReadError();
+
+  const latestRunBySubmission = new Map<string, (typeof runs)[number]>();
+  for (const run of runs) {
+    if (!latestRunBySubmission.has(run.submission_id)) {
+      latestRunBySubmission.set(run.submission_id, run);
+    }
+  }
+  const runIds = [...latestRunBySubmission.values()].map((run) => run.id);
+  const { data: feedbackRows, error: feedbackError } = runIds.length
+    ? await supabase
+        .from("writing_feedback")
+        .select(
+          "run_id, overall_band_estimate, criteria, strengths, priority_issues, revision_plan, corrected_examples",
+        )
+        .in("run_id", runIds)
+    : { data: [], error: null };
+  if (feedbackError) throw new WritingReadError();
+  const feedbackByRun = new Map(
+    feedbackRows.map((feedback) => [
+      feedback.run_id,
+      parseWritingFeedbackSnapshot(feedback),
+    ]),
+  );
+
+  return submissions.map((submission) => {
+    const run = latestRunBySubmission.get(submission.id);
+    return {
+      ...submission,
+      feedback: run ? (feedbackByRun.get(run.id) ?? null) : null,
+    };
+  });
+}
+
+export async function getWritingImprovementReview(
+  taskSlug: string,
+  submissionId: string,
+) {
+  const current = await getWritingSubmissionReview(taskSlug, submissionId);
+  if (!current) return null;
+
+  const supabase = await createSupabaseServerClient();
+  const { data: task, error: taskError } = await supabase
+    .from("writing_tasks")
+    .select("id")
+    .eq("slug", taskSlug)
+    .maybeSingle();
+  if (taskError) throw new WritingReadError();
+  if (!task) return null;
+
+  const { data: previousSubmission, error: submissionError } = await supabase
+    .from("writing_submissions")
+    .select("id, submitted_at")
+    .eq("writing_task_id", task.id)
+    .eq("status", "submitted")
+    .lt("submitted_at", current.submission.submittedAt)
+    .order("submitted_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (submissionError) throw new WritingReadError();
+  if (!previousSubmission) return { current, previous: null };
+
+  const { data: previousRun, error: runError } = await supabase
+    .from("writing_feedback_runs")
+    .select("id")
+    .eq("submission_id", previousSubmission.id)
+    .eq("status", "ready")
+    .order("requested_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (runError) throw new WritingReadError();
+  if (!previousRun) return { current, previous: null };
+
+  const { data: previousFeedback, error: feedbackError } = await supabase
+    .from("writing_feedback")
+    .select(
+      "overall_band_estimate, criteria, strengths, priority_issues, revision_plan, corrected_examples",
+    )
+    .eq("run_id", previousRun.id)
+    .maybeSingle();
+  if (feedbackError) throw new WritingReadError();
+
+  return {
+    current,
+    previous: previousFeedback
+      ? {
+          submittedAt: previousSubmission.submitted_at,
+          feedback: parseWritingFeedbackSnapshot(previousFeedback),
+        }
+      : null,
+  };
+}
+
 export type WritingSubmissionReviewData = NonNullable<
   Awaited<ReturnType<typeof getWritingSubmissionReview>>
+>;
+export type WritingHistoryDashboardData = Awaited<
+  ReturnType<typeof getWritingHistoryDashboard>
+>;
+export type WritingImprovementReviewData = NonNullable<
+  Awaited<ReturnType<typeof getWritingImprovementReview>>
 >;

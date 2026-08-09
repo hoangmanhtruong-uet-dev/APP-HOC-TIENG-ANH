@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { AlertTriangle, Check, Clock3, Headphones, Save } from "lucide-react";
+import Image from "next/image";
 
 import { LessonMarkdown } from "@/components/learning/lesson-markdown";
 import { ConfirmSubmitButton } from "@/components/shared/confirm-submit-button";
@@ -218,8 +219,8 @@ function ActiveListeningRunner({
   const isExpired = remainingSeconds === 0;
 
   return (
-    <div className="min-w-0 space-y-5">
-      <header className="flex min-w-0 flex-col gap-4 border-b border-[var(--border)] pb-5 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mx-auto min-h-[100dvh] max-w-3xl min-w-0 space-y-5 bg-[#fbf9ff] px-4 py-5 pb-24 sm:px-6 lg:min-h-0 lg:rounded-3xl lg:border lg:border-[#e4deef] lg:p-8">
+      <header className="flex min-w-0 items-start gap-4 border-b border-[#e7e1ef] pb-5">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-[var(--primary)]">
             Listening practice
@@ -228,11 +229,12 @@ function ActiveListeningRunner({
             {data.exercise.title}
           </h1>
         </div>
-        <div className="flex shrink-0 flex-wrap items-center gap-3 text-sm font-semibold">
+        <div className="ml-auto flex shrink-0 flex-col items-end gap-2 text-xs font-semibold">
           <span>
             {answeredCount}/{data.questions.length} đã trả lời
           </span>
           <span
+            data-testid="listening-timer"
             className={`inline-flex min-h-11 items-center gap-2 rounded-lg border px-3 tabular-nums ${isExpired ? "border-[var(--destructive)]" : "border-[var(--border-strong)]"}`}
             aria-label={`Thời gian còn lại ${formatListeningTime(remainingSeconds)}`}
           >
@@ -245,7 +247,7 @@ function ActiveListeningRunner({
       {isExpired ? (
         <p
           role="status"
-          className="flex items-start gap-2 rounded-lg bg-[var(--danger-subtle)] px-4 py-3 text-sm font-semibold"
+          className="flex items-start gap-2 rounded-lg bg-[var(--destructive-subtle)] px-4 py-3 text-sm font-semibold text-[var(--destructive)]"
         >
           <AlertTriangle
             aria-hidden="true"
@@ -259,7 +261,7 @@ function ActiveListeningRunner({
 
       <section
         aria-labelledby="listening-audio-title"
-        className="sticky top-3 z-10 rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] p-4 shadow-sm sm:p-5"
+        className="sticky top-3 z-10 rounded-2xl border border-[#e2dced] bg-white p-4 shadow-[0_8px_30px_rgba(62,38,162,.08)] sm:p-5"
       >
         <div className="flex items-center gap-2">
           <Headphones aria-hidden="true" size={19} />
@@ -267,9 +269,18 @@ function ActiveListeningRunner({
             Audio bài nghe
           </h2>
         </div>
+        <div className="relative mt-4 min-h-36 overflow-hidden rounded-xl">
+          <Image
+            src="/images/ielts-study-hero.png"
+            alt="Listening practice scene"
+            fill
+            sizes="(max-width: 768px) 100vw, 768px"
+            className="object-cover"
+          />
+        </div>
         <audio
           aria-label={`Audio bài Listening ${data.exercise.title}`}
-          className="mt-3 w-full"
+          className="mt-4 w-full accent-[#4d32d4]"
           controls
           preload="metadata"
           onError={() => setAudioError(true)}
@@ -342,7 +353,7 @@ function ActiveListeningRunner({
 
       <main
         aria-label="Câu hỏi Listening"
-        className="mx-auto max-w-4xl space-y-9"
+        className="mx-auto max-w-4xl space-y-7"
       >
         {data.parts.map((part) => {
           const questions = data.questions.filter(
@@ -427,7 +438,7 @@ function QuestionCard({
     <fieldset
       id={`listening-question-${question.id}`}
       onFocus={onFocus}
-      className="min-w-0 scroll-mt-56 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 focus-within:border-[var(--primary)] sm:p-6"
+      className="min-w-0 scroll-mt-56 rounded-2xl border border-[#e2dced] bg-white p-5 focus-within:border-[#6545df] sm:p-6"
     >
       <legend className="px-1 text-sm font-bold">
         Câu {question.position} · {formatListeningQuestionType(question.type)}
@@ -464,7 +475,7 @@ function QuestionCard({
             return (
               <label
                 key={option.id}
-                className="flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border border-[var(--border-strong)] px-4 py-3 focus-within:ring-2 focus-within:ring-[var(--ring)] hover:border-[var(--primary)]"
+                className={`flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 focus-within:ring-2 focus-within:ring-[#6545df] ${checked ? "border-[#6545df] bg-[#f0ebff]" : "border-[#ddd6e7] bg-white"}`}
               >
                 <input
                   type={multiple ? "checkbox" : "radio"}

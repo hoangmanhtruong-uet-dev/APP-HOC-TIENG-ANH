@@ -8,9 +8,11 @@ import { submitPracticeAction } from "@/features/practice/actions";
 export function SubmitAttemptForm({
   attemptId,
   exerciseSlug,
+  disabled = false,
 }: {
   attemptId: string;
   exerciseSlug: string;
+  disabled?: boolean;
 }) {
   return (
     <form
@@ -38,21 +40,21 @@ export function SubmitAttemptForm({
             Sau khi nộp, attempt và câu trả lời không thể chỉnh sửa.
           </p>
         </div>
-        <SubmitButton />
+        <SubmitButton disabled={disabled} />
       </div>
     </form>
   );
 }
 
-function SubmitButton() {
+function SubmitButton({ disabled }: { disabled: boolean }) {
   const { pending } = useFormStatus();
   return (
     <Button
       type="submit"
-      disabled={pending}
+      disabled={pending || disabled}
       aria-describedby="submit-practice-note"
     >
-      {pending ? "Đang chấm…" : "Nộp bài"}
+      {pending ? "Đang chấm…" : disabled ? "Lưu câu hiện tại trước" : "Nộp bài"}
     </Button>
   );
 }

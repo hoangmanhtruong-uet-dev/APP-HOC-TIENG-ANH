@@ -4,6 +4,8 @@
 
 Production requires canonical HTTPS `NEXT_PUBLIC_SITE_URL`, a real `NEXT_PUBLIC_SUPPORT_EMAIL`, and server-only cleanup credentials. `SUPABASE_SERVICE_ROLE_KEY` is confined to the `server-only` retention worker and must never be exposed to browser code. See `docs/PRODUCTION_READINESS_CHECKLIST.md` and `docs/DEPLOYMENT_CHECKLIST.md` before go-live.
 
+Private production targets Vercel with a separate Supabase production project. Optional AI remains disabled for the first release; partial AI configuration is reported as degraded and provider actions remain fail-closed. Operational procedures are in `docs/PRIVATE_PRODUCTION_RELEASE_RUNBOOK.md`, `docs/DSR_RUNBOOK.md`, `docs/ROLLBACK_RUNBOOK.md`, `docs/AUTHENTICATED_E2E_RUNBOOK.md` and `docs/OBSERVABILITY_INCIDENT_RUNBOOK.md`.
+
 Ứng dụng tự học IELTS bằng Next.js 16 và Supabase. Phase 1–10C đã COMPLETE. `/learn`, `/practice`, dashboard và `/progress` đọc dữ liệu PostgreSQL thật; không có analytics hoặc band trend giả.
 
 ## Stack
@@ -14,15 +16,15 @@ Production requires canonical HTTPS `NEXT_PUBLIC_SITE_URL`, a real `NEXT_PUBLIC_
 - Zod, React Markdown 10.1.0, official OpenAI SDK, Vitest, Testing Library, Playwright và axe-core
 - ESLint, Prettier, npm lockfile
 
-## Thiết lập local
+## Chạy local không cần Docker
 
 ```powershell
 npm ci
 Copy-Item .env.example .env.local
-npm.cmd run dev
+npm.cmd run dev:remote
 ```
 
-Điền hai public project values vào `.env.local`:
+Điền hai public values của Supabase hosted project vào `.env.local`:
 
 ```text
 NEXT_PUBLIC_SUPABASE_URL=
@@ -33,7 +35,7 @@ Không cần và không được thêm service-role/secret key cho luồng auth 
 
 Optional Writing AI feedback fail-closed nếu chưa cấu hình. Khi bật, đặt `OPENAI_API_KEY`, `OPENAI_WRITING_MODEL` và `WRITING_FEEDBACK_SIGNING_SECRET` chỉ ở server; signing secret phải khớp secret Supabase Vault tên `writing_feedback_signing_secret`. Không biến nào được có prefix `NEXT_PUBLIC_`, và application không cần service-role key.
 
-## Supabase migration
+## Supabase migration (tùy chọn, cần Docker)
 
 Docker Desktop phải chạy trước khi dùng local stack:
 
@@ -147,7 +149,7 @@ Manual end-to-end verification ngày 2026-07-16 đã pass với Gmail SMTP và t
 - Unit/component/E2E, 284 database assertions local, 64 Phase 5 pgTAP assertions và authenticated two-user Playwright local
 - Health endpoints `/api/health/live` và `/api/health/ready`
 
-Chưa triển khai: analytics nâng cao, Writing Task 1, placement test, study roadmap/plan generator, daily tasks, SRS phức tạp, error notebook `/progress/mistakes`, content admin/CMS, roles nâng cao, forgot/reset password và avatar. Phase 10C hardening đã hoàn tất; production vận hành theo `docs/PRODUCTION_READINESS_CHECKLIST.md`.
+Chưa triển khai: analytics nâng cao, Writing Task 1, placement test, study roadmap/plan generator, daily tasks, SRS phức tạp, error notebook `/progress/mistakes`, content admin/CMS, roles nâng cao và avatar. Forgot/reset password đã có ở mức repository nhưng production delivery vẫn invite-only cho tới khi SMTP/domain/redirect có evidence thật. Phase 10C hardening đã hoàn tất; production vận hành theo `docs/PRODUCTION_READINESS_CHECKLIST.md`.
 
 ## Cấu trúc chính
 

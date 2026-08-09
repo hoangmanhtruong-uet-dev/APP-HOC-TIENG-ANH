@@ -73,7 +73,7 @@ export async function saveWritingDraftAction(
     p_draft_text: parsed.data.draftText,
     p_expected_revision: parsed.data.expectedRevision,
   });
-  if (error?.code === "40001") {
+  if (error?.code === "PT409" || error?.code === "40001") {
     const { data: serverDraft } = await supabase
       .from("writing_submissions")
       .select("server_revision")
@@ -115,7 +115,7 @@ export async function submitWritingAction(input: SubmitWritingInput) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.rpc("submit_writing_submission", {
     p_submission_id: parsed.data.submissionId,
-    p_idempotency_key: randomUUID(),
+    p_idempotency_key: parsed.data.idempotencyKey,
   });
   if (error || !data) {
     return {

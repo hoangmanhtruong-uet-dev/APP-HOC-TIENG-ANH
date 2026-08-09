@@ -20,15 +20,22 @@ export type SpeakingAiConfiguration = {
 export function getSpeakingAiConfiguration(): SpeakingAiConfiguration | null {
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   const signingSecret = process.env.SPEAKING_PIPELINE_SIGNING_SECRET?.trim();
-  if (!apiKey || !signingSecret || signingSecret.length < 32) return null;
+  const transcriptionModel =
+    process.env.OPENAI_SPEAKING_TRANSCRIPTION_MODEL?.trim();
+  const feedbackModel = process.env.OPENAI_SPEAKING_FEEDBACK_MODEL?.trim();
+  if (
+    !apiKey ||
+    !transcriptionModel ||
+    !feedbackModel ||
+    !signingSecret ||
+    signingSecret.length < 32
+  )
+    return null;
   return {
     apiKey,
     signingSecret,
-    transcriptionModel:
-      process.env.OPENAI_SPEAKING_TRANSCRIPTION_MODEL?.trim() ||
-      "gpt-4o-mini-transcribe",
-    feedbackModel:
-      process.env.OPENAI_SPEAKING_FEEDBACK_MODEL?.trim() || "gpt-5-mini",
+    transcriptionModel,
+    feedbackModel,
   };
 }
 

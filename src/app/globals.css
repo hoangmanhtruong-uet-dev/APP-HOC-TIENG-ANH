@@ -1,31 +1,39 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f6f8fc;
+  /* Indigo Scholar / Google Stitch design tokens */
+  --background: #faf9ff;
   --surface: #ffffff;
-  --surface-translucent: rgba(255, 255, 255, 0.9);
-  --foreground: #15213b;
-  --muted: #eef2f8;
-  --muted-foreground: #5e6b84;
-  --primary: #1f4ed8;
-  --primary-hover: #183eae;
-  --primary-subtle: #eaf0ff;
-  --primary-soft: #c8d6ff;
-  --secondary: #e9edf5;
-  --border: #dfe5ef;
-  --border-strong: #c8d1e1;
-  --ring: #1f4ed8;
-  --success: #166b4a;
-  --success-subtle: #e9f7f1;
-  --success-soft: #b8e5d1;
-  --warning: #8a5a10;
-  --warning-subtle: #fff7e5;
-  --warning-soft: #f2d79d;
-  --destructive: #b42336;
-  --destructive-hover: #921b2b;
-  --destructive-subtle: #fff0f2;
-  --destructive-soft: #f5c4cc;
-  --radius: 0.75rem;
+  --surface-raised: #ffffff;
+  --surface-translucent: rgba(255, 255, 255, 0.96);
+  --foreground: #17152b;
+  --muted: #f3f0ff;
+  --muted-foreground: #69657c;
+  --primary: #4638d2;
+  --primary-hover: #382bb7;
+  --primary-pressed: #2d208e;
+  --primary-foreground: #ffffff;
+  --primary-subtle: #efedff;
+  --primary-soft: #d8d2ff;
+  --accent: #8067f1;
+  --accent-subtle: #f3f0ff;
+  --coral: #ed837e;
+  --secondary: #f3f0ff;
+  --border: #e7e3f0;
+  --border-strong: #d5ceea;
+  --ring: #4638d2;
+  --success: #008c61;
+  --success-subtle: #e6fbf2;
+  --success-soft: #b9efd9;
+  --warning: #a86200;
+  --warning-subtle: #fff6d8;
+  --warning-soft: #f3dc9c;
+  --destructive: #c82231;
+  --destructive-hover: #a51a27;
+  --destructive-subtle: #fff0f1;
+  --destructive-soft: #f5c5ca;
+  --shadow-color: 49 39 104;
+  --radius: 0.875rem;
 }
 
 * {
@@ -42,25 +50,77 @@ html {
 body {
   margin: 0;
   min-width: 320px;
-  overflow-x: hidden;
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-geist-sans), ui-rounded, system-ui, sans-serif;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  -webkit-tap-highlight-color: rgba(31, 78, 216, 0.14);
+  -webkit-tap-highlight-color: rgba(53, 104, 212, 0.16);
 }
 
 ::selection {
-  background: #c8d6ff;
-  color: #102658;
+  background: var(--primary-soft);
+  color: var(--foreground);
 }
 
 a,
 button,
 input,
-textarea {
+textarea,
+select,
+summary {
   touch-action: manipulation;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+[id] {
+  scroll-margin-top: 6rem;
+}
+
+.surface-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  box-shadow: 0 12px 28px rgb(var(--shadow-color) / 0.07);
+}
+
+.app-panel {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  box-shadow: 0 8px 22px rgb(var(--shadow-color) / 0.055);
+}
+
+.app-section-title {
+  color: var(--foreground);
+  font-size: 1.375rem;
+  font-weight: 750;
+  letter-spacing: -0.035em;
+}
+
+/* Stitch uses compact 12–16px surfaces. Normalize legacy utility radii so
+   every existing route adopts the same app-like visual language. */
+.rounded-2xl {
+  border-radius: var(--radius);
+}
+
+.rounded-3xl {
+  border-radius: 1rem;
+}
+
+@media (max-width: 1023px) {
+  body {
+    padding-bottom: 5.5rem;
+  }
 }
 
 .skip-link {
@@ -69,7 +129,7 @@ textarea {
   left: 0.75rem;
   z-index: 100;
   transform: translateY(-160%);
-  border-radius: 0.5rem;
+  border-radius: 0.875rem;
   background: var(--foreground);
   padding: 0.65rem 0.9rem;
   color: white;
@@ -80,6 +140,43 @@ textarea {
 
 .skip-link:focus-visible {
   transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-copy {
+    animation: hero-enter 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .hero-visual {
+    animation: hero-enter 720ms 80ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .float-slow {
+    animation: float-soft 5s ease-in-out infinite;
+  }
+}
+
+@keyframes hero-enter {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+
+  50% {
+    transform: translateY(-0.5rem) rotate(2deg);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -97,7 +97,7 @@ do $$ begin
   );
 end $$;
 select case when (select server_revision = 1 and word_count > 250 and minimum_words_met from public.writing_submissions limit 1) then 'ok 17 - autosave persists server state' else 'not ok 17 - autosave state mismatch' end;
-select case when pg_temp.throws_state(format('select public.save_writing_draft(%L::uuid, %L, 0)', (select id from public.writing_submissions limit 1), 'stale conflict'), '40001') then 'ok 18 - stale autosave rejected' else 'not ok 18 - stale autosave accepted' end;
+select case when pg_temp.throws_state(format('select public.save_writing_draft(%L::uuid, %L, 0)', (select id from public.writing_submissions limit 1), 'stale conflict'), 'PT409') then 'ok 18 - stale autosave rejected' else 'not ok 18 - stale autosave accepted' end;
 
 do $$ begin perform public.submit_writing_submission((select id from public.writing_submissions limit 1), 'phase8-remote-submit-1'); end $$;
 select case when (select status = 'submitted' and submitted_text = draft_text and submitted_at is not null from public.writing_submissions limit 1) then 'ok 19 - submit snapshots essay atomically' else 'not ok 19 - submit state mismatch' end;

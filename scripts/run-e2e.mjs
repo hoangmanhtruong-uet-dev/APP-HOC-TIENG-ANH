@@ -7,15 +7,48 @@ const baseUrl = process.env.E2E_BASE_URL ?? `http://localhost:${port}`;
 const serverReadyTimeoutMs = 120_000;
 const nextCli = "node_modules/next/dist/bin/next";
 const playwrightCli = "node_modules/@playwright/test/cli.js";
+const requireAuthenticated = process.argv.includes("--require-authenticated");
+const playwrightArgs = process.argv
+  .slice(2)
+  .filter((argument) => argument !== "--require-authenticated");
+const authenticatedEnvironmentNames = [
+  "E2E_USER_A_EMAIL",
+  "E2E_USER_A_PASSWORD",
+  "E2E_USER_B_EMAIL",
+  "E2E_USER_B_PASSWORD",
+  "E2E_ONBOARDING_EMAIL",
+  "E2E_ONBOARDING_PASSWORD",
+  "E2E_EXPECTED_SUPABASE_PROJECT_REF",
+];
 
-function readLocalPublicSupabaseUrl() {
-  if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
-    return process.env.NEXT_PUBLIC_SUPABASE_URL;
-  }
+const sharedAliases = {
+  E2E_AUTH_EMAIL: "E2E_USER_A_EMAIL",
+  E2E_AUTH_PASSWORD: "E2E_USER_A_PASSWORD",
+  E2E_LEARNING_EMAIL: "E2E_USER_A_EMAIL",
+  E2E_LEARNING_PASSWORD: "E2E_USER_A_PASSWORD",
+  E2E_PLACEMENT_USER_A_EMAIL: "E2E_USER_A_EMAIL",
+  E2E_PLACEMENT_USER_A_PASSWORD: "E2E_USER_A_PASSWORD",
+  E2E_PLACEMENT_USER_B_EMAIL: "E2E_USER_B_EMAIL",
+  E2E_PLACEMENT_USER_B_PASSWORD: "E2E_USER_B_PASSWORD",
+  E2E_PRACTICE_USER_A_EMAIL: "E2E_USER_A_EMAIL",
+  E2E_PRACTICE_USER_A_PASSWORD: "E2E_USER_A_PASSWORD",
+  E2E_PRACTICE_USER_B_EMAIL: "E2E_USER_B_EMAIL",
+  E2E_PRACTICE_USER_B_PASSWORD: "E2E_USER_B_PASSWORD",
+  E2E_MOCK_USER_A_EMAIL: "E2E_USER_A_EMAIL",
+  E2E_MOCK_USER_A_PASSWORD: "E2E_USER_A_PASSWORD",
+  E2E_MOCK_USER_B_EMAIL: "E2E_USER_B_EMAIL",
+  E2E_MOCK_USER_B_PASSWORD: "E2E_USER_B_PASSWORD",
+};
 
+for (const [alias, sharedName] of Object.entries(sharedAliases)) {
+  process.env[alias] ??= process.env[sharedName];
+}
+
+function readLocalEnvironmentValue(name) {
   try {
     const envFile = readFileSync(".env.local", "utf8");
-    const match = envFile.match(/^NEXT_PUBLIC_SUPABASE_URL=(.+)$/m);
+    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const match = envFile.match(new RegExp(`^${escapedName}=(.+)$`, "m"));
     return match?.[1]?.trim().replace(/^['"]|['"]$/g, "");
   } catch {
     return undefined;
@@ -36,11 +69,41 @@ function getProjectRef(rawUrl) {
   }
 }
 
-const activeProjectRef = getProjectRef(readLocalPublicSupabaseUrl());
+for (const publicName of [
+  "NEXT_PUBLIC_SUPABASE_URL",
+  "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+]) {
+  process.env[publicName] ??= readLocalEnvironmentValue(publicName);
+}
+
+const activeProjectRef = getProjectRef(process.env.NEXT_PUBLIC_SUPABASE_URL);
 if (activeProjectRef) {
   process.env.E2E_ACTIVE_SUPABASE_PROJECT_REF = activeProjectRef;
 }
 process.env.E2E_BASE_URL = baseUrl;
+process.env.E2E_AUTHENTICATED_REQUIRED = requireAuthenticated
+  ? "true"
+  : "false";
+
+const missingAuthenticatedEnvironment = authenticatedEnvironmentNames.filter(
+  (name) => !process.env[name]?.trim(),
+);
+if (missingAuthenticatedEnvironment.length > 0) {
+  const message = `Authenticated E2E configuration missing: ${missingAuthenticatedEnvironment.join(", ")}`;
+  if (requireAuthenticated) throw new Error(message);
+  console.warn(message);
+  console.warn(
+    "Authenticated cases may skip. Use npm run test:e2e:authenticated to require this configuration.",
+  );
+}
+if (
+  requireAuthenticated &&
+  process.env.E2E_EXPECTED_SUPABASE_PROJECT_REF !== activeProjectRef
+) {
+  throw new Error(
+    "E2E_EXPECTED_SUPABASE_PROJECT_REF does not match the active Supabase project ref.",
+  );
+}
 
 async function isReady() {
   try {
@@ -119,7 +182,7 @@ try {
   const result = await run(process.execPath, [
     playwrightCli,
     "test",
-    ...process.argv.slice(2),
+    ...playwrightArgs,
   ]);
   process.exitCode = result.code;
 } catch (error) {

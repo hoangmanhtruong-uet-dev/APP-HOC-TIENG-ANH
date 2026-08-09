@@ -13,15 +13,15 @@ const activeProjectRef = process.env.E2E_ACTIVE_SUPABASE_PROJECT_REF;
 function requirePracticeEnvironment(testInfo: TestInfo) {
   test.skip(
     testInfo.project.name !== "chromium-desktop",
-    "Persisted mutation runs once on desktop.",
+    "INTENTIONAL: persisted mutation runs once on desktop.",
   );
   test.skip(
     !userAEmail || !userAPassword || !userBEmail || !userBPassword,
-    "Two dedicated completed-onboarding Phase 5 accounts were not provided.",
+    "AUTH_ENV: two dedicated completed-onboarding Phase 5 accounts were not provided.",
   );
   test.skip(
     !expectedProjectRef || expectedProjectRef !== activeProjectRef,
-    "Expected Supabase project ref must match the active environment.",
+    "AUTH_ENV: expected Supabase project ref must match the active environment.",
   );
 }
 
@@ -33,7 +33,7 @@ async function login(page: Page, email: string, password: string) {
   await expect(page).toHaveURL(/\/(dashboard|onboarding)$/);
   test.skip(
     new URL(page.url()).pathname === "/onboarding",
-    "Dedicated account has not completed onboarding.",
+    "AUTH_ENV: dedicated account has not completed onboarding.",
   );
 }
 
@@ -48,7 +48,7 @@ test("published content, resume, deterministic submit and owner isolation", asyn
 
   await pageA.goto("/learn/vocabulary");
   await expect(
-    pageA.getByRole("heading", { name: "Vocabulary nền tảng" }),
+    pageA.getByRole("heading", { name: "Vocabulary", exact: true }),
   ).toBeVisible();
   await expect(
     pageA.getByText("mitigate", { exact: true }).first(),
@@ -86,12 +86,12 @@ test("published content, resume, deterministic submit and owner isolation", asyn
 
   await expect(pageA.getByText("5/5")).toBeVisible();
   await expect(
-    pageA.getByRole("heading", { name: "Review từng câu" }),
+    pageA.getByRole("heading", { name: "What You Learned" }),
   ).toBeVisible();
   const resultPath = new URL(pageA.url()).pathname;
   await pageA.goto("/progress");
   await expect(
-    pageA.getByRole("heading", { name: "Hoạt động gần đây" }),
+    pageA.getByRole("heading", { name: "Recent Activity" }),
   ).toBeVisible();
   await expect(
     pageA
@@ -137,11 +137,13 @@ test("Phase 5 routes remain responsive and keyboard reachable", async ({
   }
 
   await page.goto("/learn/vocabulary");
-  const vocabularyLink = page.getByRole("link", { name: "Học từ này" }).first();
+  const vocabularyLink = page
+    .getByRole("link", { name: /Continue Vocabulary/ })
+    .first();
   await vocabularyLink.focus();
   await expect(vocabularyLink).toBeFocused();
   await expect(
-    page.getByRole("heading", { name: "Vocabulary nền tảng" }),
+    page.getByRole("heading", { name: "Vocabulary", exact: true }),
   ).toBeVisible();
   await page.goto("/practice/academic-vocabulary-foundations");
   await expect(
@@ -160,10 +162,12 @@ test("Reading autosave, resume, submit, review and owner isolation", async ({
 
   await pageA.goto("/practice/reading");
   await expect(
-    pageA.getByRole("heading", { name: "Reading practice" }),
+    pageA.getByRole("heading", {
+      name: "Understand English one text at a time.",
+    }),
   ).toBeVisible();
   await expect(
-    pageA.getByRole("heading", { name: "Cool roofs neighbourhood pilot" }),
+    pageA.getByText("Cool roofs neighbourhood pilot", { exact: true }),
   ).toBeVisible();
   await pageA.goto(
     "/practice/reading/draft-academic-reading-river-restoration",
@@ -172,7 +176,7 @@ test("Reading autosave, resume, submit, review and owner isolation", async ({
   await expect(pageA.getByText("Draft river restoration notes")).toHaveCount(0);
 
   await pageA.goto("/practice/reading/academic-reading-cool-roofs");
-  const start = pageA.getByRole("button", { name: "Bắt đầu làm bài" });
+  const start = pageA.getByRole("button", { name: /Start Reading/ });
   const firstQuestion = pageA.locator("fieldset").filter({
     hasText: "What is the main purpose of paragraph B?",
   });
@@ -278,17 +282,17 @@ test("Listening audio, autosave, submit, transcript and owner isolation", async 
 
   await pageA.goto("/practice/listening");
   await expect(
-    pageA.getByRole("heading", { name: "Listening practice" }),
+    pageA.getByRole("heading", { name: "Listening", exact: true }),
   ).toBeVisible();
   await expect(
-    pageA.getByRole("heading", { name: "Community library visit" }),
+    pageA.getByText("Community library visit", { exact: true }).first(),
   ).toBeVisible();
   await pageA.goto("/practice/listening/draft-academic-listening-campus-tour");
   await expect(pageA.getByRole("region")).toBeVisible();
   await expect(pageA.getByText("Draft campus tour fixture")).toHaveCount(0);
 
   await pageA.goto("/practice/listening/academic-listening-community-library");
-  const start = pageA.getByRole("button", { name: "Bắt đầu làm bài" });
+  const start = pageA.getByRole("button", { name: /Start Lesson/ });
   const firstQuestion = pageA
     .locator("fieldset")
     .filter({ hasText: "What time does the library open" });
@@ -392,11 +396,9 @@ test("Writing autosave, immutable submit, review and owner isolation", async ({
   await login(pageA, userAEmail!, userAPassword!);
 
   await pageA.goto("/practice/writing");
+  await expect(pageA.getByRole("heading", { name: "Writing" })).toBeVisible();
   await expect(
-    pageA.getByRole("heading", { name: "Writing practice" }),
-  ).toBeVisible();
-  await expect(
-    pageA.getByRole("heading", { name: "Community green spaces" }),
+    pageA.getByRole("heading", { name: "Community green spaces" }).first(),
   ).toBeVisible();
   await pageA.goto("/practice/writing/flexible-library-hours");
   await expect(
@@ -404,22 +406,48 @@ test("Writing autosave, immutable submit, review and owner isolation", async ({
   ).toBeVisible();
 
   await pageA.goto("/practice/writing/community-green-spaces");
-  const start = pageA.getByRole("button", { name: "Bắt đầu viết" });
-  const editor = pageA.getByLabel("Bài viết của bạn");
+  const start = pageA.getByRole("button", { name: "Start Writing" });
+  const editor = pageA.getByLabel("Your writing");
   await expect(start.or(editor)).toBeVisible();
   if (await start.isVisible()) await start.click();
 
   const essay =
     "Urban green spaces can improve daily life when towns plan them carefully. This practice essay explains a clear position and provides a local example. Housing remains important, but shared parks can support health, shade, and community contact. Public consultation can help a town balance these needs before it chooses how to use unused land.";
   await editor.fill(essay);
-  await expect(pageA.getByRole("status")).toContainText(
-    "Đã lưu vào PostgreSQL",
-  );
+  await expect(pageA.getByRole("status")).toContainText("Saved to PostgreSQL.");
   await pageA.reload();
   await expect(editor).toHaveValue(essay);
-  await expect(pageA.getByLabel(/giây còn lại theo máy chủ/)).toBeVisible();
+  await expect(
+    pageA.getByLabel(/seconds remaining according to the server/),
+  ).toBeVisible();
 
-  await pageA.getByRole("button", { name: "Nộp bài và khóa nội dung" }).click();
+  const contextA2 = await browser.newContext();
+  const pageA2 = await contextA2.newPage();
+  await login(pageA2, userAEmail!, userAPassword!);
+  await pageA2.goto("/practice/writing/community-green-spaces");
+  await expect(pageA2.getByLabel("Your writing")).toHaveValue(essay);
+  await contextA2.close();
+
+  const recoveredEssay = `${essay} The final sentence was typed while the connection was unavailable.`;
+  await pageA.evaluate(() => {
+    window.dispatchEvent(new Event("offline"));
+  });
+  await editor.fill(recoveredEssay);
+  await expect(pageA.locator("#writing-save-status")).toContainText("Offline.");
+  await expect(pageA.locator("#writing-save-status")).not.toContainText(
+    "Saved to PostgreSQL.",
+  );
+  await pageA.evaluate(() => {
+    window.dispatchEvent(new Event("online"));
+  });
+  await expect(pageA.getByRole("status")).toContainText(
+    "Saved to PostgreSQL.",
+    { timeout: 15_000 },
+  );
+  await pageA.reload();
+  await expect(editor).toHaveValue(recoveredEssay);
+
+  await pageA.getByRole("button", { name: "Submit for Feedback" }).click();
   await pageA
     .getByRole("button", { name: "Xác nhận nộp bài", exact: true })
     .click();
@@ -427,17 +455,16 @@ test("Writing autosave, immutable submit, review and owner isolation", async ({
     /\/practice\/writing\/community-green-spaces\/submission\//,
   );
   await expect(
-    pageA.getByRole("heading", { name: "Bài đã nộp" }),
+    pageA.getByText("Submitted writing", { exact: true }),
   ).toBeVisible();
-  await expect(pageA.getByText(essay)).toBeVisible();
-  await expect(
-    pageA.getByText(/không phải điểm IELTS chính thức/i),
-  ).toBeVisible();
+  await pageA.getByText("View submitted writing").click();
+  await expect(pageA.getByText(recoveredEssay)).toBeVisible();
+  await expect(pageA.getByText(/for practice only/i)).toBeVisible();
   const reviewPath = new URL(pageA.url()).pathname;
 
   await pageA.goto("/progress");
   await expect(
-    pageA.getByRole("heading", { name: "Hoạt động gần đây" }),
+    pageA.getByRole("heading", { name: "Recent Activity" }),
   ).toBeVisible();
   await expect(
     pageA.getByRole("link", { name: "Community green spaces" }).first(),
@@ -450,7 +477,7 @@ test("Writing autosave, immutable submit, review and owner isolation", async ({
   await expect(
     pageB.getByRole("heading", { name: "Không tìm thấy trang" }),
   ).toBeVisible();
-  await expect(pageB.getByText(essay)).toHaveCount(0);
+  await expect(pageB.getByText(recoveredEssay)).toHaveCount(0);
   await contextB.close();
   await contextA.close();
 });
@@ -462,8 +489,8 @@ test("Writing routes are responsive and keyboard reachable", async ({
   requirePracticeEnvironment(testInfo);
   await login(page, userAEmail!, userAPassword!);
   await page.goto("/practice/writing/community-green-spaces");
-  const start = page.getByRole("button", { name: "Bắt đầu viết" });
-  const editor = page.getByLabel("Bài viết của bạn");
+  const start = page.getByRole("button", { name: "Start Writing" });
+  const editor = page.getByLabel("Your writing");
   await expect(start.or(editor)).toBeVisible();
   if (await start.isVisible()) await start.click();
 

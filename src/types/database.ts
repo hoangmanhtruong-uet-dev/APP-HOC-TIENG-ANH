@@ -787,6 +787,152 @@ export type Database = {
           },
         ];
       };
+      placement_attempts: {
+        Row: {
+          answers: Json;
+          created_at: string;
+          current_position: number;
+          id: string;
+          max_score: number | null;
+          placement_test_id: string;
+          recommended_level: string | null;
+          revision: number;
+          score: number | null;
+          start_idempotency_key: string;
+          started_at: string;
+          status: string;
+          submit_idempotency_key: string | null;
+          submitted_at: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          answers?: Json;
+          created_at?: string;
+          current_position?: number;
+          id?: string;
+          max_score?: number | null;
+          placement_test_id: string;
+          recommended_level?: string | null;
+          revision?: number;
+          score?: number | null;
+          start_idempotency_key: string;
+          started_at?: string;
+          status?: string;
+          submit_idempotency_key?: string | null;
+          submitted_at?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          answers?: Json;
+          created_at?: string;
+          current_position?: number;
+          id?: string;
+          max_score?: number | null;
+          placement_test_id?: string;
+          recommended_level?: string | null;
+          revision?: number;
+          score?: number | null;
+          start_idempotency_key?: string;
+          started_at?: string;
+          status?: string;
+          submit_idempotency_key?: string | null;
+          submitted_at?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "placement_attempts_placement_test_id_fkey";
+            columns: ["placement_test_id"];
+            isOneToOne: false;
+            referencedRelation: "placement_tests";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "placement_attempts_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      placement_questions: {
+        Row: {
+          correct_option_id: string;
+          created_at: string;
+          id: string;
+          options: Json;
+          placement_test_id: string;
+          position: number;
+          prompt: string;
+          skill: string;
+        };
+        Insert: {
+          correct_option_id: string;
+          created_at?: string;
+          id?: string;
+          options: Json;
+          placement_test_id: string;
+          position: number;
+          prompt: string;
+          skill: string;
+        };
+        Update: {
+          correct_option_id?: string;
+          created_at?: string;
+          id?: string;
+          options?: Json;
+          placement_test_id?: string;
+          position?: number;
+          prompt?: string;
+          skill?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "placement_questions_placement_test_id_fkey";
+            columns: ["placement_test_id"];
+            isOneToOne: false;
+            referencedRelation: "placement_tests";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      placement_tests: {
+        Row: {
+          created_at: string;
+          id: string;
+          published_at: string | null;
+          slug: string;
+          status: string;
+          title: string;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          published_at?: string | null;
+          slug: string;
+          status?: string;
+          title: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          published_at?: string | null;
+          slug?: string;
+          status?: string;
+          title?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [];
+      };
       learner_profiles: {
         Row: {
           created_at: string;
@@ -2979,6 +3125,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      check_exercise_answer: {
+        Args: { p_attempt_id: string; p_question_id: string };
+        Returns: Json;
+      };
       claim_speaking_audio_cleanup: {
         Args: { p_batch_size?: number };
         Returns: {
@@ -3006,6 +3156,92 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "learner_profiles";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      get_active_placement_test: {
+        Args: { p_slug?: string };
+        Returns: Json;
+      };
+      start_placement_attempt: {
+        Args: { p_idempotency_key: string; p_slug: string };
+        Returns: {
+          answers: Json;
+          created_at: string;
+          current_position: number;
+          id: string;
+          max_score: number | null;
+          placement_test_id: string;
+          recommended_level: string | null;
+          revision: number;
+          score: number | null;
+          start_idempotency_key: string;
+          started_at: string;
+          status: string;
+          submit_idempotency_key: string | null;
+          submitted_at: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "placement_attempts";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      save_placement_answer: {
+        Args: {
+          p_attempt_id: string;
+          p_current_position: number;
+          p_expected_revision: number;
+          p_option_id: string;
+          p_question_id: string;
+        };
+        Returns: Database["public"]["Tables"]["placement_attempts"]["Row"];
+        SetofOptions: {
+          from: "*";
+          to: "placement_attempts";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      update_placement_position: {
+        Args: {
+          p_attempt_id: string;
+          p_current_position: number;
+          p_expected_revision: number;
+        };
+        Returns: Database["public"]["Tables"]["placement_attempts"]["Row"];
+      };
+      submit_placement_attempt: {
+        Args: {
+          p_answers: Json;
+          p_attempt_id: string;
+          p_idempotency_key: string;
+        };
+        Returns: {
+          answers: Json;
+          created_at: string;
+          current_position: number;
+          id: string;
+          max_score: number | null;
+          placement_test_id: string;
+          recommended_level: string | null;
+          revision: number;
+          score: number | null;
+          start_idempotency_key: string;
+          started_at: string;
+          status: string;
+          submit_idempotency_key: string | null;
+          submitted_at: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "placement_attempts";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -3256,6 +3492,14 @@ export type Database = {
           total_score: number;
         }[];
       };
+      get_vocabulary_progress_summary: {
+        Args: never;
+        Returns: {
+          mastered: number;
+          reviewed_today: number;
+          reviewing: number;
+        }[];
+      };
       get_listening_attempt_clock: {
         Args: { p_attempt_id: string };
         Returns: {
@@ -3449,6 +3693,10 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      record_vocabulary_review: {
+        Args: { p_familiarity: string; p_vocabulary_entry_id: string };
+        Returns: undefined;
       };
       start_mock_test: {
         Args: { p_idempotency_key: string; p_mock_test_slug: string };

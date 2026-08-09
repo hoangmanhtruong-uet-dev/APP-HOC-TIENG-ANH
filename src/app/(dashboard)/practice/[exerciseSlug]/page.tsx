@@ -11,11 +11,20 @@ export default async function PracticePage({
   searchParams,
 }: {
   params: Promise<{ exerciseSlug: string }>;
-  searchParams: Promise<{ question?: string; saved?: string; error?: string }>;
+  searchParams: Promise<{
+    question?: string;
+    saved?: string;
+    error?: string;
+    checked?: string;
+  }>;
 }) {
   const [{ exerciseSlug }, query] = await Promise.all([params, searchParams]);
   const requestedPosition = query.question ? Number(query.question) : undefined;
-  const data = await getPracticePage(exerciseSlug, requestedPosition);
+  const data = await getPracticePage(
+    exerciseSlug,
+    requestedPosition,
+    query.checked === "1",
+  );
   if (!data) notFound();
   return (
     <PracticeRunner

@@ -434,9 +434,151 @@ export async function getRecentSpeakingAttempts(limit = 8) {
   });
 }
 
+type SpeakingFeedbackSnapshot = {
+  estimatedOverallBand: number | null;
+  estimatedFluencyBand: number | null;
+  estimatedLexicalBand: number | null;
+  estimatedGrammarBand: number | null;
+  estimatedPronunciationBand: number | null;
+  strengths: string[];
+  suggestions: string[];
+};
+
+function parseSpeakingFeedbackSnapshot(feedback: {
+  estimated_overall_band: number | null;
+  estimated_fluency_band: number | null;
+  estimated_lexical_band: number | null;
+  estimated_grammar_band: number | null;
+  estimated_pronunciation_band: number | null;
+  strengths: unknown;
+  suggestions: unknown;
+}): SpeakingFeedbackSnapshot {
+  const toNumber = (value: number | null) =>
+    value === null ? null : Number(value);
+  const toStrings = (value: unknown) =>
+    Array.isArray(value)
+      ? value.filter((item): item is string => typeof item === "string")
+      : [];
+  return {
+    estimatedOverallBand: toNumber(feedback.estimated_overall_band),
+    estimatedFluencyBand: toNumber(feedback.estimated_fluency_band),
+    estimatedLexicalBand: toNumber(feedback.estimated_lexical_band),
+    estimatedGrammarBand: toNumber(feedback.estimated_grammar_band),
+    estimatedPronunciationBand: toNumber(feedback.estimated_pronunciation_band),
+    strengths: toStrings(feedback.strengths),
+    suggestions: toStrings(feedback.suggestions),
+  };
+}
+
+export async function getSpeakingDashboardData(limit = 24) {
+  const attempts = await getRecentSpeakingAttempts(limit);
+  if (attempts.length === 0) return [];
+  const supabase = await createSupabaseServerClient();
+  const { data: runs, error: runsError } = await supabase
+    .from("speaking_feedback_runs")
+    .select("id, attempt_id, requested_at")
+    .in(
+      "attempt_id",
+      attempts.map((attempt) => attempt.id),
+    )
+    .eq("status", "ready")
+    .order("requested_at", { ascending: false });
+  if (runsError) throw new SpeakingReadError();
+
+  const runByAttempt = new Map<string, (typeof runs)[number]>();
+  for (const run of runs) {
+    if (!runByAttempt.has(run.attempt_id))
+      runByAttempt.set(run.attempt_id, run);
+  }
+  const runIds = [...runByAttempt.values()].map((run) => run.id);
+  const { data: feedbackRows, error: feedbackError } = runIds.length
+    ? await supabase
+        .from("speaking_feedback")
+        .select(
+          "run_id, estimated_overall_band, estimated_fluency_band, estimated_lexical_band, estimated_grammar_band, estimated_pronunciation_band, strengths, suggestions",
+        )
+        .in("run_id", runIds)
+    : { data: [], error: null };
+  if (feedbackError) throw new SpeakingReadError();
+  const feedbackByRun = new Map(
+    feedbackRows.map((feedback) => [
+      feedback.run_id,
+      parseSpeakingFeedbackSnapshot(feedback),
+    ]),
+  );
+  return attempts.map((attempt) => {
+    const run = runByAttempt.get(attempt.id);
+    return {
+      ...attempt,
+      feedback: run ? (feedbackByRun.get(run.id) ?? null) : null,
+    };
+  });
+}
+
+export async function getSpeakingImprovementReview(
+  setSlug: string,
+  attemptId: string,
+) {
+  const current = await getSpeakingAttemptReview(setSlug, attemptId);
+  if (!current) return null;
+  const supabase = await createSupabaseServerClient();
+  const { data: set, error: setError } = await supabase
+    .from("speaking_sets")
+    .select("id")
+    .eq("slug", setSlug)
+    .maybeSingle();
+  if (setError) throw new SpeakingReadError();
+  if (!set) return null;
+
+  const { data: previousAttempt, error: attemptError } = await supabase
+    .from("speaking_attempts")
+    .select("id, submitted_at")
+    .eq("speaking_set_id", set.id)
+    .eq("status", "submitted")
+    .lt("submitted_at", current.attempt.submittedAt)
+    .order("submitted_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (attemptError) throw new SpeakingReadError();
+  if (!previousAttempt) return { current, previous: null };
+
+  const { data: previousRun, error: runError } = await supabase
+    .from("speaking_feedback_runs")
+    .select("id")
+    .eq("attempt_id", previousAttempt.id)
+    .eq("status", "ready")
+    .maybeSingle();
+  if (runError) throw new SpeakingReadError();
+  if (!previousRun) return { current, previous: null };
+
+  const { data: previousFeedback, error: feedbackError } = await supabase
+    .from("speaking_feedback")
+    .select(
+      "estimated_overall_band, estimated_fluency_band, estimated_lexical_band, estimated_grammar_band, estimated_pronunciation_band, strengths, suggestions",
+    )
+    .eq("run_id", previousRun.id)
+    .maybeSingle();
+  if (feedbackError) throw new SpeakingReadError();
+  return {
+    current,
+    previous: previousFeedback
+      ? {
+          submittedAt: previousAttempt.submitted_at,
+          feedback: parseSpeakingFeedbackSnapshot(previousFeedback),
+        }
+      : null,
+  };
+}
+
 export type SpeakingPracticeData = NonNullable<
   Awaited<ReturnType<typeof getSpeakingPracticePage>>
 >;
 export type SpeakingReviewData = NonNullable<
   Awaited<ReturnType<typeof getSpeakingAttemptReview>>
+>;
+export type SpeakingDashboardData = Awaited<
+  ReturnType<typeof getSpeakingDashboardData>
+>;
+export type SpeakingImprovementReviewData = NonNullable<
+  Awaited<ReturnType<typeof getSpeakingImprovementReview>>
 >;

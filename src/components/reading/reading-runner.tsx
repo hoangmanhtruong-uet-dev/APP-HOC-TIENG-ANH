@@ -229,8 +229,8 @@ function ActiveReadingRunner({
   const isExpired = remainingSeconds === 0;
 
   return (
-    <div className="min-w-0 space-y-5">
-      <header className="flex min-w-0 flex-col gap-4 border-b border-[var(--border)] pb-5 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mx-auto min-h-[100dvh] max-w-6xl min-w-0 space-y-5 bg-[#fbf9ff] px-4 py-5 pb-24 sm:px-6 lg:min-h-0 lg:rounded-3xl lg:border lg:border-[#e4deef] lg:p-8">
+      <header className="flex min-w-0 items-start gap-4 border-b border-[#e7e1ef] pb-5">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-[var(--primary)]">
             Reading practice
@@ -239,7 +239,7 @@ function ActiveReadingRunner({
             {data.exercise.title}
           </h1>
         </div>
-        <div className="flex shrink-0 flex-wrap items-center gap-3 text-sm font-semibold">
+        <div className="ml-auto flex shrink-0 flex-col items-end gap-2 text-xs font-semibold">
           <span>
             {answeredCount}/{data.questions.length} đã trả lời
           </span>
@@ -256,7 +256,7 @@ function ActiveReadingRunner({
       {isExpired ? (
         <p
           role="status"
-          className="flex items-start gap-2 rounded-lg bg-[var(--danger-subtle)] px-4 py-3 text-sm font-semibold"
+          className="flex items-start gap-2 rounded-lg bg-[var(--destructive-subtle)] px-4 py-3 text-sm font-semibold text-[var(--destructive)]"
         >
           <AlertTriangle
             aria-hidden="true"
@@ -306,7 +306,7 @@ function ActiveReadingRunner({
       <div className="min-w-0 lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(22rem,.95fr)] lg:gap-7">
         <article
           aria-labelledby="reading-passage-title"
-          className={`${mobileView === "passage" ? "block" : "hidden"} min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 lg:block lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto lg:p-7`}
+          className={`${mobileView === "passage" ? "block" : "hidden"} min-w-0 rounded-2xl border border-[#e2dced] bg-white p-5 lg:block lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto lg:p-7`}
         >
           <h2
             id="reading-passage-title"
@@ -339,6 +339,33 @@ function ActiveReadingRunner({
               </section>
             ))}
           </div>
+          <aside className="mt-8 border-t border-[#e7e1ef] pt-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-2xl font-bold">wake up</p>
+                <p className="mt-1 text-xs font-semibold text-[#756e80] uppercase">
+                  Phrasal verb
+                </p>
+              </div>
+              <button
+                type="button"
+                aria-label="Listen to wake up"
+                className="grid size-11 place-items-center rounded-full bg-[#eee8ff] text-[#4d32d4]"
+              >
+                ♪
+              </button>
+            </div>
+            <p className="mt-3 text-sm text-[#5f586a]">To stop sleeping.</p>
+            <p className="mt-4 rounded-xl bg-[#f1ecfa] p-3 text-xs text-[#5f586a] italic">
+              “I wake up early on weekdays to go to work.”
+            </p>
+            <button
+              type="button"
+              className="mt-4 min-h-11 w-full rounded-xl border border-[#dcd5e7] bg-white text-sm font-bold text-[#4d32d4]"
+            >
+              Save Word
+            </button>
+          </aside>
         </article>
 
         <main
@@ -463,7 +490,7 @@ function QuestionCard({
     <fieldset
       id={`reading-question-${question.id}`}
       onFocus={onFocus}
-      className="min-w-0 scroll-mt-24 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 focus-within:border-[var(--primary)]"
+      className="min-w-0 scroll-mt-24 rounded-2xl border border-[#e2dced] bg-white p-5 focus-within:border-[#6545df]"
     >
       <legend className="px-1 text-sm font-bold">
         Câu {question.position}
@@ -503,7 +530,7 @@ function QuestionCard({
             return (
               <label
                 key={option.id}
-                className="flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border border-[var(--border-strong)] px-4 py-3 focus-within:ring-2 focus-within:ring-[var(--ring)] hover:border-[var(--primary)]"
+                className={`flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 focus-within:ring-2 focus-within:ring-[#6545df] ${checked ? "border-[#6545df] bg-[#f0ebff]" : "border-[#ddd6e7] bg-white"}`}
               >
                 <input
                   type={multiple ? "checkbox" : "radio"}

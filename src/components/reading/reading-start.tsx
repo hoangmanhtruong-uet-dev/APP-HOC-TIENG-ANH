@@ -1,7 +1,13 @@
-import { Clock3 } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpenText,
+  Clock3,
+  HelpCircle,
+  Languages,
+} from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
-import { LessonMarkdown } from "@/components/learning/lesson-markdown";
 import { Button } from "@/components/ui/button";
 import { startReadingPracticeAction } from "@/features/reading/actions";
 import type { ReadingPracticePageData } from "@/server/reading/content";
@@ -14,63 +20,95 @@ export function ReadingStart({
   error?: string;
 }) {
   return (
-    <div className="mx-auto max-w-3xl space-y-7">
-      <header>
-        <p className="text-sm font-semibold text-[var(--primary)]">
-          Reading practice
-        </p>
-        <h1 className="mt-2 text-3xl font-bold text-pretty break-words">
-          {data.exercise.title}
-        </h1>
-        <p className="mt-3 leading-7 text-[var(--muted-foreground)]">
-          {data.exercise.summary}
-        </p>
-      </header>
-      <section
-        aria-labelledby="reading-instructions-title"
-        className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6"
-      >
-        <h2 id="reading-instructions-title" className="text-xl font-bold">
-          Hướng dẫn
-        </h2>
-        <div className="mt-3">
-          <LessonMarkdown>{data.exercise.instructionsMarkdown}</LessonMarkdown>
-        </div>
-        <p className="mt-5 flex flex-wrap items-center gap-2 text-sm font-semibold">
-          <Clock3 aria-hidden="true" size={17} />
-          {Math.round(data.exercise.timeLimitSeconds / 60)} phút ·{" "}
-          {data.questions.length} câu
-        </p>
-        <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-          Đồng hồ được tính từ thời gian máy chủ. Hết giờ không tự thay đổi đáp
-          án; trạng thái nộp muộn sẽ được lưu cùng kết quả.
-        </p>
-      </section>
-      {error ? (
-        <p
-          role="alert"
-          className="rounded-lg bg-[var(--danger-subtle)] px-4 py-3 font-semibold"
+    <div className="mx-auto min-h-[100dvh] max-w-3xl bg-[#fbf9ff] pb-24 lg:min-h-0 lg:rounded-3xl lg:border lg:border-[#e4deef]">
+      <header className="flex h-14 items-center border-b border-[#e7e1ef] bg-white px-3 lg:rounded-t-3xl">
+        <Link
+          href="/practice/reading"
+          aria-label="Back to Reading"
+          className="grid size-11 place-items-center text-[#4329c7]"
         >
-          Không thể bắt đầu bài Reading. Hãy thử lại.
-        </p>
-      ) : null}
-      <div className="flex flex-col gap-3 sm:flex-row">
+          <ArrowLeft size={19} />
+        </Link>
+        <p className="flex-1 text-center text-sm font-bold">Lesson Overview</p>
+        <span className="w-11" />
+      </header>
+      <main className="space-y-6 px-4 py-6 sm:px-6">
+        <div className="text-center">
+          <span className="rounded-full bg-[#eee8ff] px-3 py-1 text-[10px] font-bold text-[#4d32d4]">
+            {data.exercise.difficulty} · Reading
+          </span>
+          <h1 className="mt-4 text-2xl font-bold">{data.exercise.title}</h1>
+          <p className="mt-2 text-sm leading-6 text-[#716a7c]">
+            {data.exercise.summary}
+          </p>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            [
+              Clock3,
+              `${Math.round(data.exercise.timeLimitSeconds / 60)} min`,
+              "Time",
+            ],
+            [HelpCircle, `${data.questions.length}`, "Questions"],
+            [BookOpenText, `${data.passage.sections.length}`, "Sections"],
+          ].map(([Icon, value, label]) => {
+            const ItemIcon = Icon as typeof Clock3;
+            return (
+              <div
+                key={String(label)}
+                className="rounded-2xl border border-[#e2dced] bg-white p-3 text-center"
+              >
+                <ItemIcon className="mx-auto text-[#4d32d4]" size={18} />
+                <p className="mt-2 font-bold">{String(value)}</p>
+                <p className="text-[10px] text-[#756e80] uppercase">
+                  {String(label)}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+        <div className="relative min-h-44 overflow-hidden rounded-2xl">
+          <Image
+            src="/images/ielts-flow-hero-v2.webp"
+            alt="English study workspace"
+            fill
+            sizes="(max-width: 768px) 100vw, 768px"
+            className="object-cover"
+          />
+        </div>
+        <section className="rounded-2xl border border-[#e2dced] bg-white p-4">
+          <h2 className="flex items-center gap-2 font-bold">
+            <Languages size={18} className="text-[#4d32d4]" />
+            Key Vocabulary Preview
+          </h2>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {["wake up", "breakfast", "usually", "morning", "+3 more"].map(
+              (word) => (
+                <span
+                  key={word}
+                  className="rounded-lg bg-[#f0ebf8] px-3 py-1.5 text-xs text-[#5d5668]"
+                >
+                  {word}
+                </span>
+              ),
+            )}
+          </div>
+        </section>
+        {error ? (
+          <p
+            role="alert"
+            className="rounded-xl bg-[#ffe2de] p-3 text-sm font-bold text-[#a72d27]"
+          >
+            Could not start this reading.
+          </p>
+        ) : null}
         <form action={startReadingPracticeAction}>
           <input type="hidden" name="exerciseSlug" value={data.exercise.slug} />
-          <Button type="submit" className="min-h-11 w-full sm:w-auto">
-            Bắt đầu làm bài
+          <Button type="submit" className="min-h-12 w-full rounded-xl">
+            Start Reading →
           </Button>
         </form>
-        {data.latestResultId ? (
-          <Button asChild variant="secondary" className="min-h-11">
-            <Link
-              href={`/practice/reading/${data.exercise.slug}/result/${data.latestResultId}`}
-            >
-              Xem kết quả gần nhất
-            </Link>
-          </Button>
-        ) : null}
-      </div>
+      </main>
     </div>
   );
 }

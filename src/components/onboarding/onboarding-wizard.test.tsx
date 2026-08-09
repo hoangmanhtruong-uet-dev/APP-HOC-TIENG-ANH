@@ -21,7 +21,7 @@ const saveStep = vi.fn(async (...args: unknown[]) => {
     status: "success" as const,
     message: "Đã lưu tiến độ.",
     requestId: `request-${step}`,
-    nextStep: step + 1,
+    nextStep: formData.get("returnToReview") === "true" ? 8 : step + 1,
   };
 });
 
@@ -51,10 +51,42 @@ const completedProfile: LearnerProfile = {
 describe("OnboardingWizard", () => {
   beforeEach(() => saveStep.mockClear());
 
+  it("provides a real URL for starting setup before hydration", () => {
+    render(<OnboardingWizard learnerProfile={null} displayName="Minh" />);
+
+    expect(
+      screen.getByRole("link", { name: "Bắt đầu thiết lập" }),
+    ).toHaveAttribute("href", "/onboarding?step=2");
+  });
+
+  it("can render the first form directly from a server requested step", () => {
+    render(
+      <OnboardingWizard
+        learnerProfile={null}
+        displayName="Minh"
+        initialStep={2}
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Bạn đang chuẩn bị cho loại bài thi nào?",
+      }),
+    ).toBeVisible();
+  });
+
   it("supports welcome, validation error focus, and back navigation", async () => {
     render(<OnboardingWizard learnerProfile={null} displayName="Minh" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Bắt đầu thiết lập" }));
+    expect(screen.getByRole("progressbar")).toHaveAttribute(
+      "aria-valuenow",
+      "0",
+    );
+    fireEvent.click(screen.getByRole("link", { name: "Bắt đầu thiết lập" }));
+    expect(screen.getByRole("progressbar")).toHaveAttribute(
+      "aria-valuenow",
+      "1",
+    );
     expect(
       screen.getByRole("heading", {
         name: "Bạn đang chuẩn bị cho loại bài thi nào?",
@@ -77,7 +109,7 @@ describe("OnboardingWizard", () => {
 
   it("saves a step and advances to the next semantic form", async () => {
     render(<OnboardingWizard learnerProfile={null} displayName="Minh" />);
-    fireEvent.click(screen.getByRole("button", { name: "Bắt đầu thiết lập" }));
+    fireEvent.click(screen.getByRole("link", { name: "Bắt đầu thiết lập" }));
     fireEvent.click(screen.getByRole("radio", { name: /IELTS Academic/ }));
     fireEvent.click(screen.getByRole("button", { name: "Lưu và tiếp tục" }));
 
@@ -103,8 +135,46 @@ describe("OnboardingWizard", () => {
     expect(screen.getByText("IELTS Academic")).toBeVisible();
     expect(screen.getByText("Du học")).toBeVisible();
     expect(screen.getByText("Writing, Speaking")).toBeVisible();
+    expect(screen.getByText("3 giờ 45 phút mỗi tuần")).toBeVisible();
     expect(
-      screen.getByRole("button", { name: "Hoàn tất onboarding" }),
+      screen.getByRole("button", { name: "Hoàn tất thiết lập" }),
     ).toBeEnabled();
+  });
+
+  it("selects a balanced four-skill focus in one action", () => {
+    render(
+      <OnboardingWizard
+        learnerProfile={{
+          ...completedProfile,
+          onboarding_step: 7,
+          priority_skills: [],
+        }}
+        displayName="Minh"
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Học cân bằng 4 kỹ năng" }),
+    );
+    for (const skill of ["Listening", "Reading", "Writing", "Speaking"]) {
+      expect(screen.getByRole("checkbox", { name: skill })).toBeChecked();
+    }
+  });
+
+  it("returns to review after editing a saved value", async () => {
+    render(
+      <OnboardingWizard learnerProfile={completedProfile} displayName="Minh" />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Sửa band mục tiêu" }));
+    fireEvent.change(screen.getByLabelText("Band mục tiêu"), {
+      target: { value: "7.5" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Lưu và tiếp tục" }));
+
+    await expect(
+      screen.findByRole("heading", { name: "Kiểm tra lại thiết lập của bạn" }),
+    ).resolves.toBeVisible();
+    expect(screen.getByText("7.5")).toBeVisible();
   });
 });

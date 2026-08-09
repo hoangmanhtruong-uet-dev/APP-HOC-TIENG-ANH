@@ -1,9 +1,11 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   isQuestionType,
+  practiceAnswerFeedbackSchema,
   practiceResultSchema,
   type PracticeResult,
   type QuestionType,
+  type PracticeAnswerFeedback,
 } from "@/features/practice/model";
 import { learningSlugSchema } from "@/features/learning/schemas";
 import { requireCompletedOnboarding } from "@/server/onboarding/learner-profile";
@@ -53,6 +55,7 @@ export type PracticePageData = {
   } | null;
   questions: PracticeQuestion[];
   activeQuestion: PracticeQuestion;
+  feedback?: PracticeAnswerFeedback | null;
 };
 
 export type AttemptHistoryItem = {
@@ -75,6 +78,7 @@ export class PracticeReadError extends Error {
 export async function getPracticePage(
   exerciseSlug: string,
   requestedPosition?: number,
+  includeFeedback = false,
 ): Promise<PracticePageData | null> {
   if (!learningSlugSchema.safeParse(exerciseSlug).success) return null;
   await requireCompletedOnboarding();
@@ -202,6 +206,21 @@ export async function getPracticePage(
     questions.find((question) => question.position === activePosition) ??
     questions[0];
 
+  let feedback: PracticeAnswerFeedback | null = null;
+  if (includeFeedback && activeAttempt && activeQuestion.answer) {
+    const { data: feedbackData, error: feedbackError } = await supabase.rpc(
+      "check_exercise_answer",
+      {
+        p_attempt_id: activeAttempt.id,
+        p_question_id: activeQuestion.id,
+      },
+    );
+    if (feedbackError) throw new PracticeReadError();
+    const parsedFeedback = practiceAnswerFeedbackSchema.safeParse(feedbackData);
+    if (!parsedFeedback.success) throw new PracticeReadError();
+    feedback = parsedFeedback.data;
+  }
+
   return {
     exercise: {
       id: exercise.id,
@@ -234,6 +253,7 @@ export async function getPracticePage(
         : null,
     questions,
     activeQuestion,
+    feedback,
   };
 }
 

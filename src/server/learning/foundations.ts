@@ -90,6 +90,19 @@ export async function getVocabularyEntry(slug: string) {
   return entries.find((entry) => entry.slug === slug) ?? null;
 }
 
+export async function getVocabularyProgressSummary() {
+  await requireCompletedOnboarding();
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.rpc("get_vocabulary_progress_summary");
+  if (error) throw new LearningFoundationReadError();
+  const summary = data[0];
+  return {
+    reviewing: Number(summary?.reviewing ?? 0),
+    mastered: Number(summary?.mastered ?? 0),
+    reviewedToday: Number(summary?.reviewed_today ?? 0),
+  };
+}
+
 export async function getGrammarCatalog(): Promise<GrammarTopic[]> {
   await requireCompletedOnboarding();
   const supabase = await createSupabaseServerClient();

@@ -16,6 +16,8 @@ const publicSupabaseWebSocketOrigin = (() => {
 })();
 const isHttpsDeployment =
   process.env.NEXT_PUBLIC_SITE_URL?.startsWith("https://") ?? false;
+const enableHstsPreload = process.env.ENABLE_HSTS_PRELOAD === "true";
+const isDevelopment = process.env.NODE_ENV === "development";
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -23,7 +25,7 @@ const contentSecurityPolicy = [
   "form-action 'self'",
   "frame-ancestors 'none'",
   "object-src 'none'",
-  "script-src 'self' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
@@ -46,7 +48,9 @@ const securityHeaders = [
     ? [
         {
           key: "Strict-Transport-Security",
-          value: "max-age=63072000; includeSubDomains; preload",
+          value: enableHstsPreload
+            ? "max-age=63072000; includeSubDomains; preload"
+            : "max-age=31536000",
         },
       ]
     : []),
@@ -57,7 +61,25 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      {
+        source: "/sw.js",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-cache, no-store, must-revalidate",
+          },
+          { key: "Service-Worker-Allowed", value: "/" },
+        ],
+      },
+      {
+        source: "/offline.html",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=0, must-revalidate" },
+        ],
+      },
+    ];
   },
   async redirects() {
     return ["reading", "listening", "writing", "speaking"].map((skill) => ({

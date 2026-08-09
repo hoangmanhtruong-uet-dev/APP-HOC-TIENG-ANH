@@ -1,6 +1,29 @@
 "use client";
 
-export default function GlobalError({ reset }: { reset: () => void }) {
+import { useEffect, useState } from "react";
+
+import { reportClientBoundaryError } from "@/lib/observability/client-error";
+
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  const [requestId, setRequestId] = useState<string>();
+  useEffect(() => {
+    let active = true;
+    void reportClientBoundaryError(error, "global")
+      .then((value) => {
+        if (active && value) setRequestId(value);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [error]);
+
   return (
     <html lang="vi">
       <body>
@@ -23,6 +46,7 @@ export default function GlobalError({ reset }: { reset: () => void }) {
             Hãy tải lại trang. Không có dữ liệu kỹ thuật nhạy cảm được hiển thị
             tại đây.
           </p>
+          {requestId ? <p>Mã yêu cầu: {requestId}</p> : null}
           <button
             type="button"
             onClick={reset}

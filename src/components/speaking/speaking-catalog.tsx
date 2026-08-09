@@ -1,65 +1,76 @@
-import { ArrowRight, Clock3, Mic2 } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  MessageCircle,
+  Mic2,
+  Repeat2,
+  Volume2,
+} from "lucide-react";
 import Link from "next/link";
 
 import type { SpeakingCatalogItem } from "@/server/speaking/content";
 
+const categoryIcons = [Repeat2, Volume2, BookOpen, MessageCircle];
+const categoryNames = [
+  "Repeat After Me",
+  "Pronunciation",
+  "Read Aloud",
+  "Answer a Question",
+];
+
 export function SpeakingCatalog({ items }: { items: SpeakingCatalogItem[] }) {
-  if (items.length === 0) {
+  if (!items.length) {
     return (
-      <p className="rounded-2xl border border-dashed border-[var(--border-strong)] p-8 text-center text-[var(--muted-foreground)]">
-        Chưa có bộ Speaking đã xuất bản phù hợp. Draft không được hiển thị cho
-        learner.
-      </p>
+      <section className="rounded-2xl border border-dashed border-[#d9d1e6] bg-white p-6 text-center">
+        <Mic2 aria-hidden="true" className="mx-auto text-[#4d32d4]" />
+        <h2 className="mt-3 font-bold">No published Speaking sets yet</h2>
+      </section>
     );
   }
+
   return (
-    <div className="grid gap-5 lg:grid-cols-2">
-      {items.map((item) => (
-        <article
-          key={item.slug}
-          className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <span className="rounded-full bg-[var(--primary-soft)] px-3 py-1 text-xs font-bold text-[var(--primary)]">
-              {item.difficulty}
-            </span>
-            <Mic2
-              aria-hidden="true"
-              className="text-[var(--primary)]"
-              size={22}
-            />
-          </div>
-          <h2 className="mt-5 text-xl font-bold text-pretty">{item.title}</h2>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted-foreground)]">
-            {item.description}
-          </p>
-          <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[var(--muted-foreground)]">
-            <span className="inline-flex items-center gap-2">
-              <Clock3 aria-hidden="true" size={16} />
-              {item.estimatedMinutes} phút
-            </span>
-            <span>{item.promptCount} câu</span>
-            <span>{item.testType}</span>
-          </div>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              href={`/practice/speaking/${item.slug}`}
-              className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2 font-bold text-white hover:opacity-90 focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:outline-none"
+    <section>
+      <h2 className="mb-3 text-base font-bold">Practice Categories</h2>
+      <div className="overflow-hidden rounded-2xl border border-[#e3ddec] bg-white">
+        {items.map((item, index) => {
+          const Icon = categoryIcons[index % categoryIcons.length];
+          return (
+            <div
+              key={item.slug}
+              className="border-b border-[#ece7f1] p-4 last:border-0"
             >
-              {item.activeAttemptId ? "Tiếp tục luyện" : "Mở bài luyện"}
-              <ArrowRight aria-hidden="true" size={17} />
-            </Link>
-            {item.latestAttemptId ? (
-              <Link
-                href={`/practice/speaking/${item.slug}/attempt/${item.latestAttemptId}`}
-                className="inline-flex min-h-11 items-center rounded-lg border border-[var(--border-strong)] px-4 py-2 font-bold hover:bg-[var(--surface-subtle)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
-              >
-                Xem bài gần nhất
-              </Link>
-            ) : null}
-          </div>
-        </article>
-      ))}
-    </div>
+              <div className="flex items-center gap-3">
+                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#f1edff] text-[#4d32d4]">
+                  <Icon aria-hidden="true" size={18} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold">
+                    {categoryNames[index % categoryNames.length]}
+                  </p>
+                  <p className="mt-1 truncate text-xs text-[#736c7e]">
+                    {item.title} · {item.promptCount} prompts
+                  </p>
+                </div>
+                <Link
+                  href={`/practice/speaking/${item.slug}`}
+                  aria-label={`Open ${item.title}`}
+                  className="grid size-10 shrink-0 place-items-center rounded-full border border-[#ddd5e9] text-[#4d32d4] transition active:scale-[0.96]"
+                >
+                  <ArrowRight aria-hidden="true" size={16} />
+                </Link>
+              </div>
+              {item.latestAttemptId ? (
+                <Link
+                  href={`/practice/speaking/${item.slug}/attempt/${item.latestAttemptId}`}
+                  className="mt-3 block text-right text-xs font-bold text-[#4d32d4] underline-offset-4 hover:underline"
+                >
+                  View latest feedback
+                </Link>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }

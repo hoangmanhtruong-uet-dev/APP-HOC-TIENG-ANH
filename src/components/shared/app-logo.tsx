@@ -5,27 +5,46 @@ import { cn } from "@/lib/utils";
 interface AppLogoProps {
   compact?: boolean;
   className?: string;
+  inverse?: boolean;
 }
 
-export function AppLogo({ compact = false, className }: AppLogoProps) {
+export function AppLogo({
+  compact = false,
+  className,
+  inverse = false,
+}: AppLogoProps) {
   return (
     <Link
       href="/"
+      prefetch={false}
       className={cn(
-        "inline-flex min-h-11 items-center gap-3 rounded-lg focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:outline-none",
+        "group inline-flex min-h-11 items-center gap-3 rounded-xl focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+        inverse
+          ? "focus-visible:ring-white focus-visible:ring-offset-[var(--primary)]"
+          : "focus-visible:ring-[var(--ring)]",
         className,
       )}
       aria-label="IELTS Flow - Trang chủ"
     >
       <span
         aria-hidden="true"
-        className="grid size-9 place-items-center rounded-lg bg-[var(--primary)] text-sm font-bold tracking-tight text-white shadow-[0_6px_18px_rgba(31,78,216,0.2)]"
+        className={cn(
+          "grid size-10 place-items-center rounded-xl text-sm font-extrabold tracking-tight shadow-[0_6px_0_rgb(var(--shadow-color)/0.18)] transition-transform duration-200 group-hover:scale-[1.04] group-hover:-rotate-3",
+          inverse
+            ? "bg-white text-[var(--primary)]"
+            : "bg-[var(--primary)] text-[var(--primary-foreground)]",
+        )}
       >
-        IF
+        IS
       </span>
       {!compact ? (
-        <span className="text-base font-bold tracking-[-0.02em] text-[var(--foreground)]">
-          IELTS Flow
+        <span
+          className={cn(
+            "text-lg font-extrabold tracking-[-0.03em]",
+            inverse ? "text-white" : "text-[var(--foreground)]",
+          )}
+        >
+          Indigo Scholar
         </span>
       ) : null}
     </Link>

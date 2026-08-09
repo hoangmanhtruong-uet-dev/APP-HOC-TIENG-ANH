@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/validation/zod";
 
 export const speakingUploadIntentSchema = z.object({
   intentId: z.string().uuid(),

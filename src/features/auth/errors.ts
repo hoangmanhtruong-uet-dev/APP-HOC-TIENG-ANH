@@ -32,7 +32,7 @@ export function getConfirmationMessage(code: string | undefined) {
     return "Liên kết xác minh không hợp lệ, đã hết hạn hoặc đã được sử dụng.";
   }
   if (code === "session_expired") {
-    return "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.";
+    return "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
   }
   return undefined;
 }

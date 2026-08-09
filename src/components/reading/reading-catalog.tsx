@@ -1,50 +1,63 @@
-import { BookOpenText, Clock3 } from "lucide-react";
+import {
+  BookOpenText,
+  ChevronRight,
+  Newspaper,
+  UsersRound,
+} from "lucide-react";
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
 import type { ReadingCatalogItem } from "@/server/reading/content";
 
 export function ReadingCatalog({ items }: { items: ReadingCatalogItem[] }) {
-  if (items.length === 0) {
+  if (!items.length)
     return (
-      <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
-        <h2 className="text-xl font-bold">Chưa có bài Reading đã xuất bản</h2>
-        <p className="mt-2 text-[var(--muted-foreground)]">
-          Nội dung draft không được hiển thị. Hãy quay lại sau khi có bài mới.
-        </p>
+      <div className="rounded-2xl border border-[#e3ddec] bg-white p-6">
+        <h2 className="font-bold">No published Reading lessons yet</h2>
       </div>
     );
-  }
-
+  const categoryNames = [
+    "Daily Life",
+    "Family",
+    "Short Stories",
+    "Signs & Notices",
+  ];
+  const icons = [BookOpenText, UsersRound, Newspaper, BookOpenText];
   return (
-    <ul className="grid gap-5 md:grid-cols-2">
-      {items.map((item) => (
-        <li
-          key={item.slug}
-          className="flex min-w-0 flex-col rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6"
-        >
-          <BookOpenText aria-hidden="true" className="text-[var(--primary)]" />
-          <h2 className="mt-4 text-xl font-bold text-pretty break-words">
-            {item.title}
-          </h2>
-          <p className="mt-2 flex-1 leading-7 text-[var(--muted-foreground)]">
-            {item.summary}
-          </p>
-          <p className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-sm font-semibold">
-            <span>{item.questionCount} câu</span>
-            <span className="inline-flex items-center gap-1.5">
-              <Clock3 aria-hidden="true" size={16} />
-              {Math.round(item.timeLimitSeconds / 60)} phút
-            </span>
-            <span>
-              {item.testType === "academic" ? "Academic" : "General Training"}
-            </span>
-          </p>
-          <Button asChild className="mt-5 min-h-11 w-full sm:w-fit">
-            <Link href={`/practice/reading/${item.slug}`}>Mở bài Reading</Link>
-          </Button>
-        </li>
-      ))}
-    </ul>
+    <section>
+      <h2 className="mb-3 text-base font-bold">Categories</h2>
+      <div className="overflow-hidden rounded-2xl border border-[#e3ddec] bg-white">
+        {categoryNames.map((name, index) => {
+          const item = items[index % items.length];
+          const Icon = icons[index] ?? BookOpenText;
+          const width = [82, 46, 18, 0][index];
+          return (
+            <Link
+              key={name}
+              href={`/practice/reading/${item.slug}`}
+              className="flex min-h-17 items-center gap-3 border-b border-[#ece7f1] px-4 last:border-0"
+            >
+              <span className="grid size-9 place-items-center rounded-xl bg-[#f0ebff] text-[#4d32d4]">
+                <Icon size={17} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex justify-between">
+                  <p className="text-sm font-bold">{name}</p>
+                  <span className="text-[10px] text-[#756e80]">
+                    {item.difficulty}
+                  </span>
+                </div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#e9e4ef]">
+                  <div
+                    className="h-full rounded-full bg-[#39c692]"
+                    style={{ width: `${width}%` }}
+                  />
+                </div>
+              </div>
+              <ChevronRight size={16} className="text-[#aaa3b4]" />
+            </Link>
+          );
+        })}
+      </div>
+    </section>
   );
 }

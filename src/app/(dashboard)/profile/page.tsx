@@ -1,90 +1,145 @@
+import {
+  Bell,
+  BookOpen,
+  CalendarDays,
+  CheckCircle2,
+  LockKeyhole,
+  UserRound,
+} from "lucide-react";
 import type { Metadata } from "next";
 
-import { ProfileForm } from "@/components/profile/profile-form";
+import { LogoutButton } from "@/components/auth/logout-button";
 import { LearningPreferencesForm } from "@/components/profile/learning-preferences-form";
+import { ProfileForm } from "@/components/profile/profile-form";
 import { ErrorState } from "@/components/shared/error-state";
-import { PageHeader } from "@/components/shared/page-header";
 import { requireCurrentAccount } from "@/server/auth/account";
 import { getCurrentLearnerProfile } from "@/server/onboarding/learner-profile";
 
-export const metadata: Metadata = { title: "Hồ sơ" };
+export const metadata: Metadata = { title: "Profile & settings" };
 
-const dateFormatter = new Intl.DateTimeFormat("vi-VN", {
-  dateStyle: "long",
-  timeZone: "Asia/Ho_Chi_Minh",
-});
+function getLevel(currentBand: number | null | undefined) {
+  if (currentBand === null || currentBand === undefined || currentBand < 4)
+    return "A1 Beginner";
+  if (currentBand < 5) return "A2 Elementary";
+  return "B1 Intermediate";
+}
 
 export default async function ProfilePage() {
   const [account, learnerProfile] = await Promise.all([
     requireCurrentAccount(),
     getCurrentLearnerProfile(),
   ]);
+  if (!account.profile)
+    return (
+      <ErrorState
+        title="Profile unavailable"
+        description="Your account is signed in, but its public profile has not been created yet."
+      />
+    );
+
+  const displayName =
+    account.profile.display_name || account.user.email.split("@")[0];
+  const level = getLevel(learnerProfile?.current_band);
 
   return (
-    <div className="space-y-8">
-      <PageHeader
-        title="Hồ sơ"
-        description="Thông tin tài khoản được đọc trực tiếp từ Supabase Auth và PostgreSQL."
-      />
-      {!account.profile ? (
-        <ErrorState
-          title="Chưa tìm thấy hồ sơ"
-          description="Tài khoản đã xác thực nhưng profile chưa được tạo. Hãy kiểm tra migration và trigger tạo profile."
-        />
-      ) : (
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-          <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7">
-            <h2 className="text-xl font-bold">Thông tin cá nhân</h2>
-            <p className="mt-2 text-sm leading-6 text-[var(--muted-foreground)]">
-              Hiện tại bạn chỉ có thể cập nhật họ và tên.
-            </p>
-            <div className="mt-6">
-              <ProfileForm displayName={account.profile.display_name ?? ""} />
-            </div>
-          </section>
-          <aside className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
-            <h2 className="font-bold">Tài khoản</h2>
-            <dl className="mt-5 space-y-5 text-sm">
-              <div>
-                <dt className="text-[var(--muted-foreground)]">Email</dt>
-                <dd className="mt-1 font-semibold break-words">
-                  {account.user.email}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-[var(--muted-foreground)]">
-                  Ngày tham gia
-                </dt>
-                <dd className="mt-1 font-semibold">
-                  {dateFormatter.format(new Date(account.user.createdAt))}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-[var(--muted-foreground)]">
-                  Xác minh email
-                </dt>
-                <dd className="mt-1 font-semibold text-[var(--success)]">
-                  {account.user.emailConfirmedAt
-                    ? "Đã xác minh"
-                    : "Chưa xác minh"}
-                </dd>
-              </div>
-            </dl>
-          </aside>
-        </div>
-      )}
-      {learnerProfile?.onboarding_completed_at ? (
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7">
-          <h2 className="text-xl font-bold">Mục tiêu học IELTS</h2>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted-foreground)]">
-            Cập nhật các lựa chọn onboarding. Thay đổi này chưa tự tạo hoặc sửa
-            lộ trình học.
+    <div className="min-h-[100dvh] bg-[#fbf9ff] pb-8 lg:mx-auto lg:min-h-[calc(100dvh-4.5rem)] lg:max-w-3xl lg:rounded-2xl lg:border lg:border-[var(--border)] lg:shadow-[0_18px_50px_rgb(var(--shadow-color)/0.06)]">
+      <header className="flex min-h-14 items-center border-b border-[var(--border)] bg-white px-4 lg:rounded-t-2xl">
+        <UserRound size={17} className="text-[var(--primary)]" />
+        <h1 className="ml-3 flex-1 text-base font-extrabold text-[var(--primary)]">
+          Profile
+        </h1>
+        <Bell size={17} className="text-[var(--primary)]" />
+      </header>
+
+      <main className="space-y-4 px-4 py-5 sm:px-6">
+        <section className="rounded-2xl border border-[var(--border)] bg-white p-5 text-center shadow-[0_8px_24px_rgb(var(--shadow-color)/0.05)]">
+          <div className="mx-auto grid size-20 place-items-center rounded-full bg-[var(--primary-subtle)] text-2xl font-extrabold text-[var(--primary)] shadow-lg ring-4 ring-white">
+            {displayName.slice(0, 1).toUpperCase()}
+          </div>
+          <h2 className="mt-4 text-xl font-extrabold">{displayName}</h2>
+          <p className="mt-1 text-xs text-[var(--muted-foreground)]">
+            Learning English one step at a time
           </p>
-          <div className="mt-6">
-            <LearningPreferencesForm profile={learnerProfile} />
+          <div className="mx-auto mt-4 grid max-w-sm grid-cols-2 gap-3">
+            <div className="rounded-xl border border-[var(--primary-soft)] bg-[var(--primary-subtle)] p-3">
+              <BookOpen size={16} className="mx-auto text-[var(--primary)]" />
+              <p className="mt-1 text-[10px] text-[var(--muted-foreground)]">
+                Current level
+              </p>
+              <strong className="text-xs">{level}</strong>
+            </div>
+            <div className="rounded-xl border border-[var(--primary-soft)] bg-[var(--primary-subtle)] p-3">
+              <CalendarDays
+                size={16}
+                className="mx-auto text-[var(--primary)]"
+              />
+              <p className="mt-1 text-[10px] text-[var(--muted-foreground)]">
+                Study plan
+              </p>
+              <strong className="text-xs">
+                {learnerProfile?.study_days_per_week ?? 0} days / week
+              </strong>
+            </div>
           </div>
         </section>
-      ) : null}
+
+        <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-white">
+          <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--primary-subtle)] px-4 py-3 text-[var(--primary)]">
+            <UserRound size={17} />
+            <h2 className="text-sm font-extrabold">Personal information</h2>
+          </div>
+          <div className="p-4">
+            <ProfileForm displayName={account.profile.display_name ?? ""} />
+          </div>
+        </section>
+
+        {learnerProfile?.onboarding_completed_at ? (
+          <details
+            open
+            className="group overflow-hidden rounded-2xl border border-[var(--border)] bg-white"
+          >
+            <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 bg-[var(--primary-subtle)] px-4 py-3 text-[var(--primary)] [&::-webkit-details-marker]:hidden">
+              <BookOpen size={17} />
+              <span className="flex-1 text-sm font-extrabold">
+                Learning preferences
+              </span>
+              <span className="text-xs group-open:hidden">Open</span>
+            </summary>
+            <div className="p-4">
+              <LearningPreferencesForm profile={learnerProfile} />
+            </div>
+          </details>
+        ) : null}
+
+        <section className="rounded-2xl border border-[var(--border)] bg-white">
+          <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--primary-subtle)] px-4 py-3 text-[var(--primary)]">
+            <LockKeyhole size={17} />
+            <h2 className="text-sm font-extrabold">Account & security</h2>
+          </div>
+          <dl className="divide-y divide-[var(--border)] px-4 text-sm">
+            <div className="py-4">
+              <dt className="text-xs text-[var(--muted-foreground)]">
+                Email address
+              </dt>
+              <dd
+                data-testid="account-email"
+                className="mt-1 flex items-center gap-2 font-semibold break-all"
+              >
+                {account.user.email}
+                {account.user.emailConfirmedAt ? (
+                  <CheckCircle2
+                    size={15}
+                    className="shrink-0 text-[var(--success)]"
+                  />
+                ) : null}
+              </dd>
+            </div>
+          </dl>
+          <div className="border-t border-[var(--border)] p-4">
+            <LogoutButton className="w-full justify-center" />
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

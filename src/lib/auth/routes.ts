@@ -1,5 +1,6 @@
 export const protectedRoutePrefixes = [
   "/onboarding",
+  "/placement-test",
   "/dashboard",
   "/learn",
   "/roadmap",

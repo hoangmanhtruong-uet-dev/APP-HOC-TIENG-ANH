@@ -14,9 +14,10 @@ import {
   targetStepSchema,
   testTypeStepSchema,
 } from "@/features/onboarding/schemas";
-import { createRequestId } from "@/lib/api/errors";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireCurrentAccount } from "@/server/auth/account";
+import { logServerEvent } from "@/server/observability/logger";
+import { getServerRequestId } from "@/server/observability/request-context";
 import type { Database } from "@/types/database";
 
 type LearnerProfileUpdate =
@@ -60,14 +61,15 @@ export async function saveOnboardingStepAction(
   _previousState: OnboardingActionState,
   formData: FormData,
 ): Promise<OnboardingActionState> {
-  const requestId = createRequestId();
+  const requestId = await getServerRequestId();
   const step = Number(stringValue(formData, "step"));
+  const returnToReview = stringValue(formData, "returnToReview") === "true";
   const account = await requireCurrentAccount();
 
   if (!account.profile) {
     return {
       status: "error",
-      message: "Chưa tìm thấy hồ sơ tài khoản để lưu onboarding.",
+      message: "Chưa tìm thấy hồ sơ tài khoản để lưu thiết lập.",
       requestId,
     };
   }
@@ -75,14 +77,21 @@ export async function saveOnboardingStepAction(
   const supabase = await createSupabaseServerClient();
   const { data: existing, error: readError } = await supabase
     .from("learner_profiles")
-    .select("onboarding_completed_at")
+    .select("onboarding_completed_at, onboarding_step")
     .eq("user_id", account.user.id)
     .maybeSingle();
 
   if (readError) {
+    logServerEvent("warn", {
+      event: "onboarding.read.rejected",
+      requestId,
+      route: "saveOnboardingStepAction",
+      stage: "read learner profile",
+      errorCode: readError.code ?? "ONBOARDING_READ_REJECTED",
+    });
     return {
       status: "error",
-      message: "Không thể kiểm tra tiến độ onboarding lúc này.",
+      message: "Không thể kiểm tra tiến độ thiết lập lúc này.",
       requestId,
     };
   }
@@ -153,21 +162,30 @@ export async function saveOnboardingStepAction(
   } else {
     return {
       status: "error",
-      message: "Bước onboarding không hợp lệ.",
+      message: "Bước thiết lập không hợp lệ.",
       requestId,
     };
   }
 
+  const destinationStep =
+    returnToReview && existing?.onboarding_step === 8 ? 8 : nextStep;
   const { error } = await supabase.from("learner_profiles").upsert(
     {
       user_id: account.user.id,
       ...update,
-      onboarding_step: nextStep,
+      onboarding_step: destinationStep,
     },
     { onConflict: "user_id" },
   );
 
   if (error) {
+    logServerEvent("warn", {
+      event: "onboarding.save.rejected",
+      requestId,
+      route: "saveOnboardingStepAction",
+      stage: "save learner profile",
+      errorCode: error.code ?? "ONBOARDING_SAVE_REJECTED",
+    });
     return {
       status: "error",
       message: "Không thể lưu bước này. Hãy thử lại sau.",
@@ -180,7 +198,7 @@ export async function saveOnboardingStepAction(
     status: "success",
     message: "Đã lưu tiến độ.",
     requestId,
-    nextStep,
+    nextStep: destinationStep,
   };
 }
 
@@ -190,7 +208,7 @@ export async function completeOnboardingAction(
 ): Promise<OnboardingActionState> {
   void _previousState;
   void _formData;
-  const requestId = createRequestId();
+  const requestId = await getServerRequestId();
   const account = await requireCurrentAccount();
   const supabase = await createSupabaseServerClient();
   const { data: learnerProfile, error: readError } = await supabase
@@ -202,9 +220,18 @@ export async function completeOnboardingAction(
     .maybeSingle();
 
   if (readError || !learnerProfile) {
+    if (readError) {
+      logServerEvent("warn", {
+        event: "onboarding.complete_read.rejected",
+        requestId,
+        route: "completeOnboardingAction",
+        stage: "read learner profile",
+        errorCode: readError.code ?? "ONBOARDING_READ_REJECTED",
+      });
+    }
     return {
       status: "error",
-      message: "Không tìm thấy thông tin onboarding để hoàn tất.",
+      message: "Không tìm thấy hồ sơ học tập để hoàn tất.",
       requestId,
     };
   }
@@ -213,16 +240,23 @@ export async function completeOnboardingAction(
   if (!validation.success) {
     return {
       status: "error",
-      message: "Onboarding chưa đủ thông tin. Hãy quay lại kiểm tra các bước.",
+      message: "Thiết lập chưa đủ thông tin. Hãy quay lại kiểm tra các bước.",
       requestId,
     };
   }
 
   const { error } = await supabase.rpc("complete_learner_onboarding");
   if (error) {
+    logServerEvent("warn", {
+      event: "onboarding.complete.rejected",
+      requestId,
+      route: "completeOnboardingAction",
+      stage: "complete onboarding",
+      errorCode: error.code ?? "ONBOARDING_COMPLETE_REJECTED",
+    });
     return {
       status: "error",
-      message: "Không thể hoàn tất onboarding lúc này. Hãy thử lại sau.",
+      message: "Không thể hoàn tất thiết lập lúc này. Hãy thử lại sau.",
       requestId,
     };
   }
@@ -235,7 +269,7 @@ export async function updateLearnerPreferencesAction(
   _previousState: OnboardingActionState,
   formData: FormData,
 ): Promise<OnboardingActionState> {
-  const requestId = createRequestId();
+  const requestId = await getServerRequestId();
   const account = await requireCurrentAccount();
 
   if (!account.profile) {
@@ -273,9 +307,18 @@ export async function updateLearnerPreferencesAction(
     .maybeSingle();
 
   if (readError || !learnerProfile?.onboarding_completed_at) {
+    if (readError) {
+      logServerEvent("warn", {
+        event: "preferences.read.rejected",
+        requestId,
+        route: "updateLearnerPreferencesAction",
+        stage: "read learner profile",
+        errorCode: readError.code ?? "PREFERENCES_READ_REJECTED",
+      });
+    }
     return {
       status: "error",
-      message: "Hãy hoàn tất onboarding trước khi cập nhật mục tiêu.",
+      message: "Hãy hoàn tất thiết lập ban đầu trước khi cập nhật mục tiêu.",
       requestId,
     };
   }
@@ -295,6 +338,13 @@ export async function updateLearnerPreferencesAction(
     .eq("user_id", account.user.id);
 
   if (error) {
+    logServerEvent("warn", {
+      event: "preferences.update.rejected",
+      requestId,
+      route: "updateLearnerPreferencesAction",
+      stage: "update learner preferences",
+      errorCode: error.code ?? "PREFERENCES_UPDATE_REJECTED",
+    });
     return {
       status: "error",
       message: "Không thể cập nhật mục tiêu học lúc này. Hãy thử lại sau.",

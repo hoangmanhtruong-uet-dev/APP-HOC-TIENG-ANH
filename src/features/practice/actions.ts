@@ -11,6 +11,14 @@ import {
 } from "@/features/practice/schemas";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireCompletedOnboarding } from "@/server/onboarding/learner-profile";
+import { logServerEvent } from "@/server/observability/logger";
+import { getServerRequestId } from "@/server/observability/request-context";
+
+export type PracticeSaveState = {
+  status: "idle" | "error";
+  message?: string;
+  requestId?: string;
+};
 
 export async function startPracticeAction(formData: FormData) {
   const parsed = startPracticeSchema.safeParse({
@@ -29,7 +37,11 @@ export async function startPracticeAction(formData: FormData) {
   redirect(`/practice/${parsed.data.exerciseSlug}?attempt=${data.id}`);
 }
 
-export async function savePracticeAnswerAction(formData: FormData) {
+export async function savePracticeAnswerAction(
+  _previousState: PracticeSaveState,
+  formData: FormData,
+): Promise<PracticeSaveState> {
+  const requestId = await getServerRequestId();
   const parsed = savePracticeAnswerSchema.safeParse({
     attemptId: formData.get("attemptId"),
     questionId: formData.get("questionId"),
@@ -38,23 +50,64 @@ export async function savePracticeAnswerAction(formData: FormData) {
     answerText: formData.get("answerText")?.toString(),
     clientRevision: formData.get("clientRevision"),
     nextPosition: formData.get("nextPosition"),
+    currentPosition: formData.get("currentPosition") ?? undefined,
+    checkAnswer: formData.get("checkAnswer") === "true",
   });
-  if (!parsed.success) redirect("/learn?practiceError=invalid-answer");
-  await requireCompletedOnboarding();
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.rpc("save_exercise_answer", {
-    p_attempt_id: parsed.data.attemptId,
-    p_question_id: parsed.data.questionId,
-    p_selected_option_ids: parsed.data.selectedOptionIds,
-    p_answer_text: parsed.data.answerText ?? "",
-    p_client_revision: parsed.data.clientRevision,
-  });
-  if (error) {
-    redirect(
-      `/practice/${parsed.data.exerciseSlug}?question=${parsed.data.nextPosition}&error=save`,
-    );
+  if (!parsed.success) {
+    return {
+      status: "error",
+      message:
+        "Câu trả lời không hợp lệ. Dữ liệu trên màn hình vẫn được giữ; hãy kiểm tra và thử lại.",
+      requestId,
+    };
+  }
+  try {
+    await requireCompletedOnboarding();
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.rpc("save_exercise_answer", {
+      p_attempt_id: parsed.data.attemptId,
+      p_question_id: parsed.data.questionId,
+      p_selected_option_ids: parsed.data.selectedOptionIds,
+      p_answer_text: parsed.data.answerText ?? "",
+      p_client_revision: parsed.data.clientRevision,
+    });
+    if (error) {
+      logServerEvent("warn", {
+        event: "practice.answer_save.rejected",
+        requestId,
+        route: "savePracticeAnswerAction",
+        stage: "save answer",
+        errorCode: error.code ?? "PRACTICE_SAVE_REJECTED",
+      });
+      return {
+        status: "error",
+        message:
+          "Không thể lưu câu trả lời. Dữ liệu trên màn hình vẫn được giữ; hãy thử lại.",
+        requestId,
+      };
+    }
+  } catch (error) {
+    logServerEvent("error", {
+      event: "practice.answer_save.failed",
+      requestId,
+      route: "savePracticeAnswerAction",
+      stage: "save answer",
+      errorCode: "PRACTICE_SAVE_UNEXPECTED_ERROR",
+      error,
+    });
+    return {
+      status: "error",
+      message:
+        "Không thể lưu câu trả lời. Dữ liệu trên màn hình vẫn được giữ; hãy thử lại.",
+      requestId,
+    };
   }
   revalidatePracticePaths(parsed.data.exerciseSlug);
+  if (parsed.data.checkAnswer) {
+    redirect(
+      `/practice/${parsed.data.exerciseSlug}?question=${parsed.data.currentPosition ?? 1}&checked=1`,
+    );
+  }
   redirect(
     `/practice/${parsed.data.exerciseSlug}?question=${parsed.data.nextPosition}&saved=1`,
   );

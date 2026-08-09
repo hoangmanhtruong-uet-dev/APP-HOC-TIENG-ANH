@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/validation/zod";
 
 export const questionTypes = [
   "single_choice",
@@ -40,6 +40,18 @@ export const practiceResultSchema = z.object({
 });
 
 export type PracticeResult = z.infer<typeof practiceResultSchema>;
+
+export const practiceAnswerFeedbackSchema = z.object({
+  questionId: z.uuid(),
+  isCorrect: z.boolean(),
+  correctOptionIds: z.array(z.uuid()).nullable(),
+  acceptedTextAnswers: z.array(z.string()).nullable(),
+  explanationMarkdown: z.string().nullable(),
+});
+
+export type PracticeAnswerFeedback = z.infer<
+  typeof practiceAnswerFeedbackSchema
+>;
 
 export const readingPracticeResultSchema = practiceResultSchema.extend({
   startedAt: z.string(),

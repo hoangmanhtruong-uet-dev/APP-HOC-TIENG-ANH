@@ -1,6 +1,5 @@
 "use server";
 
-import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 
 import {
@@ -10,6 +9,8 @@ import {
 import { lessonProgressMutationSchema } from "@/features/learning/schemas";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireCompletedOnboarding } from "@/server/onboarding/learner-profile";
+import { logServerEvent } from "@/server/observability/logger";
+import { getServerRequestId } from "@/server/observability/request-context";
 
 export async function openLessonSectionAction(input: unknown) {
   return mutateLessonProgress("open", input);
@@ -31,7 +32,7 @@ async function mutateLessonProgress(
   operation: "open" | "complete",
   input: unknown,
 ): Promise<LearningProgressActionState> {
-  const requestId = randomUUID();
+  const requestId = await getServerRequestId();
   const parsed = lessonProgressMutationSchema.safeParse(input);
   if (!parsed.success) {
     return {
@@ -54,6 +55,13 @@ async function mutateLessonProgress(
     });
 
     if (error) {
+      logServerEvent("warn", {
+        event: "learning.progress.rejected",
+        requestId,
+        route: "mutateLessonProgress",
+        stage: operation,
+        errorCode: error.code ?? "PROGRESS_PROVIDER_ERROR",
+      });
       return mapProgressError(error.code, requestId);
     }
 
@@ -66,7 +74,15 @@ async function mutateLessonProgress(
           : "Vị trí đang học đã được lưu.",
       requestId,
     };
-  } catch {
+  } catch (error) {
+    logServerEvent("error", {
+      event: "learning.progress.failed",
+      requestId,
+      route: "mutateLessonProgress",
+      stage: operation,
+      errorCode: "PROGRESS_UNEXPECTED_ERROR",
+      error,
+    });
     return {
       status: "error",
       message: "Không thể lưu tiến độ lúc này. Hãy thử lại.",

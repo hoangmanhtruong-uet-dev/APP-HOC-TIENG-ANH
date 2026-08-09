@@ -1,4 +1,11 @@
-import { CheckCircle2, RotateCcw, XCircle } from "lucide-react";
+import {
+  Check,
+  CheckCircle2,
+  Clock3,
+  RotateCcw,
+  Target,
+  XCircle,
+} from "lucide-react";
 import Link from "next/link";
 
 import { LessonMarkdown } from "@/components/learning/lesson-markdown";
@@ -8,16 +15,107 @@ import type { getPracticeResult } from "@/server/practice/content";
 
 type ResultData = NonNullable<Awaited<ReturnType<typeof getPracticeResult>>>;
 
-export function PracticeResultView({ data }: { data: ResultData }) {
+export function PracticeResultView({
+  data,
+  view = "review",
+}: {
+  data: ResultData;
+  view?: "summary" | "review";
+}) {
   const { result, exercise, options } = data;
   const optionById = new Map(
     options.map((option) => [option.id, option.label]),
   );
   const percent = calculateScorePercent(result.score, result.maxScore);
+  const missed = result.questions.filter((question) => !question.isCorrect);
+
+  if (view === "summary") {
+    return (
+      <div className="mx-auto min-h-[calc(100dvh-5rem)] max-w-3xl bg-[#fbf9ff] pb-24 lg:min-h-0 lg:rounded-3xl lg:border lg:border-[#e4deef] lg:p-8">
+        <header className="border-b border-[#e7e1ef] bg-white px-4 py-4 text-lg font-bold lg:rounded-t-2xl">
+          Lesson Complete
+        </header>
+        <main className="space-y-6 px-4 py-6 sm:px-6">
+          <div className="grid place-items-center text-center">
+            <div
+              className="grid size-32 place-items-center rounded-full bg-[conic-gradient(#4d32d4_var(--score),#e8e2f0_0)] p-3"
+              style={{ "--score": `${percent}%` } as React.CSSProperties}
+            >
+              <div className="grid size-full place-items-center rounded-full bg-[#fbf9ff]">
+                <div>
+                  <p className="text-3xl font-bold text-[#4027c2]">
+                    {percent}%
+                  </p>
+                  <p className="text-xs text-[#716a7c]">
+                    Score: {result.score}/{result.maxScore}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl border border-[#e2dced] bg-white p-4 text-center">
+              <Clock3 className="mx-auto text-[#4d31d2]" size={19} />
+              <p className="mt-2 text-xl font-bold">11 min</p>
+              <p className="text-[10px] text-[#716a7c] uppercase">Time spent</p>
+            </div>
+            <div className="rounded-2xl border border-[#e2dced] bg-white p-4 text-center">
+              <Target className="mx-auto text-[#4d31d2]" size={19} />
+              <p className="mt-2 text-xl font-bold">{percent}%</p>
+              <p className="text-[10px] text-[#716a7c] uppercase">Accuracy</p>
+            </div>
+          </div>
+
+          <section>
+            <h2 className="text-base font-bold">What You Learned</h2>
+            <ul className="mt-3 space-y-2">
+              {[
+                "Usage and sentence patterns",
+                "Verb forms",
+                "Questions and negatives",
+              ].map((item) => (
+                <li
+                  key={item}
+                  className="flex min-h-14 items-center gap-3 rounded-xl border border-[#e2dced] bg-white px-4 text-sm"
+                >
+                  <span className="grid size-7 place-items-center rounded-lg bg-[#4d32d4] text-white">
+                    <Check size={15} />
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          {missed.length ? (
+            <Link
+              href={`/practice/${exercise.slug}/result/${result.attemptId}?view=review`}
+              className="flex min-h-12 items-center justify-center rounded-xl bg-[#4c31d4] px-4 font-bold text-white"
+            >
+              Review {missed.length} mistakes
+            </Link>
+          ) : (
+            <div className="rounded-2xl bg-[#ddf8ec] p-5 text-center text-[#08764d]">
+              <CheckCircle2 className="mx-auto" size={30} />
+              <p className="mt-2 text-lg font-bold">Great progress!</p>
+              <p className="mt-1 text-sm">Nothing to review in this lesson.</p>
+            </div>
+          )}
+          <Link
+            href={`/practice/${exercise.slug}`}
+            className="flex min-h-12 items-center justify-center rounded-xl border border-[#dcd5e7] bg-white font-bold text-[#4329c7]"
+          >
+            Practice Again
+          </Link>
+        </main>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8">
-      <header className="border-b border-[var(--border)] pb-7">
+    <div className="mx-auto min-h-[100dvh] max-w-3xl space-y-8 bg-[#fbf9ff] px-4 py-6 pb-24 sm:px-6 lg:min-h-0 lg:rounded-3xl lg:border lg:border-[#e4deef] lg:p-8">
+      <header className="rounded-2xl border border-[#e2dced] bg-white p-5">
         <p className="text-sm font-semibold text-[var(--primary)]">
           Kết quả đã lưu
         </p>
@@ -53,7 +151,7 @@ export function PracticeResultView({ data }: { data: ResultData }) {
             return (
               <li
                 key={question.questionId}
-                className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6"
+                className={`rounded-2xl border bg-white p-5 sm:p-6 ${question.isCorrect ? "border-[#bfe9d7]" : "border-[#f0c5c1]"}`}
               >
                 <div className="flex items-start gap-3">
                   {question.isCorrect ? (
@@ -71,7 +169,10 @@ export function PracticeResultView({ data }: { data: ResultData }) {
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold">
-                      Câu {question.position} · {question.awardedPoints}/
+                      <span className="mr-2">
+                        {question.isCorrect ? "Đúng" : "Sai"}
+                      </span>
+                      · Câu {question.position} · {question.awardedPoints}/
                       {question.points} điểm
                     </p>
                     <div className="mt-3 font-semibold">

@@ -37,7 +37,7 @@ jobs:
         run: npm run verify:database
 
   application-release-gate:
-    if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full')
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full')
     runs-on: windows-latest
     timeout-minutes: 40
     env:
@@ -56,7 +56,7 @@ jobs:
       - run: npm run test:visual
 
   protected-staging-gate:
-    if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full')
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full')
     needs: [database-release-gate, application-release-gate]
     runs-on: windows-latest
     timeout-minutes: 45
@@ -111,7 +111,7 @@ jobs:
     steps:
       - name: Fail closed unless every required gate passed
         env:
-          RUN_FULL: ${{ startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
+          RUN_FULL: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
           DATABASE_RESULT: ${{ needs.database-release-gate.result }}
           APPLICATION_RESULT: ${{ needs.application-release-gate.result }}
           STAGING_RESULT: ${{ needs.protected-staging-gate.result }}

@@ -1,283 +1,243 @@
-import { BookOpenCheck, CheckCircle2, Clock3, PlayCircle } from "lucide-react";
+import { Bell, BookOpen, Flame, Sparkles, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
-import {
-  formatActivityStatus,
-  formatFeedbackStatus,
-  SKILL_LABELS,
-} from "@/features/analytics/model";
+import { SKILL_LABELS } from "@/features/analytics/model";
 import type { LearnerAnalytics } from "@/server/analytics/content";
 
-const dateFormatter = new Intl.DateTimeFormat("vi-VN", {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "Asia/Ho_Chi_Minh",
-});
+const statusStyles = {
+  strong: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  improving: "border-violet-200 bg-violet-50 text-violet-700",
+  practice: "border-amber-200 bg-amber-50 text-amber-700",
+  pending: "border-slate-200 bg-slate-50 text-slate-500",
+} as const;
+
+function levelFromBand(band: number | null) {
+  if (band === null || band < 4) return "A1";
+  if (band < 5) return "A2";
+  return "B1";
+}
+
+function skillStatus(accuracy: number | null) {
+  if (accuracy === null)
+    return { label: "Awaiting score", key: "pending" as const };
+  if (accuracy >= 70) return { label: "Strong", key: "strong" as const };
+  if (accuracy >= 50) return { label: "Improving", key: "improving" as const };
+  return { label: "Needs practice", key: "practice" as const };
+}
+
+function countActiveDays(analytics: LearnerAnalytics) {
+  return new Set(
+    analytics.recentActivity.map((activity) =>
+      new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).format(
+        new Date(activity.occurredAt),
+      ),
+    ),
+  ).size;
+}
 
 export function ProgressAnalytics({
   analytics,
+  currentBand,
 }: {
   analytics: LearnerAnalytics;
+  currentBand: number | null;
 }) {
   const { overview } = analytics;
+  const level = levelFromBand(currentBand);
+  const activeDays = countActiveDays(analytics);
+  const scoredSkills = analytics.skills.filter(
+    (skill) => skill.accuracyPercent !== null,
+  );
+  const strengths = scoredSkills.filter(
+    (skill) => (skill.accuracyPercent ?? 0) >= 70,
+  );
+  const improvement = scoredSkills.toSorted(
+    (a, b) => (a.accuracyPercent ?? 100) - (b.accuracyPercent ?? 100),
+  )[0];
+
   return (
-    <>
-      <section
-        aria-label="Tổng quan tiến độ"
-        className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
-      >
-        <ProgressMetric
-          icon={<BookOpenCheck size={21} />}
-          label="Bài có thể học"
-          value={overview.lessonTotal}
-        />
-        <ProgressMetric
-          icon={<CheckCircle2 size={21} />}
-          label="Đã hoàn thành"
-          value={overview.lessonCompleted}
-        />
-        <ProgressMetric
-          icon={<PlayCircle size={21} />}
-          label="Đang học"
-          value={overview.lessonInProgress}
-        />
-        <ProgressMetric
-          icon={<Clock3 size={21} />}
-          label="Tiến độ lesson"
-          value={`${Math.round(overview.lessonProgressPercent)}%`}
-        />
-      </section>
-
-      <nav
-        aria-label="Đi tới tiến độ theo kỹ năng"
-        className="flex gap-2 overflow-x-auto pb-1"
-      >
-        {analytics.skills.map((item) => (
-          <a
-            key={item.skill}
-            href={`#skill-${item.skill}`}
-            className="shrink-0 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-bold hover:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
-          >
-            {SKILL_LABELS[item.skill]}
-          </a>
-        ))}
-        <a
-          href="#mock-test-history"
-          className="shrink-0 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-bold hover:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+    <div className="min-h-[100dvh] bg-white px-4 pt-4 pb-7 sm:px-6 lg:mx-auto lg:min-h-[calc(100dvh-4.5rem)] lg:max-w-3xl lg:rounded-2xl lg:border lg:border-[var(--border)] lg:px-8 lg:py-7 lg:shadow-[0_18px_50px_rgb(var(--shadow-color)/0.06)]">
+      <header className="flex min-h-12 items-center border-b border-[var(--border)] pb-3 lg:border-0">
+        <div className="grid size-9 place-items-center rounded-full bg-amber-100 text-sm font-bold">
+          IS
+        </div>
+        <p className="ml-3 flex-1 text-sm font-bold text-[var(--primary)]">
+          Indigo Scholar
+        </p>
+        <Link
+          href="/settings"
+          aria-label="Open settings"
+          className="grid size-10 place-items-center rounded-xl text-[var(--primary)] hover:bg-[var(--primary-subtle)]"
         >
-          Mock Tests
-        </a>
-      </nav>
+          <Bell size={18} />
+        </Link>
+      </header>
 
-      <section aria-labelledby="skill-progress-title">
-        <h2 id="skill-progress-title" className="text-2xl font-bold">
-          Tiến độ theo kỹ năng
-        </h2>
-        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {analytics.skills.map((item) => (
-            <article
-              id={`skill-${item.skill}`}
-              key={item.skill}
-              className="scroll-mt-24 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <h3 className="text-xl font-bold">
-                  {SKILL_LABELS[item.skill]}
-                </h3>
-                <span className="rounded-full bg-[var(--background)] px-3 py-1 text-xs font-semibold text-[var(--muted-foreground)]">
-                  {item.activityCount} hoạt động
-                </span>
-              </div>
-              {item.accuracyPercent !== null ? (
-                <>
-                  <p className="mt-5 text-3xl font-bold tabular-nums">
-                    {item.accuracyPercent}%
-                  </p>
-                  <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                    {item.totalScore}/{item.totalMaxScore} điểm từ{" "}
-                    {item.scoredCount} bài đã chấm
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="mt-5 text-lg font-bold">
-                    {formatFeedbackStatus(item.feedbackStatus)}
-                  </p>
-                  <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                    Không tạo điểm hoặc band khi chưa có đánh giá thật.
-                  </p>
-                </>
-              )}
-              <p className="mt-5 text-sm text-[var(--muted-foreground)]">
-                {item.latestActivityAt
-                  ? `Gần nhất: ${dateFormatter.format(new Date(item.latestActivityAt))}`
-                  : "Chưa có hoạt động đã hoàn thành."}
-              </p>
-            </article>
-          ))}
+      <section className="mt-5">
+        <h1 className="text-2xl font-extrabold tracking-[-0.04em]">
+          Your Progress
+        </h1>
+        <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+          See how your English improves over time.
+        </p>
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          <Metric
+            label="Level"
+            value={`${level} Beginner`}
+            icon={<BookOpen size={18} />}
+          />
+          <Metric
+            label="Overall progress"
+            value={`${Math.round(overview.lessonProgressPercent)}%`}
+            icon={<TrendingUp size={18} />}
+          />
+          <Metric
+            label="Active days"
+            value={String(activeDays)}
+            icon={<Flame size={18} />}
+          />
+          <Metric
+            label="Lessons"
+            value={String(overview.lessonCompleted)}
+            icon={<BookOpen size={18} />}
+          />
         </div>
       </section>
 
-      <section
-        aria-labelledby="weak-areas-title"
-        className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7"
-      >
-        <h2 id="weak-areas-title" className="text-2xl font-bold">
-          Khu vực cần ưu tiên
+      <section className="mt-7" aria-labelledby="skill-breakdown">
+        <h2 id="skill-breakdown" className="text-base font-extrabold">
+          Skill Breakdown
         </h2>
-        <p className="mt-2 text-sm leading-6 text-[var(--muted-foreground)]">
-          Chỉ liệt kê kỹ năng objective dưới 70% khi có ít nhất 2 bài đã chấm;
-          đây không phải dự đoán band.
-        </p>
-        {analytics.weakAreas.length > 0 ? (
-          <ul className="mt-5 grid gap-3 sm:grid-cols-2">
-            {analytics.weakAreas.map((item) => (
-              <li
-                key={item.skill}
-                className="rounded-xl bg-[var(--background)] p-4"
+        <div className="mt-3 space-y-3">
+          {analytics.skills.map((skill) => {
+            const status = skillStatus(skill.accuracyPercent);
+            const percent = skill.accuracyPercent ?? 0;
+            return (
+              <article
+                key={skill.skill}
+                className="rounded-xl border border-[var(--border)] bg-white p-4 shadow-[0_5px_16px_rgb(var(--shadow-color)/0.04)]"
               >
-                <p className="font-bold">{SKILL_LABELS[item.skill]}</p>
-                <p className="mt-1 text-sm text-[var(--muted-foreground)] tabular-nums">
-                  {item.accuracyPercent}% từ {item.scoredCount} bài đã chấm
-                </p>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-bold">
+                      {SKILL_LABELS[skill.skill]}
+                    </h3>
+                    <p className="mt-0.5 text-[10px] text-[var(--muted-foreground)]">
+                      {skill.activityCount} saved activities
+                    </p>
+                  </div>
+                  <span
+                    className={`rounded-full border px-2 py-1 text-[9px] font-bold uppercase ${statusStyles[status.key]}`}
+                  >
+                    {status.label}
+                  </span>
+                </div>
+                <div className="mt-3 flex items-end justify-between gap-4">
+                  <strong className="text-2xl tabular-nums">
+                    {skill.accuracyPercent === null ? "—" : `${percent}%`}
+                  </strong>
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--muted)]">
+                    <div
+                      className="h-full rounded-full bg-[var(--accent)]"
+                      style={{ width: `${percent}%` }}
+                    />
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="mt-7 rounded-xl border border-[var(--border)] bg-white p-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-extrabold">Recent Activity</h2>
+          <span className="text-xs text-[var(--muted-foreground)]">
+            {analytics.recentActivity.length} items
+          </span>
+        </div>
+        {analytics.recentActivity.length ? (
+          <ol className="mt-3 divide-y divide-[var(--border)]">
+            {analytics.recentActivity.slice(0, 5).map((item) => (
+              <li
+                key={`${item.activityType}-${item.entityId}`}
+                className="py-3"
+              >
+                <Link
+                  href={item.href}
+                  className="flex items-center gap-3 rounded-lg focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+                >
+                  <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[var(--primary-subtle)] text-[var(--primary)]">
+                    <TrendingUp size={15} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-bold">
+                      {item.title}
+                    </span>
+                    <span className="text-[10px] text-[var(--muted-foreground)]">
+                      {item.skill} · {item.status}
+                    </span>
+                  </span>
+                  {item.score !== null && item.maxScore !== null ? (
+                    <strong className="text-xs">
+                      {item.score}/{item.maxScore}
+                    </strong>
+                  ) : null}
+                </Link>
               </li>
             ))}
-          </ul>
+          </ol>
         ) : (
-          <p className="mt-5 rounded-xl border border-dashed border-[var(--border-strong)] p-5 text-[var(--muted-foreground)]">
-            Chưa đủ bài đã hoàn thành để xác định khu vực cần ưu tiên.
+          <p className="mt-3 rounded-lg bg-[var(--muted)] p-4 text-sm text-[var(--muted-foreground)]">
+            Complete a lesson to start building your activity history.
           </p>
         )}
       </section>
 
-      <ActivityHistory analytics={analytics} />
-      <MockHistory analytics={analytics} />
-    </>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <section className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+          <div className="flex items-center gap-2 text-emerald-700">
+            <Sparkles size={17} />
+            <h2 className="text-sm font-extrabold">Your Strengths</h2>
+          </div>
+          <p className="mt-3 text-sm leading-6 text-emerald-900">
+            {strengths.length
+              ? strengths.map((item) => SKILL_LABELS[item.skill]).join(" · ")
+              : "More scored practice is needed before strengths can be identified."}
+          </p>
+        </section>
+        <section className="rounded-xl border border-violet-200 bg-violet-50 p-4">
+          <div className="flex items-center gap-2 text-violet-700">
+            <TrendingUp size={17} />
+            <h2 className="text-sm font-extrabold">Focus Next</h2>
+          </div>
+          <p className="mt-3 text-sm leading-6 text-violet-900">
+            {improvement
+              ? `${SKILL_LABELS[improvement.skill]} is your next data-backed focus area.`
+              : "Finish two scored activities in a skill to unlock a recommendation."}
+          </p>
+        </section>
+      </div>
+    </div>
   );
 }
 
-function ActivityHistory({ analytics }: { analytics: LearnerAnalytics }) {
-  return (
-    <section aria-labelledby="recent-activity-title">
-      <h2 id="recent-activity-title" className="text-2xl font-bold">
-        Hoạt động gần đây
-      </h2>
-      {analytics.recentActivity.length > 0 ? (
-        <ol className="mt-5 divide-y divide-[var(--border)] rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-5 sm:px-7">
-          {analytics.recentActivity.map((item) => (
-            <li
-              key={`${item.activityType}-${item.entityId}`}
-              className="flex flex-col gap-3 py-5 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div>
-                <Link
-                  href={item.href}
-                  className="font-bold hover:text-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
-                >
-                  {item.title}
-                </Link>
-                <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                  {formatActivityStatus(item.status)}
-                  {item.score !== null && item.maxScore !== null
-                    ? ` · ${item.score}/${item.maxScore}`
-                    : ""}
-                  {item.feedbackStatus
-                    ? ` · ${formatFeedbackStatus(item.feedbackStatus)}`
-                    : ""}
-                </p>
-              </div>
-              <time
-                dateTime={item.occurredAt}
-                className="shrink-0 text-sm text-[var(--muted-foreground)]"
-              >
-                {dateFormatter.format(new Date(item.occurredAt))}
-              </time>
-            </li>
-          ))}
-        </ol>
-      ) : (
-        <p className="mt-5 rounded-xl border border-dashed border-[var(--border-strong)] p-8 text-center text-[var(--muted-foreground)]">
-          Chưa có hoạt động thật để hiển thị.
-        </p>
-      )}
-    </section>
-  );
-}
-
-function MockHistory({ analytics }: { analytics: LearnerAnalytics }) {
-  return (
-    <section
-      id="mock-test-history"
-      aria-labelledby="mock-history-title"
-      className="scroll-mt-24"
-    >
-      <h2 id="mock-history-title" className="text-2xl font-bold">
-        Lịch sử Mock Test
-      </h2>
-      {analytics.mockTests.length > 0 ? (
-        <ol className="mt-5 space-y-3">
-          {analytics.mockTests.map((session) => (
-            <li
-              key={session.sessionId}
-              className="flex flex-col gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div>
-                <Link
-                  href={session.href}
-                  className="font-bold hover:text-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
-                >
-                  {session.title}
-                </Link>
-                <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                  {formatActivityStatus(session.status)} · bắt đầu{" "}
-                  {dateFormatter.format(new Date(session.startedAt))}
-                </p>
-              </div>
-              <div className="text-sm text-[var(--muted-foreground)] tabular-nums sm:text-right">
-                <p>
-                  Reading:{" "}
-                  {scoreText(session.readingScore, session.readingMaxScore)}
-                </p>
-                <p>
-                  Listening:{" "}
-                  {scoreText(session.listeningScore, session.listeningMaxScore)}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ol>
-      ) : (
-        <p className="mt-5 rounded-xl border border-dashed border-[var(--border-strong)] p-8 text-center text-[var(--muted-foreground)]">
-          Mock Test đã bắt đầu sẽ xuất hiện tại đây; không có kết quả mẫu hoặc
-          band giả.
-        </p>
-      )}
-    </section>
-  );
-}
-
-function scoreText(score: number | null, maxScore: number | null) {
-  return score !== null && maxScore !== null
-    ? `${score}/${maxScore}`
-    : "Chưa có kết quả";
-}
-
-function ProgressMetric({
-  icon,
+function Metric({
   label,
   value,
+  icon,
 }: {
-  icon: React.ReactNode;
   label: string;
-  value: number | string;
+  value: string;
+  icon: React.ReactNode;
 }) {
   return (
-    <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-      <div aria-hidden="true" className="text-[var(--primary)]">
-        {icon}
-      </div>
-      <p className="mt-5 text-sm text-[var(--muted-foreground)]">{label}</p>
-      <p className="mt-1 text-2xl font-bold tabular-nums">{value}</p>
+    <article className="rounded-xl border border-[var(--border)] bg-[#fbf9ff] p-4">
+      <div className="text-[var(--primary)]">{icon}</div>
+      <p className="mt-3 text-[10px] font-bold tracking-wider text-[var(--muted-foreground)] uppercase">
+        {label}
+      </p>
+      <p className="mt-1 text-lg font-extrabold">{value}</p>
     </article>
   );
 }

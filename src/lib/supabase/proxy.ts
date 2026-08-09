@@ -33,6 +33,9 @@ export async function updateSupabaseSession(request: NextRequest) {
     },
   );
 
+  const hadAuthCookie = request.cookies
+    .getAll()
+    .some(({ name }) => /^sb-.+-auth-token(?:\.\d+)?$/.test(name));
   let isAuthenticated = false;
   try {
     const { data } = await supabase.auth.getClaims();
@@ -51,6 +54,9 @@ export async function updateSupabaseSession(request: NextRequest) {
       "next",
       getSafeRedirectPath(`${pathname}${search}`),
     );
+    if (hadAuthCookie) {
+      loginUrl.searchParams.set("authError", "session_expired");
+    }
     return NextResponse.redirect(loginUrl);
   }
 

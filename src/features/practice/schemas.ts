@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/validation/zod";
 
 import { learningSlugSchema } from "@/features/learning/schemas";
 
@@ -20,6 +20,8 @@ export const savePracticeAnswerSchema = z.object({
   answerText: optionalTextAnswer,
   clientRevision: z.coerce.number().int().min(0).max(2_147_483_647),
   nextPosition: z.coerce.number().int().min(1).max(1000),
+  currentPosition: z.coerce.number().int().min(1).max(1000).optional(),
+  checkAnswer: z.coerce.boolean().optional(),
 });
 
 export const submitPracticeSchema = z.object({

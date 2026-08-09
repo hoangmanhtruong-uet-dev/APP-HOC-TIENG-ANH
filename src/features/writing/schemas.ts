@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/validation/zod";
 
 import { learningSlugSchema } from "@/features/learning/schemas";
 
@@ -19,6 +19,7 @@ export const saveWritingDraftSchema = z.object({
 export const submitWritingSchema = z.object({
   submissionId: z.uuid(),
   taskSlug: learningSlugSchema,
+  idempotencyKey: z.string().trim().min(1).max(200),
 });
 
 export const requestWritingFeedbackSchema = z.object({

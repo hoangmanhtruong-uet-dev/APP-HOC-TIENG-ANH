@@ -27,11 +27,13 @@ export type WritingFeedbackFailureCode =
 export function getWritingAiConfiguration(): WritingAiConfiguration | null {
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   const signingSecret = process.env.WRITING_FEEDBACK_SIGNING_SECRET?.trim();
-  if (!apiKey || !signingSecret || signingSecret.length < 32) return null;
+  const model = process.env.OPENAI_WRITING_MODEL?.trim();
+  if (!apiKey || !model || !signingSecret || signingSecret.length < 32)
+    return null;
   return {
     apiKey,
     signingSecret,
-    model: process.env.OPENAI_WRITING_MODEL?.trim() || "gpt-5-mini",
+    model,
   };
 }
 

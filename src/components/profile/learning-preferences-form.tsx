@@ -321,7 +321,7 @@ export function LearningPreferencesForm({
           >
             {state.message}
             {state.status === "error" && state.requestId ? (
-              <span className="mt-1 block text-xs opacity-80">
+              <span className="mt-1 block text-xs font-medium">
                 Mã yêu cầu: {state.requestId}
               </span>
             ) : null}

@@ -24,8 +24,8 @@ export function ReadingResult({ data }: { data: ResultData }) {
   );
 
   return (
-    <div className="space-y-8">
-      <header className="border-b border-[var(--border)] pb-7">
+    <div className="mx-auto min-h-[100dvh] max-w-3xl space-y-8 bg-[#fbf9ff] px-4 py-6 pb-24 sm:px-6 lg:min-h-0 lg:rounded-3xl lg:border lg:border-[#e4deef] lg:p-8">
+      <header className="rounded-2xl border border-[#e2dced] bg-white p-5">
         <p className="text-sm font-semibold text-[var(--primary)]">
           Kết quả đã lưu
         </p>
@@ -69,7 +69,7 @@ export function ReadingResult({ data }: { data: ResultData }) {
             return (
               <li
                 key={question.questionId}
-                className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6"
+                className={`rounded-2xl border bg-white p-5 sm:p-6 ${question.isCorrect ? "border-[#bde9d7]" : "border-[#efbdb8]"}`}
               >
                 <div className="flex items-start gap-3">
                   {question.isCorrect ? (
@@ -105,7 +105,7 @@ export function ReadingResult({ data }: { data: ResultData }) {
                         <>
                           <div>
                             <dt className="font-bold">Đáp án</dt>
-                            <dd className="mt-1 leading-6 break-words text-[var(--muted-foreground)]">
+                            <dd className="mt-1 rounded-xl bg-[#dff8ed] p-3 leading-6 break-words text-[#08764d]">
                               {(question.acceptedTextAnswers ?? []).join(
                                 "; ",
                               ) || correct.join("; ")}
@@ -114,7 +114,7 @@ export function ReadingResult({ data }: { data: ResultData }) {
                           {question.explanationMarkdown ? (
                             <div>
                               <dt className="font-bold">Giải thích</dt>
-                              <dd className="mt-2">
+                              <dd className="mt-2 rounded-xl bg-[#f0ebff] p-3">
                                 <LessonMarkdown>
                                   {question.explanationMarkdown}
                                 </LessonMarkdown>

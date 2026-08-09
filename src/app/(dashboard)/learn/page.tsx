@@ -62,6 +62,16 @@ export default async function LearnPage() {
             </p>
           </Link>
           <Link
+            href="/learn/mistakes"
+            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+          >
+            <h3 className="text-lg font-bold">Sổ tay lỗi sai</h3>
+            <p className="mt-2 leading-7 text-[var(--muted-foreground)]">
+              Tập hợp các bài có câu trả lời chưa đúng và mở lại phần giải thích
+              sau khi chấm.
+            </p>
+          </Link>
+          <Link
             href="/practice/listening"
             className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
           >

@@ -34,12 +34,13 @@ const emptyOverview: LearnerProgressOverview = {
 export const getLearnerAnalytics = cache(async (limit = 8) => {
   await requireCompletedOnboarding();
   const supabase = await createSupabaseServerClient();
+  const safeLimit = Math.min(20, Math.max(1, Math.trunc(limit)));
   const [overviewResult, skillsResult, activityResult, mockResult] =
     await Promise.all([
       supabase.rpc("get_learner_progress_overview"),
       supabase.rpc("get_learner_skill_progress"),
-      supabase.rpc("get_learner_recent_activity", { p_limit: limit }),
-      supabase.rpc("get_learner_mock_test_history", { p_limit: limit }),
+      supabase.rpc("get_learner_recent_activity", { p_limit: safeLimit }),
+      supabase.rpc("get_learner_mock_test_history", { p_limit: safeLimit }),
     ]);
 
   if (
@@ -48,6 +49,19 @@ export const getLearnerAnalytics = cache(async (limit = 8) => {
     activityResult.error ||
     mockResult.error
   ) {
+    console.error(
+      JSON.stringify({
+        event: "analytics.rpc_failed",
+        overview: overviewResult.error
+          ? { code: overviewResult.error.code }
+          : null,
+        skills: skillsResult.error ? { code: skillsResult.error.code } : null,
+        activity: activityResult.error
+          ? { code: activityResult.error.code }
+          : null,
+        mock: mockResult.error ? { code: mockResult.error.code } : null,
+      }),
+    );
     throw new AnalyticsReadError();
   }
 

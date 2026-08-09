@@ -45,17 +45,14 @@ jobs:
       - name: Unit tests
         run: npm run test
 
-      - name: Start local Supabase
-        run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor
-
       - name: Verify migrations and database tests
-        run: |
-          npx supabase db reset --local
-          npx supabase test db
-          npx supabase db lint --local --level warning
+        run: npm run verify:database
 
       - name: Build
         run: npm run build
 
       - name: E2E smoke
+        # Public/default mode reports missing authenticated secrets explicitly.
+        # Release verification must separately run test:e2e:production-verification
+        # with dedicated secret-managed accounts and the approved project ref.
         run: npm run test:e2e

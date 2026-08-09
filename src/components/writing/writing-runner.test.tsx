@@ -62,19 +62,19 @@ describe("WritingRunner", () => {
   it("renders the pinned task, editor and database-derived timer", () => {
     render(<WritingRunner data={fixture} />);
     expect(screen.getByText(fixture.task.promptText)).toBeVisible();
-    expect(screen.getByLabelText("Bài viết của bạn")).toHaveValue(
+    expect(screen.getByLabelText("Your writing")).toHaveValue(
       "A saved introduction.",
     );
-    expect(screen.getByLabelText(/giây còn lại theo máy chủ/)).toBeVisible();
     expect(
-      screen.queryByText(/điểm IELTS chính thức/i),
-    ).not.toBeInTheDocument();
+      screen.getByLabelText(/seconds remaining according to the server/),
+    ).toBeVisible();
+    expect(screen.queryByText(/official IELTS score/i)).not.toBeInTheDocument();
   });
 
   it("autosaves the full draft with the expected server revision", async () => {
     vi.useFakeTimers();
     render(<WritingRunner data={fixture} />);
-    fireEvent.change(screen.getByLabelText("Bài viết của bạn"), {
+    fireEvent.change(screen.getByLabelText("Your writing"), {
       target: { value: "A changed introduction with more useful detail." },
     });
     await act(async () => vi.advanceTimersByTimeAsync(801));
@@ -92,16 +92,40 @@ describe("WritingRunner", () => {
     vi.mocked(saveWritingDraftAction).mockResolvedValueOnce({
       status: "conflict",
       serverRevision: 2,
-      message: "PostgreSQL có bản nháp mới hơn.",
+      message: "PostgreSQL has a newer draft.",
     });
     render(<WritingRunner data={fixture} />);
-    const editor = screen.getByLabelText("Bài viết của bạn");
+    const editor = screen.getByLabelText("Your writing");
     fireEvent.change(editor, { target: { value: "Unsaved local version." } });
     await act(async () => vi.advanceTimersByTimeAsync(801));
     expect(editor).toHaveValue("Unsaved local version.");
-    expect(screen.getByRole("alert")).toHaveTextContent("mới hơn");
+    expect(screen.getByRole("alert")).toHaveTextContent("newer draft");
     expect(
-      screen.getByRole("button", { name: "Tải bản PostgreSQL" }),
+      screen.getByRole("button", { name: "Load PostgreSQL version" }),
     ).toBeVisible();
+  });
+
+  it("keeps local text after a network failure and retries only on request", async () => {
+    vi.useFakeTimers();
+    vi.mocked(saveWritingDraftAction).mockRejectedValueOnce(
+      new TypeError("network unavailable"),
+    );
+    render(<WritingRunner data={fixture} />);
+    const editor = screen.getByLabelText("Your writing");
+    fireEvent.change(editor, { target: { value: "Unsaved network draft." } });
+    await act(async () => vi.advanceTimersByTimeAsync(801));
+
+    expect(editor).toHaveValue("Unsaved network draft.");
+    expect(screen.getByRole("alert")).toHaveTextContent("Save failed");
+    expect(saveWritingDraftAction).toHaveBeenCalledTimes(1);
+    await act(async () => vi.advanceTimersByTimeAsync(10_000));
+    expect(saveWritingDraftAction).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByRole("button", { name: "Retry save" }));
+    await act(async () => Promise.resolve());
+    expect(saveWritingDraftAction).toHaveBeenCalledTimes(2);
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Saved to PostgreSQL.",
+    );
   });
 });

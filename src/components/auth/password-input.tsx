@@ -44,7 +44,7 @@ export function PasswordInput({
           required
           aria-invalid={Boolean(error)}
           aria-describedby={error ? errorId : undefined}
-          className="h-11 w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 pr-12 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+          className="h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-3 pr-12 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
           placeholder={
             autoComplete === "new-password"
               ? "Tối thiểu 8 ký tự…"

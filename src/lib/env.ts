@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/validation/zod";
 
 const publicEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.url(
@@ -20,11 +20,11 @@ const serverEnvSchema = z
       .default("development"),
     NEXT_PUBLIC_SUPPORT_EMAIL: z.email().optional(),
     NEXT_PUBLIC_SITE_URL: z.url().optional(),
-    OPENAI_API_KEY: z.string().trim().min(1).optional(),
-    OPENAI_WRITING_MODEL: z.string().trim().min(1).optional(),
-    WRITING_FEEDBACK_SIGNING_SECRET: z.string().trim().min(32).optional(),
-    OPENAI_SPEAKING_TRANSCRIPTION_MODEL: z.string().trim().min(1).optional(),
-    OPENAI_SPEAKING_FEEDBACK_MODEL: z.string().trim().min(1).optional(),
+    OPENAI_API_KEY: z.string().trim().optional(),
+    OPENAI_WRITING_MODEL: z.string().trim().optional(),
+    WRITING_FEEDBACK_SIGNING_SECRET: z.string().trim().optional(),
+    OPENAI_SPEAKING_TRANSCRIPTION_MODEL: z.string().trim().optional(),
+    OPENAI_SPEAKING_FEEDBACK_MODEL: z.string().trim().optional(),
     SPEAKING_PIPELINE_SIGNING_SECRET: z.string().trim().min(32).optional(),
     SUPABASE_SERVICE_ROLE_KEY: z.string().trim().min(1).optional(),
     STORAGE_CLEANUP_SECRET: z.string().trim().min(32).optional(),
@@ -57,65 +57,15 @@ const serverEnvSchema = z
       });
     }
 
-    if (
-      env.OPENAI_API_KEY &&
-      !env.WRITING_FEEDBACK_SIGNING_SECRET &&
-      !env.SPEAKING_PIPELINE_SIGNING_SECRET
-    ) {
+    if (env.NODE_ENV === "production" && !env.SUPABASE_SERVICE_ROLE_KEY) {
       context.addIssue({
         code: "custom",
-        path: ["OPENAI_API_KEY"],
-        message: "cần ít nhất một signing secret tương ứng",
+        path: ["SUPABASE_SERVICE_ROLE_KEY"],
+        message: "bắt buộc trong production để thực thi retention",
       });
     }
 
-    const writingConfigured = Boolean(
-      env.OPENAI_WRITING_MODEL || env.WRITING_FEEDBACK_SIGNING_SECRET,
-    );
-    if (
-      writingConfigured &&
-      (!env.OPENAI_API_KEY || !env.WRITING_FEEDBACK_SIGNING_SECRET)
-    ) {
-      context.addIssue({
-        code: "custom",
-        path: ["WRITING_FEEDBACK_SIGNING_SECRET"],
-        message:
-          "OPENAI_API_KEY và signing secret phải được cấu hình cùng nhau",
-      });
-    }
-
-    const speakingAiConfigured = Boolean(
-      env.OPENAI_SPEAKING_TRANSCRIPTION_MODEL ||
-      env.OPENAI_SPEAKING_FEEDBACK_MODEL,
-    );
-    if (
-      speakingAiConfigured &&
-      (!env.OPENAI_API_KEY || !env.SPEAKING_PIPELINE_SIGNING_SECRET)
-    ) {
-      context.addIssue({
-        code: "custom",
-        path: ["SPEAKING_PIPELINE_SIGNING_SECRET"],
-        message: "Speaking AI cần OPENAI_API_KEY và signing secret",
-      });
-    }
-
-    const cleanupConfigured = Boolean(
-      env.SUPABASE_SERVICE_ROLE_KEY || env.STORAGE_CLEANUP_SECRET,
-    );
-    if (
-      cleanupConfigured &&
-      (!env.SUPABASE_SERVICE_ROLE_KEY || !env.STORAGE_CLEANUP_SECRET)
-    ) {
-      context.addIssue({
-        code: "custom",
-        path: ["STORAGE_CLEANUP_SECRET"],
-        message: "storage cleanup cần service-role key và cleanup secret",
-      });
-    }
-    if (
-      env.NODE_ENV === "production" &&
-      (!env.SUPABASE_SERVICE_ROLE_KEY || !env.STORAGE_CLEANUP_SECRET)
-    ) {
+    if (env.NODE_ENV === "production" && !env.STORAGE_CLEANUP_SECRET) {
       context.addIssue({
         code: "custom",
         path: ["STORAGE_CLEANUP_SECRET"],
@@ -126,12 +76,50 @@ const serverEnvSchema = z
 
 export type PublicEnv = z.infer<typeof publicEnvSchema>;
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
+export type OptionalAiStatus = "disabled" | "configured" | "misconfigured";
+export type OptionalAiReadiness = {
+  overall: OptionalAiStatus;
+  writing: OptionalAiStatus;
+  speaking: OptionalAiStatus;
+};
+
+type OptionalAiEnvInput = Partial<
+  Pick<
+    ServerEnv,
+    | "OPENAI_API_KEY"
+    | "OPENAI_WRITING_MODEL"
+    | "WRITING_FEEDBACK_SIGNING_SECRET"
+    | "OPENAI_SPEAKING_TRANSCRIPTION_MODEL"
+    | "OPENAI_SPEAKING_FEEDBACK_MODEL"
+    | "SPEAKING_PIPELINE_SIGNING_SECRET"
+  >
+>;
 
 export class EnvironmentValidationError extends Error {
-  constructor(details: string) {
+  constructor(
+    details: string,
+    public readonly fields: string[],
+  ) {
     super(`Cấu hình môi trường chưa hợp lệ. ${details}`);
     this.name = "EnvironmentValidationError";
   }
+}
+
+function createEnvironmentValidationError(
+  issues: Array<{ path: PropertyKey[]; message: string }>,
+) {
+  const fields = [
+    ...new Set(
+      issues
+        .map((issue) => issue.path.join("."))
+        .filter((field) => field.length > 0),
+    ),
+  ];
+  const details = issues
+    .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+    .join(" ");
+
+  return new EnvironmentValidationError(details, fields);
 }
 
 export function parsePublicEnv(
@@ -140,11 +128,7 @@ export function parsePublicEnv(
   const result = publicEnvSchema.safeParse(input);
 
   if (!result.success) {
-    const details = result.error.issues
-      .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
-      .join(" ");
-
-    throw new EnvironmentValidationError(details);
+    throw createEnvironmentValidationError(result.error.issues);
   }
 
   return result.data;
@@ -164,12 +148,70 @@ export function parseServerEnv(
 ): ServerEnv {
   const result = serverEnvSchema.safeParse(input);
   if (!result.success) {
-    const details = result.error.issues
-      .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
-      .join(" ");
-    throw new EnvironmentValidationError(details);
+    throw createEnvironmentValidationError(result.error.issues);
   }
   return result.data;
+}
+
+export function inspectOptionalAiConfiguration(
+  input: OptionalAiEnvInput,
+): OptionalAiReadiness {
+  const hasApiKey = isPresent(input.OPENAI_API_KEY);
+  const hasWritingModel = isPresent(input.OPENAI_WRITING_MODEL);
+  const writingSecret = input.WRITING_FEEDBACK_SIGNING_SECRET?.trim();
+  const hasWritingSecret = Boolean(writingSecret);
+  const hasTranscriptionModel = isPresent(
+    input.OPENAI_SPEAKING_TRANSCRIPTION_MODEL,
+  );
+  const hasSpeakingFeedbackModel = isPresent(
+    input.OPENAI_SPEAKING_FEEDBACK_MODEL,
+  );
+  const hasSpeakingModel = hasTranscriptionModel || hasSpeakingFeedbackModel;
+  const speakingSecret = input.SPEAKING_PIPELINE_SIGNING_SECRET?.trim();
+  const hasAnyAiValue = Boolean(
+    hasApiKey || hasWritingModel || hasWritingSecret || hasSpeakingModel,
+  );
+
+  if (!hasAnyAiValue) {
+    return {
+      overall: "disabled",
+      writing: "disabled",
+      speaking: "disabled",
+    };
+  }
+
+  const orphanApiKey =
+    hasApiKey && !hasWritingModel && !hasWritingSecret && !hasSpeakingModel;
+  const writingIntent = hasWritingModel || hasWritingSecret || orphanApiKey;
+  const speakingIntent = hasSpeakingModel || orphanApiKey;
+  const writing = writingIntent
+    ? hasApiKey &&
+      hasWritingModel &&
+      Boolean(writingSecret && writingSecret.length >= 32)
+      ? "configured"
+      : "misconfigured"
+    : "disabled";
+  const speaking = speakingIntent
+    ? hasApiKey &&
+      hasTranscriptionModel &&
+      hasSpeakingFeedbackModel &&
+      Boolean(speakingSecret && speakingSecret.length >= 32)
+      ? "configured"
+      : "misconfigured"
+    : "disabled";
+
+  return {
+    overall:
+      writing === "misconfigured" || speaking === "misconfigured"
+        ? "misconfigured"
+        : "configured",
+    writing,
+    speaking,
+  };
+}
+
+function isPresent(value: string | undefined) {
+  return Boolean(value?.trim());
 }
 
 export function getServerEnv(): ServerEnv {

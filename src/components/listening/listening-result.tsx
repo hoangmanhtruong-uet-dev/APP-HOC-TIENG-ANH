@@ -23,8 +23,8 @@ export function ListeningResult({ data }: { data: ResultData }) {
     ),
   );
   return (
-    <div className="space-y-8">
-      <header className="border-b border-[var(--border)] pb-7">
+    <div className="mx-auto min-h-[100dvh] max-w-3xl space-y-8 bg-[#fbf9ff] px-4 py-6 pb-24 sm:px-6 lg:min-h-0 lg:rounded-3xl lg:border lg:border-[#e4deef] lg:p-8">
+      <header className="rounded-2xl border border-[#e2dced] bg-white p-5">
         <p className="text-sm font-semibold text-[var(--primary)]">
           Kết quả đã lưu
         </p>
@@ -39,7 +39,10 @@ export function ListeningResult({ data }: { data: ResultData }) {
             {percent}%
           </p>
         </div>
-        <p className="mt-4 inline-flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
+        <p
+          data-testid="listening-elapsed-time"
+          className="mt-4 inline-flex items-center gap-2 text-sm text-[var(--muted-foreground)]"
+        >
           <Clock3 aria-hidden="true" size={17} />
           Thời gian: {Math.floor(elapsedSeconds / 60)} phút{" "}
           {elapsedSeconds % 60} giây ·{" "}
@@ -68,7 +71,7 @@ export function ListeningResult({ data }: { data: ResultData }) {
             return (
               <li
                 key={question.questionId}
-                className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6"
+                className={`rounded-2xl border bg-white p-5 sm:p-6 ${question.isCorrect ? "border-[#bde9d7]" : "border-[#efbdb8]"}`}
               >
                 <div className="flex items-start gap-3">
                   {question.isCorrect ? (

@@ -39,7 +39,7 @@ export function MockTestDetail({
       {error ? (
         <p
           role="alert"
-          className="rounded-lg bg-[var(--danger-subtle)] px-4 py-3 font-semibold"
+          className="rounded-lg bg-[var(--destructive-subtle)] px-4 py-3 font-semibold text-[var(--destructive)]"
         >
           Chưa thể bắt đầu mock test. Vui lòng thử lại.
         </p>

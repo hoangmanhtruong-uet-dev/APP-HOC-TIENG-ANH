@@ -9,12 +9,20 @@ export const metadata: Metadata = { title: "Kết quả luyện tập" };
 
 export default async function PracticeResultPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ exerciseSlug: string; attemptId: string }>;
+  searchParams: Promise<{ view?: string }>;
 }) {
-  const parsed = attemptRouteSchema.safeParse(await params);
+  const [routeParams, query] = await Promise.all([params, searchParams]);
+  const parsed = attemptRouteSchema.safeParse(routeParams);
   if (!parsed.success) notFound();
   const data = await getPracticeResult(parsed.data.attemptId);
   if (!data || data.exercise.slug !== parsed.data.exerciseSlug) notFound();
-  return <PracticeResultView data={data} />;
+  return (
+    <PracticeResultView
+      data={data}
+      view={query.view === "review" ? "review" : "summary"}
+    />
+  );
 }

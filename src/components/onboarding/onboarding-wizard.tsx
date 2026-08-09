@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 
@@ -27,6 +28,8 @@ import type { LearnerProfile } from "@/server/onboarding/learner-profile";
 import { cn } from "@/lib/utils";
 
 const initialActionState: OnboardingActionState = { status: "idle" };
+const FORM_STEP_COUNT = ONBOARDING_STEPS.length - 1;
+const ALL_PRIORITY_SKILLS = [...PRIORITY_SKILLS];
 
 type WizardValues = {
   testType: string;
@@ -66,6 +69,27 @@ function initialValues(profile: LearnerProfile | null): WizardValues {
   };
 }
 
+function formatExamDate(value: string) {
+  if (!value) return "Chưa xác định";
+  const date = new Date(value + "T00:00:00Z");
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date);
+}
+
+function formatWeeklyStudyTime(minutesValue: string, daysValue: string) {
+  const weeklyMinutes = Number(minutesValue) * Number(daysValue);
+  if (!Number.isFinite(weeklyMinutes) || weeklyMinutes <= 0) return null;
+  const hours = Math.floor(weeklyMinutes / 60);
+  const minutes = weeklyMinutes % 60;
+  const parts = [hours ? hours + " giờ" : "", minutes ? minutes + " phút" : ""];
+  return parts.filter(Boolean).join(" ") + " mỗi tuần";
+}
+
 function SubmitStepButton() {
   const { pending } = useFormStatus();
   return (
@@ -80,7 +104,7 @@ function CompleteButton() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" size="lg" disabled={pending}>
-      {pending ? "Đang hoàn tất…" : "Hoàn tất onboarding"}
+      {pending ? "Đang hoàn tất…" : "Hoàn tất thiết lập"}
       {!pending ? <Check aria-hidden="true" size={19} /> : null}
     </Button>
   );
@@ -107,7 +131,7 @@ function StepHeading({
       <h1
         id="onboarding-step-title"
         tabIndex={-1}
-        className="text-2xl font-bold tracking-[-0.035em] text-[var(--foreground)] outline-none sm:text-3xl"
+        className="rounded-md text-2xl font-bold tracking-[-0.035em] text-[var(--foreground)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-4 focus-visible:outline-none sm:text-3xl"
       >
         {title}
       </h1>
@@ -118,7 +142,15 @@ function StepHeading({
   );
 }
 
-function FormFooter({ step, onBack }: { step: number; onBack: () => void }) {
+function FormFooter({
+  step,
+  onBack,
+  returnToReview,
+}: {
+  step: number;
+  onBack: () => void;
+  returnToReview: boolean;
+}) {
   return (
     <div className="mt-8 flex flex-col-reverse gap-3 border-t border-[var(--border)] pt-6 sm:flex-row sm:items-center sm:justify-between">
       <Button type="button" variant="ghost" onClick={onBack}>
@@ -126,6 +158,11 @@ function FormFooter({ step, onBack }: { step: number; onBack: () => void }) {
         Quay lại
       </Button>
       <input type="hidden" name="step" value={step} />
+      <input
+        type="hidden"
+        name="returnToReview"
+        value={returnToReview ? "true" : "false"}
+      />
       <SubmitStepButton />
     </div>
   );
@@ -158,7 +195,7 @@ function SelectField({
         onChange={(event) => onChange(event.target.value)}
         aria-invalid={Boolean(error?.[0])}
         aria-describedby={error?.[0] ? `${id}-error` : undefined}
-        className="mt-2 h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+        className="mt-2 h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-raised)] px-3 text-sm focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
       >
         {children}
       </select>
@@ -170,17 +207,21 @@ function SelectField({
 export function OnboardingWizard({
   learnerProfile,
   displayName,
+  initialStep,
 }: {
   learnerProfile: LearnerProfile | null;
   displayName: string;
+  initialStep?: number;
 }) {
-  const [step, setStep] = useState(() =>
-    Math.min(8, Math.max(1, learnerProfile?.onboarding_step ?? 1)),
-  );
+  const [step, setStep] = useState(() => {
+    const persistedStep = learnerProfile?.onboarding_step ?? 1;
+    return Math.min(8, Math.max(1, persistedStep, initialStep ?? 1));
+  });
   const [values, setValues] = useState(() => initialValues(learnerProfile));
   const [hasExamDate, setHasExamDate] = useState(
     Boolean(learnerProfile?.target_exam_date),
   );
+  const [editingFromReview, setEditingFromReview] = useState(false);
   const [saveState, saveAction] = useActionState(
     saveOnboardingStepAction,
     initialActionState,
@@ -198,6 +239,7 @@ export function OnboardingWizard({
       saveState.requestId !== previousRequestId.current
     ) {
       previousRequestId.current = saveState.requestId;
+      setEditingFromReview(false);
       setStep(saveState.nextStep);
       requestAnimationFrame(() =>
         document.getElementById("onboarding-step-title")?.focus(),
@@ -217,11 +259,16 @@ export function OnboardingWizard({
     }
   }, [saveState]);
 
-  function moveTo(nextStep: number) {
+  function moveTo(nextStep: number, fromReview = false) {
+    setEditingFromReview(fromReview);
     setStep(nextStep);
     requestAnimationFrame(() =>
       document.getElementById("onboarding-step-title")?.focus(),
     );
+  }
+
+  function moveBack(previousStep: number) {
+    moveTo(editingFromReview ? 8 : previousStep);
   }
 
   function toggleSkill(skill: string, checked: boolean) {
@@ -235,18 +282,29 @@ export function OnboardingWizard({
 
   const errors = saveState.fieldErrors;
   const message = step === 8 ? completeState : saveState;
-  const progress = Math.round((step / ONBOARDING_STEPS.length) * 100);
+  const completedFormSteps = Math.max(0, step - 1);
+  const progress = Math.round((completedFormSteps / FORM_STEP_COUNT) * 100);
+  const weeklyStudyTime = formatWeeklyStudyTime(
+    values.dailyStudyMinutes,
+    values.studyDaysPerWeek,
+  );
 
   return (
-    <div className="mx-auto w-full max-w-4xl">
+    <div className="mx-auto w-full max-w-lg lg:max-w-xl">
       <div className="mb-6 flex items-end justify-between gap-4">
         <div>
           <p className="text-xs font-bold tracking-[0.16em] text-[var(--primary)] uppercase">
-            Thiết lập lộ trình
+            Hồ sơ học tập
           </p>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-            Bước {step} / {ONBOARDING_STEPS.length}:{" "}
-            {ONBOARDING_STEPS[step - 1]}
+            {step === 1
+              ? "Sẵn sàng bắt đầu"
+              : "Bước " +
+                (step - 1) +
+                " / " +
+                FORM_STEP_COUNT +
+                ": " +
+                ONBOARDING_STEPS[step - 1]}
           </p>
         </div>
         <span className="text-sm font-semibold text-[var(--muted-foreground)]">
@@ -256,10 +314,10 @@ export function OnboardingWizard({
       <div
         className="mb-8 h-2 overflow-hidden rounded-full bg-[var(--muted)]"
         role="progressbar"
-        aria-label="Tiến độ onboarding"
-        aria-valuemin={1}
-        aria-valuemax={8}
-        aria-valuenow={step}
+        aria-label="Tiến độ thiết lập hồ sơ học tập"
+        aria-valuemin={0}
+        aria-valuemax={FORM_STEP_COUNT}
+        aria-valuenow={completedFormSteps}
       >
         <div
           className="h-full rounded-full bg-[var(--primary)] transition-[width] duration-300"
@@ -269,31 +327,34 @@ export function OnboardingWizard({
 
       <section
         aria-labelledby="onboarding-step-title"
-        className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_24px_70px_rgba(28,54,110,0.08)] sm:p-8 lg:p-10"
+        className="min-h-[34rem] rounded-3xl border border-[var(--border)] bg-[#fbf9ff] p-5 shadow-[0_28px_80px_rgb(var(--shadow-color)/0.1)] sm:p-8"
       >
         {step === 1 ? (
-          <div className="py-4 sm:py-8">
-            <div className="grid size-12 place-items-center rounded-2xl bg-[var(--primary-subtle)] text-[var(--primary)]">
+          <div className="flex min-h-[30rem] flex-col justify-center py-4 text-center sm:py-8">
+            <div className="mx-auto grid size-14 place-items-center rounded-full bg-[var(--primary)] text-white shadow-[0_12px_30px_rgb(var(--shadow-color)/0.18)]">
               <Sparkles aria-hidden="true" size={24} strokeWidth={1.8} />
             </div>
             <div className="mt-6">
               <StepHeading
-                title={`Chào ${displayName || "bạn"}, hãy bắt đầu từ mục tiêu thật`}
-                description="Khoảng 2 phút để IELTS Flow hiểu loại bài thi, band mục tiêu và quỹ thời gian của bạn. Mỗi bước được lưu riêng để bạn có thể tiếp tục sau."
+                title={`Chào ${displayName || "bạn"}, hãy thiết lập hồ sơ học của bạn`}
+                description="Khoảng 2 phút để IELTS Flow hiểu loại bài thi, mục tiêu và quỹ thời gian của bạn. Mỗi bước được lưu riêng để bạn có thể tiếp tục sau."
               />
             </div>
-            <div className="mt-8 rounded-2xl bg-[var(--background)] p-5 text-sm leading-6 text-[var(--muted-foreground)]">
-              Thông tin này chỉ dùng để cá nhân hóa trải nghiệm học. Phase này
-              chưa tạo kế hoạch hoặc điểm số ước lượng.
+            <div className="mt-8 rounded-2xl border border-[var(--border)] bg-white p-5 text-left text-sm leading-6 text-[var(--muted-foreground)]">
+              IELTS Flow dùng thông tin này để sắp xếp nội dung, nhịp học và kỹ
+              năng cần ưu tiên. Bạn có thể thay đổi bất cứ lúc nào trong Hồ sơ.
             </div>
-            <Button
-              type="button"
-              size="lg"
-              className="mt-8"
-              onClick={() => moveTo(2)}
-            >
-              Bắt đầu thiết lập
-              <ChevronRight aria-hidden="true" size={19} />
+            <Button asChild size="lg" className="mt-8 w-full rounded-xl">
+              <Link
+                href="/onboarding?step=2"
+                onClick={(event) => {
+                  event.preventDefault();
+                  moveTo(2);
+                }}
+              >
+                Bắt đầu thiết lập
+                <ChevronRight aria-hidden="true" size={19} />
+              </Link>
             </Button>
           </div>
         ) : null}
@@ -310,7 +371,7 @@ export function OnboardingWizard({
                 <label
                   key={value}
                   className={cn(
-                    "flex min-h-24 cursor-pointer items-start gap-3 rounded-2xl border p-5 transition-colors",
+                    "flex min-h-24 cursor-pointer items-start gap-3 rounded-2xl border p-5 transition-colors focus-within:ring-2 focus-within:ring-[var(--ring)] focus-within:ring-offset-2",
                     values.testType === value
                       ? "border-[var(--primary)] bg-[var(--primary-subtle)]"
                       : "border-[var(--border-strong)] hover:border-[var(--primary)]",
@@ -341,7 +402,11 @@ export function OnboardingWizard({
               ))}
             </fieldset>
             <FieldError id="testType-error" errors={errors?.testType} />
-            <FormFooter step={2} onBack={() => moveTo(1)} />
+            <FormFooter
+              step={2}
+              onBack={() => moveBack(1)}
+              returnToReview={editingFromReview}
+            />
           </form>
         ) : null}
 
@@ -369,7 +434,11 @@ export function OnboardingWizard({
                 ))}
               </SelectField>
             </div>
-            <FormFooter step={3} onBack={() => moveTo(2)} />
+            <FormFooter
+              step={3}
+              onBack={() => moveBack(2)}
+              returnToReview={editingFromReview}
+            />
           </form>
         ) : null}
 
@@ -377,7 +446,7 @@ export function OnboardingWizard({
           <form action={saveAction} noValidate>
             <StepHeading
               title="Bạn muốn đạt band nào và để làm gì?"
-              description="Mục tiêu rõ ràng giúp các phase sau ưu tiên đúng mức độ và kỹ năng."
+              description="Mục tiêu rõ ràng giúp IELTS Flow định hướng đúng mức độ và kỹ năng cần tập trung."
             />
             <div className="mt-7 grid gap-6 md:grid-cols-2">
               <SelectField
@@ -413,7 +482,11 @@ export function OnboardingWizard({
                 ))}
               </SelectField>
             </div>
-            <FormFooter step={4} onBack={() => moveTo(3)} />
+            <FormFooter
+              step={4}
+              onBack={() => moveBack(3)}
+              returnToReview={editingFromReview}
+            />
           </form>
         ) : null}
 
@@ -449,7 +522,7 @@ export function OnboardingWizard({
                         ? "targetExamDate-error"
                         : undefined
                     }
-                    className="mt-2 h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+                    className="mt-2 h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-raised)] px-3 text-sm focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
                   />
                   <FieldError
                     id="targetExamDate-error"
@@ -476,7 +549,11 @@ export function OnboardingWizard({
                 Chưa xác định ngày thi
               </label>
             </div>
-            <FormFooter step={5} onBack={() => moveTo(4)} />
+            <FormFooter
+              step={5}
+              onBack={() => moveBack(4)}
+              returnToReview={editingFromReview}
+            />
           </form>
         ) : null}
 
@@ -526,7 +603,16 @@ export function OnboardingWizard({
                 ))}
               </SelectField>
             </div>
-            <FormFooter step={6} onBack={() => moveTo(5)} />
+            {weeklyStudyTime ? (
+              <div className="mt-5 rounded-2xl border border-[var(--primary-soft)] bg-[var(--primary-subtle)] px-4 py-3 text-sm text-[var(--foreground)]">
+                Nhịp học đã chọn: <strong>{weeklyStudyTime}</strong>.
+              </div>
+            ) : null}
+            <FormFooter
+              step={6}
+              onBack={() => moveBack(5)}
+              returnToReview={editingFromReview}
+            />
           </form>
         ) : null}
 
@@ -534,7 +620,7 @@ export function OnboardingWizard({
           <form action={saveAction} noValidate>
             <StepHeading
               title="Bạn muốn ưu tiên kỹ năng nào?"
-              description="Chọn ít nhất một kỹ năng. Bạn có thể chọn cả bốn nếu chưa xác định điểm yếu."
+              description="Chọn kỹ năng cần tập trung, hoặc học cân bằng nếu bạn chưa xác định điểm yếu."
             />
             <fieldset className="mt-7 grid gap-3 sm:grid-cols-2">
               <legend className="sr-only">Kỹ năng ưu tiên</legend>
@@ -544,7 +630,7 @@ export function OnboardingWizard({
                   <label
                     key={skill}
                     className={cn(
-                      "flex min-h-16 cursor-pointer items-center gap-3 rounded-2xl border px-5 py-4 font-bold transition-colors",
+                      "flex min-h-16 cursor-pointer items-center gap-3 rounded-2xl border px-5 py-4 font-bold transition-colors focus-within:ring-2 focus-within:ring-[var(--ring)] focus-within:ring-offset-2",
                       checked
                         ? "border-[var(--primary)] bg-[var(--primary-subtle)] text-[var(--primary)]"
                         : "border-[var(--border-strong)] hover:border-[var(--primary)]",
@@ -558,6 +644,7 @@ export function OnboardingWizard({
                       onChange={(event) =>
                         toggleSkill(skill, event.target.checked)
                       }
+                      aria-invalid={Boolean(errors?.prioritySkills?.[0])}
                       aria-describedby={
                         errors?.prioritySkills?.[0]
                           ? "prioritySkills-error"
@@ -570,11 +657,28 @@ export function OnboardingWizard({
                 );
               })}
             </fieldset>
+            <Button
+              type="button"
+              variant="secondary"
+              className="mt-4"
+              onClick={() =>
+                setValues((current) => ({
+                  ...current,
+                  prioritySkills: ALL_PRIORITY_SKILLS,
+                }))
+              }
+            >
+              Học cân bằng 4 kỹ năng
+            </Button>
             <FieldError
               id="prioritySkills-error"
               errors={errors?.prioritySkills}
             />
-            <FormFooter step={7} onBack={() => moveTo(6)} />
+            <FormFooter
+              step={7}
+              onBack={() => moveBack(6)}
+              returnToReview={editingFromReview}
+            />
           </form>
         ) : null}
 
@@ -608,7 +712,7 @@ export function OnboardingWizard({
                     : "Chưa chọn",
                   4,
                 ],
-                ["Ngày thi", values.targetExamDate || "Chưa xác định", 5],
+                ["Ngày thi", formatExamDate(values.targetExamDate), 5],
                 [
                   "Lịch học",
                   values.dailyStudyMinutes && values.studyDaysPerWeek
@@ -634,18 +738,34 @@ export function OnboardingWizard({
                     {label}
                   </dt>
                   <dd className="font-semibold">{value}</dd>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => moveTo(Number(editStep))}
-                    aria-label={`Sửa ${String(label).toLowerCase()}`}
-                  >
-                    Sửa
-                  </Button>
+                  <dd>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => moveTo(Number(editStep), true)}
+                      aria-label={`Sửa ${String(label).toLowerCase()}`}
+                    >
+                      Sửa
+                    </Button>
+                  </dd>
                 </div>
               ))}
             </dl>
+            {weeklyStudyTime ? (
+              <div className="mt-5 rounded-2xl border border-[var(--primary-soft)] bg-[var(--primary-subtle)] p-5">
+                <p className="text-xs font-bold tracking-[0.14em] text-[var(--primary)] uppercase">
+                  Nhịp học dự kiến
+                </p>
+                <p className="mt-2 text-lg font-bold text-[var(--foreground)]">
+                  {weeklyStudyTime}
+                </p>
+                <p className="mt-1 text-sm leading-6 text-[var(--muted-foreground)]">
+                  IELTS Flow sẽ dùng quỹ thời gian này để ưu tiên nội dung phù
+                  hợp.
+                </p>
+              </div>
+            ) : null}
             <form
               action={completeAction}
               className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between"
@@ -667,7 +787,7 @@ export function OnboardingWizard({
             >
               {message.message}
               {message.requestId ? (
-                <span className="mt-1 block text-xs opacity-80">
+                <span className="mt-1 block text-xs font-medium">
                   Mã yêu cầu: {message.requestId}
                 </span>
               ) : null}

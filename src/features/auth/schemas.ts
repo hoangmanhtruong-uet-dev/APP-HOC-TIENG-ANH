@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/validation/zod";
 
 const normalizedEmailSchema = z
   .string()
@@ -51,6 +51,25 @@ export const loginSchema = z.object({
   next: z.string().optional(),
 });
 
+export const forgotPasswordSchema = z.object({
+  email: normalizedEmailSchema,
+});
+
+export const resetPasswordSchema = z
+  .object({
+    password: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .superRefine((value, context) => {
+    if (value.password !== value.confirmPassword) {
+      context.addIssue({
+        code: "custom",
+        path: ["confirmPassword"],
+        message: "Mật khẩu xác nhận chưa khớp.",
+      });
+    }
+  });
+
 export const profileUpdateSchema = z.object({
   displayName: z
     .string()
@@ -61,4 +80,6 @@ export const profileUpdateSchema = z.object({
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;

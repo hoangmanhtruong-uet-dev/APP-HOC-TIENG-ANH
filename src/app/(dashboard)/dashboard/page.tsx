@@ -1,253 +1,248 @@
 import {
   ArrowRight,
+  Bell,
   BookOpenCheck,
-  CalendarClock,
-  CheckCircle2,
+  BookOpenText,
   Clock3,
-  NotebookPen,
+  Headphones,
+  Languages,
+  Mic2,
+  Play,
   Target,
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { DashboardAnalytics } from "@/components/analytics/dashboard-analytics";
-import { EmptyState } from "@/components/shared/empty-state";
-import { PageHeader } from "@/components/shared/page-header";
-import { SectionHeader } from "@/components/shared/section-header";
-import { Button } from "@/components/ui/button";
-import {
-  GOAL_LABELS,
-  isPrimaryGoal,
-  isPrioritySkill,
-  isTestType,
-  SKILL_LABELS,
-  TEST_TYPE_LABELS,
-} from "@/features/onboarding/constants";
 import { getAccountLabel } from "@/server/auth/account";
-import { getLearnerAnalytics } from "@/server/analytics/content";
 import { getLearningOverview } from "@/server/learning/content";
 import { requireCompletedOnboarding } from "@/server/onboarding/learner-profile";
 
 export const metadata: Metadata = {
-  title: "Tổng quan",
-  description: "Không gian tổng quan cho mục tiêu tự học IELTS.",
+  title: "Student dashboard",
+  description: "Your English learning plan for today.",
 };
 
-const examDateFormatter = new Intl.DateTimeFormat("vi-VN", {
-  dateStyle: "long",
-  timeZone: "UTC",
-});
+const planItems = [
+  {
+    title: "Vocabulary",
+    detail: "Everyday words",
+    href: "/learn/vocabulary",
+    icon: BookOpenText,
+  },
+  {
+    title: "Grammar",
+    detail: "Foundation practice",
+    href: "/learn/grammar",
+    icon: Languages,
+  },
+  {
+    title: "Listening",
+    detail: "Daily conversations",
+    href: "/practice/listening",
+    icon: Headphones,
+  },
+  {
+    title: "Speaking",
+    detail: "Pronunciation practice",
+    href: "/practice/speaking",
+    icon: Mic2,
+  },
+] as const;
+
+function getLevel(band: number | null) {
+  if (band === null || band < 4) return { code: "A1", label: "Beginner" };
+  if (band < 5) return { code: "A2", label: "Elementary" };
+  return { code: "B1", label: "Intermediate" };
+}
+
+function weeklyTime(minutes: number) {
+  const hours = Math.floor(minutes / 60);
+  return hours ? `${hours}h ${minutes % 60}m` : `${minutes}m`;
+}
 
 export default async function DashboardPage() {
-  const [{ account, learnerProfile }, learningOverview, analytics] =
-    await Promise.all([
-      requireCompletedOnboarding(),
-      getLearningOverview(),
-      getLearnerAnalytics(8),
-    ]);
-  const skills = learnerProfile.priority_skills.filter(isPrioritySkill);
-  const testType = isTestType(learnerProfile.test_type)
-    ? TEST_TYPE_LABELS[learnerProfile.test_type]
-    : "IELTS";
-  const goal = isPrimaryGoal(learnerProfile.primary_goal)
-    ? GOAL_LABELS[learnerProfile.primary_goal]
-    : "Chưa xác định";
+  const [{ account, learnerProfile }, overview] = await Promise.all([
+    requireCompletedOnboarding(),
+    getLearningOverview(),
+  ]);
+  const accountLabel = getAccountLabel(account);
+  const firstName = accountLabel.trim().split(/\s+/).at(-1) ?? accountLabel;
+  const level = getLevel(learnerProfile.current_band);
+  const dailyMinutes = learnerProfile.daily_study_minutes ?? 20;
+  const nextLesson = overview.continueLesson ?? overview.nextLesson;
+  const progress = Math.round(nextLesson?.progressPercent ?? 0);
 
   return (
-    <div className="space-y-10">
-      <PageHeader
-        title={`Xin chào, ${getAccountLabel(account)}`}
-        description={`Thiết lập ${testType} của bạn đã sẵn sàng. Tiếp tục bài đang học hoặc mở bài tiếp theo trong thư viện.`}
-        action={
-          <Button asChild variant="secondary" size="sm">
-            <Link href="/profile">Chỉnh mục tiêu</Link>
-          </Button>
-        }
-      />
-
-      <section
-        className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
-        aria-label="Thiết lập học tập"
-      >
-        <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-          <Target
-            aria-hidden="true"
-            size={22}
-            className="text-[var(--primary)]"
-          />
-          <p className="mt-5 text-sm text-[var(--muted-foreground)]">
-            Band mục tiêu
-          </p>
-          <p className="mt-1 text-2xl font-bold">
-            {learnerProfile.target_band?.toFixed(1)}
-          </p>
-        </article>
-        <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-          <Clock3
-            aria-hidden="true"
-            size={22}
-            className="text-[var(--primary)]"
-          />
-          <p className="mt-5 text-sm text-[var(--muted-foreground)]">
-            Quỹ thời gian
-          </p>
-          <p className="mt-1 text-lg font-bold">
-            {learnerProfile.daily_study_minutes} phút ·{" "}
-            {learnerProfile.study_days_per_week} ngày/tuần
-          </p>
-        </article>
-        <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-          <NotebookPen
-            aria-hidden="true"
-            size={22}
-            className="text-[var(--primary)]"
-          />
-          <p className="mt-5 text-sm text-[var(--muted-foreground)]">Ưu tiên</p>
-          <p className="mt-1 font-bold">
-            {skills.map((skill) => SKILL_LABELS[skill]).join(", ")}
-          </p>
-        </article>
-        <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-          <CalendarClock
-            aria-hidden="true"
-            size={22}
-            className="text-[var(--primary)]"
-          />
-          <p className="mt-5 text-sm text-[var(--muted-foreground)]">
-            Ngày thi dự kiến
-          </p>
-          <p className="mt-1 font-bold">
-            {learnerProfile.target_exam_date
-              ? examDateFormatter.format(
-                  new Date(`${learnerProfile.target_exam_date}T00:00:00Z`),
-                )
-              : "Chưa xác định"}
-          </p>
-        </article>
-      </section>
-
-      <section
-        className="grid gap-5 lg:grid-cols-[1.3fr_0.7fr]"
-        aria-labelledby="today-title"
-      >
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7">
-          <SectionHeader
-            title={
-              learningOverview.continueLesson
-                ? "Tiếp tục bài đang học"
-                : "Bài học tiếp theo"
-            }
-            description="Đề xuất này dùng thứ tự nội dung và tiến độ thật, không phải lộ trình hoặc gợi ý AI."
-          />
-          {learningOverview.nextLesson ? (
-            <div className="mt-6 rounded-xl bg-[var(--background)] p-5 sm:p-6">
-              <p className="text-sm font-semibold text-[var(--primary)]">
-                {learningOverview.nextLesson.moduleTitle}
-              </p>
-              <h3 className="mt-2 text-xl font-bold text-pretty">
-                {learningOverview.nextLesson.title}
-              </h3>
-              <p className="mt-2 max-w-xl leading-7 text-pretty text-[var(--muted-foreground)]">
-                {learningOverview.nextLesson.summary}
-              </p>
-              <div className="mt-5 flex flex-wrap items-center gap-4">
-                <Button asChild size="sm">
-                  <Link href={learningOverview.nextLesson.href}>
-                    {learningOverview.nextLesson.status === "in_progress"
-                      ? "Tiếp tục học"
-                      : "Bắt đầu bài học"}
-                    <ArrowRight
-                      aria-hidden="true"
-                      size={17}
-                      strokeWidth={1.8}
-                    />
-                  </Link>
-                </Button>
-                <span className="text-sm text-[var(--muted-foreground)]">
-                  {learningOverview.nextLesson.estimatedMinutes} phút
-                  {learningOverview.nextLesson.status === "in_progress"
-                    ? ` · ${Math.round(learningOverview.nextLesson.progressPercent)}% đã hoàn thành`
-                    : ""}
-                </span>
-              </div>
-            </div>
-          ) : learningOverview.totalLessons > 0 ? (
-            <div className="mt-6 rounded-xl bg-[var(--success-subtle)] p-6">
-              <CheckCircle2
-                aria-hidden="true"
-                size={24}
-                className="text-[var(--success)]"
-              />
-              <h3 className="mt-3 text-xl font-bold">
-                Bạn đã hoàn thành toàn bộ bài học hiện có
-              </h3>
-              <p className="mt-2 text-[var(--muted-foreground)]">
-                Bạn có thể xem lại nội dung bất kỳ lúc nào trong thư viện.
-              </p>
-            </div>
-          ) : (
-            <EmptyState
-              className="mt-6 border-0 bg-[var(--background)] py-8"
-              title="Chưa có nội dung phù hợp"
-              description="Thư viện chưa có module đã xuất bản cho thiết lập IELTS của bạn. Không có task mẫu hoặc tiến độ giả được tạo."
-              action={
-                <Button asChild variant="secondary" size="sm">
-                  <Link href="/learn">
-                    Mở thư viện học
-                    <ArrowRight
-                      aria-hidden="true"
-                      size={17}
-                      strokeWidth={1.8}
-                    />
-                  </Link>
-                </Button>
-              }
-            />
-          )}
-
-          <dl className="mt-6 grid grid-cols-2 gap-4 border-t border-[var(--border)] pt-5 sm:grid-cols-3">
-            <div>
-              <dt className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
-                <BookOpenCheck aria-hidden="true" size={17} /> Có thể học
-              </dt>
-              <dd className="mt-1 text-xl font-bold tabular-nums">
-                {learningOverview.totalLessons}
-              </dd>
-            </div>
-            <div>
-              <dt className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
-                <CheckCircle2 aria-hidden="true" size={17} /> Hoàn thành
-              </dt>
-              <dd className="mt-1 text-xl font-bold tabular-nums">
-                {learningOverview.completedLessons}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-sm text-[var(--muted-foreground)]">
-                Tiến độ tổng
-              </dt>
-              <dd className="mt-1 text-xl font-bold tabular-nums">
-                {Math.round(learningOverview.progressPercent)}%
-              </dd>
-            </div>
-          </dl>
-        </div>
-
-        <aside className="rounded-2xl border border-[var(--border)] bg-[var(--foreground)] p-6 text-white sm:p-7">
-          <p className="text-sm font-semibold text-[#aebfff]">Mục tiêu chính</p>
-          <h2 className="mt-3 text-2xl font-bold">{goal}</h2>
-          <p className="mt-4 text-sm leading-6 text-[#ccd5e8]">
-            Band hiện tại:{" "}
-            {learnerProfile.current_band?.toFixed(1) ?? "chưa xác định"}. Band
-            mục tiêu: {learnerProfile.target_band?.toFixed(1)}.
-          </p>
-          <div className="mt-7 border-t border-white/15 pt-5 text-sm font-semibold text-[#e6ebf5]">
-            Dữ liệu onboarding đã lưu
+    <div className="min-h-[100dvh] bg-white px-4 pt-4 pb-6 sm:px-6 lg:min-h-[calc(100dvh-4.5rem)] lg:rounded-2xl lg:border lg:border-[var(--border)] lg:px-8 lg:py-7 lg:shadow-[0_18px_50px_rgb(var(--shadow-color)/0.06)]">
+      <div className="mx-auto w-full max-w-5xl">
+        <header className="flex min-h-12 items-center gap-3 border-b border-[var(--border)] pb-3 lg:border-0">
+          <Link
+            href="/profile"
+            prefetch={false}
+            className="grid size-9 shrink-0 place-items-center rounded-full bg-[var(--primary-subtle)] text-sm font-bold text-[var(--primary)]"
+          >
+            {accountLabel.slice(0, 1).toUpperCase()}
+          </Link>
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-sm font-bold text-[var(--primary)]">
+              Good morning, {firstName} 👋
+            </h1>
+            <p className="truncate text-xs text-[var(--muted-foreground)]">
+              Ready to make progress today?
+            </p>
           </div>
-        </aside>
-      </section>
+          <Link
+            href="/profile"
+            prefetch={false}
+            aria-label="Open profile and settings"
+            className="grid size-10 place-items-center rounded-xl text-[var(--primary)] hover:bg-[var(--primary-subtle)]"
+          >
+            <Bell size={18} />
+          </Link>
+        </header>
 
-      <DashboardAnalytics analytics={analytics} />
+        <section
+          className="mt-4 grid grid-cols-3 gap-2.5 lg:max-w-lg"
+          aria-label="Learning summary"
+        >
+          <Metric
+            icon={<BookOpenCheck size={18} />}
+            value={String(overview.completedLessons)}
+            label="Lessons"
+          />
+          <Metric
+            icon={
+              <span className="rounded bg-[var(--primary-subtle)] px-2 py-1 text-[10px] font-bold">
+                {level.code}
+              </span>
+            }
+            value={level.label}
+            label="Level"
+          />
+          <Metric
+            icon={<Clock3 size={18} />}
+            value={weeklyTime(
+              dailyMinutes * (learnerProfile.study_days_per_week ?? 5),
+            )}
+            label="Study time"
+          />
+        </section>
+
+        <div className="mt-7 grid gap-7 lg:grid-cols-[1fr_0.9fr] lg:items-start">
+          <section>
+            <h2 className="text-lg font-extrabold">Continue Learning</h2>
+            {nextLesson ? (
+              <article className="mt-3 rounded-xl border border-[var(--border)] bg-white p-4 shadow-[0_8px_24px_rgb(var(--shadow-color)/0.055)] sm:p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] font-bold tracking-wider text-[var(--primary)] uppercase">
+                      {nextLesson.moduleTitle}
+                    </p>
+                    <h3 className="mt-2 text-lg font-extrabold">
+                      {nextLesson.title}
+                    </h3>
+                  </div>
+                  <span className="flex shrink-0 items-center gap-1 text-xs text-[var(--muted-foreground)]">
+                    <Clock3 size={14} />
+                    {nextLesson.estimatedMinutes} min
+                  </span>
+                </div>
+                <div className="mt-4 flex justify-between text-xs">
+                  <span>Progress</span>
+                  <strong className="text-[var(--primary)]">{progress}%</strong>
+                </div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--muted)]">
+                  <div
+                    className="h-full rounded-full bg-[var(--accent)]"
+                    style={{ width: `${Math.max(4, progress)}%` }}
+                  />
+                </div>
+                <Link
+                  href={nextLesson.href}
+                  prefetch={false}
+                  className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[var(--primary)] text-sm font-bold text-white"
+                >
+                  Resume lesson <ArrowRight size={17} />
+                </Link>
+              </article>
+            ) : (
+              <article className="mt-3 rounded-xl border border-[var(--border)] p-5">
+                <Target className="text-[var(--primary)]" size={22} />
+                <h3 className="mt-3 font-bold">Start your first lesson</h3>
+                <Link
+                  href="/learn"
+                  prefetch={false}
+                  className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg bg-[var(--primary)] px-4 text-sm font-bold text-white"
+                >
+                  Open library <ArrowRight size={17} />
+                </Link>
+              </article>
+            )}
+          </section>
+
+          <section>
+            <div className="flex items-end justify-between">
+              <h2 className="text-lg font-extrabold">Today’s Learning Plan</h2>
+              <Link
+                href="/learn"
+                prefetch={false}
+                className="text-xs font-bold text-[var(--primary)]"
+              >
+                View full plan
+              </Link>
+            </div>
+            <div className="mt-3 space-y-2.5">
+              {planItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    prefetch={false}
+                    className="flex min-h-[4.25rem] items-center gap-3 rounded-xl border border-[var(--border)] bg-white px-3 py-2.5 shadow-[0_5px_16px_rgb(var(--shadow-color)/0.04)]"
+                  >
+                    <span className="grid size-10 place-items-center rounded-xl bg-[var(--primary-subtle)] text-[var(--primary)]">
+                      <Icon size={19} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <strong className="block text-sm">{item.title}</strong>
+                      <span className="block truncate text-[11px] text-[var(--muted-foreground)]">
+                        {item.detail} ·{" "}
+                        {Math.max(5, Math.round(dailyMinutes / 4))} min
+                      </span>
+                    </span>
+                    <span className="grid size-8 place-items-center rounded-full border border-[var(--border)] text-[var(--primary)]">
+                      <Play size={13} fill="currentColor" />
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        </div>
+      </div>
     </div>
+  );
+}
+
+function Metric({
+  icon,
+  value,
+  label,
+}: {
+  icon: React.ReactNode;
+  value: string;
+  label: string;
+}) {
+  return (
+    <article className="rounded-xl border border-[var(--border)] bg-white px-2 py-4 text-center shadow-[0_6px_18px_rgb(var(--shadow-color)/0.045)]">
+      <div className="mx-auto grid h-6 place-items-center text-[var(--primary)]">
+        {icon}
+      </div>
+      <p className="mt-2 truncate text-sm font-extrabold">{value}</p>
+      <p className="mt-1 text-[9px] font-bold tracking-wider text-[var(--muted-foreground)] uppercase">
+        {label}
+      </p>
+    </article>
   );
 }

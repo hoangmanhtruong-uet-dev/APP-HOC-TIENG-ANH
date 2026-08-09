@@ -7,15 +7,26 @@ import {
   createApiSuccess,
   createRequestId,
 } from "@/lib/api/errors";
+import { REQUEST_ID_HEADER, resolveRequestId } from "@/lib/api/request-id";
 import { getServerEnv } from "@/lib/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { logServerEvent } from "@/server/observability/logger";
 
 export const dynamic = "force-dynamic";
 
 const BATCH_SIZE = 100;
 
 export async function POST(request: NextRequest) {
-  const requestId = createRequestId();
+  const requestId = resolveRequestId(request.headers.get(REQUEST_ID_HEADER));
+  const runId = createRequestId();
+  const batchId = createRequestId();
+  let stage = "authenticate";
+  const metrics = {
+    claimedCount: 0,
+    deletedCount: 0,
+    finalizedCount: 0,
+    retryCount: null as number | null,
+  };
 
   try {
     if (
@@ -24,13 +35,25 @@ export async function POST(request: NextRequest) {
         process.env.STORAGE_CLEANUP_SECRET,
       )
     ) {
+      logServerEvent("warn", {
+        event: "storage_cleanup.rejected",
+        requestId,
+        runId,
+        batchId,
+        route: "/api/internal/storage-cleanup",
+        stage,
+        errorCode: "UNAUTHORIZED",
+        metadata: metrics,
+      });
       return responseError("NOT_FOUND", "Route not found.", requestId, 404);
     }
 
+    stage = "validate configuration";
     getServerEnv();
 
     const admin = createSupabaseAdminClient();
     const now = new Date().toISOString();
+    stage = "acquire lease";
     const [expireIntentsResult, assetsResult] = await Promise.all([
       admin
         .from("speaking_upload_intents")
@@ -45,6 +68,7 @@ export async function POST(request: NextRequest) {
 
     if (expireIntentsResult.error || assetsResult.error)
       throw new Error("cleanup_query_failed");
+    stage = "claim records";
     const claimedAssets = assetsResult.data as Array<{
       id: string;
       storage_path: string;
@@ -58,6 +82,7 @@ export async function POST(request: NextRequest) {
       .order("expires_at")
       .limit(BATCH_SIZE);
     if (intentsResult.error) throw new Error("cleanup_query_failed");
+    metrics.claimedCount = claimedAssets.length + intentsResult.data.length;
 
     const paths = [
       ...new Set(
@@ -66,13 +91,16 @@ export async function POST(request: NextRequest) {
         ),
       ),
     ];
+    stage = "delete storage objects";
     if (paths.length > 0) {
       const { error } = await admin.storage
         .from("speaking-recordings")
         .remove(paths);
       if (error) throw new Error("cleanup_storage_failed");
     }
+    metrics.deletedCount = paths.length;
 
+    stage = "finalize database records";
     const [intentUpdate, assetUpdate] = await Promise.all([
       intentsResult.data.length > 0
         ? admin
@@ -100,6 +128,23 @@ export async function POST(request: NextRequest) {
     ]);
     if (intentUpdate.error || assetUpdate.error)
       throw new Error("cleanup_finalize_failed");
+    metrics.finalizedCount = intentsResult.data.length + claimedAssets.length;
+    stage = "release lease";
+
+    logServerEvent("info", {
+      event: "storage_cleanup.completed",
+      requestId,
+      runId,
+      batchId,
+      route: "/api/internal/storage-cleanup",
+      stage,
+      metadata: {
+        ...metrics,
+        batchSize: BATCH_SIZE,
+        leaseReleasedCount: claimedAssets.length,
+        staleLeaseRetryWindowMinutes: 15,
+      },
+    });
 
     return NextResponse.json(
       createApiSuccess(
@@ -110,9 +155,26 @@ export async function POST(request: NextRequest) {
         },
         requestId,
       ),
-      { headers: { "Cache-Control": "no-store" } },
+      {
+        headers: {
+          "Cache-Control": "no-store",
+          [REQUEST_ID_HEADER]: requestId,
+        },
+      },
     );
-  } catch {
+  } catch (error) {
+    logServerEvent("error", {
+      event: "storage_cleanup.failed",
+      requestId,
+      runId,
+      batchId,
+      route: "/api/internal/storage-cleanup",
+      stage,
+      errorCode:
+        error instanceof Error ? error.message : "cleanup_unknown_failure",
+      error,
+      metadata: metrics,
+    });
     return responseError(
       "INTERNAL_ERROR",
       "Storage cleanup could not be completed.",
@@ -140,6 +202,9 @@ function responseError(
 ) {
   return NextResponse.json(createApiError(code, message, requestId), {
     status,
-    headers: { "Cache-Control": "no-store" },
+    headers: {
+      "Cache-Control": "no-store",
+      [REQUEST_ID_HEADER]: requestId,
+    },
   });
 }

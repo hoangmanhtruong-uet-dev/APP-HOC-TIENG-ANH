@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 
 import { siteConfig } from "@/config/site";
+import { OfflineFallbackRegistration } from "@/components/shared/offline-fallback-registration";
 
 import "./globals.css";
 
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#f6f8fc",
+  themeColor: "#3568d4",
 };
 
 export default function RootLayout({
@@ -29,7 +30,10 @@ export default function RootLayout({
       className={GeistSans.variable}
       data-scroll-behavior="smooth"
     >
-      <body>{children}</body>
+      <body>
+        {children}
+        <OfflineFallbackRegistration />
+      </body>
     </html>
   );
 }

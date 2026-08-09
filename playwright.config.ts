@@ -23,5 +23,15 @@ export default defineConfig({
       name: "chromium-mobile",
       use: { ...devices["Pixel 7"], browserName: "chromium" },
     },
+    {
+      name: "firefox-smoke",
+      testMatch: /cross-browser-smoke\.spec\.ts/,
+      use: { ...devices["Desktop Firefox"], permissions: [] },
+    },
+    {
+      name: "webkit-smoke",
+      testMatch: /cross-browser-smoke\.spec\.ts/,
+      use: { ...devices["Desktop Safari"], permissions: [] },
+    },
   ],
 });

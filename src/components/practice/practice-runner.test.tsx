@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { PracticeRunner } from "@/components/practice/practice-runner";
 import { SubmitAttemptForm } from "@/components/practice/submit-attempt-form";
@@ -60,7 +60,36 @@ const fixture: PracticePageData = {
 };
 fixture.activeQuestion = fixture.questions[0];
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe("PracticeRunner", () => {
+  it("renders secure per-question grammar feedback returned by PostgreSQL", () => {
+    const grammarFixture: PracticePageData = {
+      ...fixture,
+      exercise: { ...fixture.exercise, domain: "grammar" },
+      feedback: {
+        questionId: "question-1",
+        isCorrect: true,
+        correctOptionIds: ["option-1"],
+        acceptedTextAnswers: [],
+        explanationMarkdown: "The subject requires this verb form.",
+      },
+    };
+    render(
+      <PracticeRunner data={grammarFixture} saved={false} error={undefined} />,
+    );
+    expect(screen.getByText("Correct!")).toBeInTheDocument();
+    expect(
+      screen.getByText(/The subject requires this verb form/),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Continue/ })).toHaveAttribute(
+      "href",
+      "/practice/vocabulary-foundations?question=2",
+    );
+  });
+
   it("renders saved draft state without exposing correctness", () => {
     render(<PracticeRunner data={fixture} saved={false} error={undefined} />);
     expect(
@@ -101,5 +130,19 @@ describe("PracticeRunner", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Dữ liệu hiện có vẫn được giữ",
     );
+  });
+
+  it("protects a dirty answer from navigation and final submit", () => {
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    render(<PracticeRunner data={fixture} saved={false} error={undefined} />);
+
+    fireEvent.click(screen.getByRole("radio", { name: "Second" }));
+    const nextQuestion = screen.getByRole("link", { name: "Câu 2" });
+
+    expect(fireEvent.click(nextQuestion)).toBe(false);
+    expect(confirm).toHaveBeenCalledOnce();
+    expect(
+      screen.getByRole("button", { name: "Lưu câu hiện tại trước" }),
+    ).toBeDisabled();
   });
 });

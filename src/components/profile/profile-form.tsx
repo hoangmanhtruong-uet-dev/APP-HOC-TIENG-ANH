@@ -74,7 +74,7 @@ export function ProfileForm({ displayName }: { displayName: string }) {
           >
             {state.message}
             {state.requestId && state.status === "error" ? (
-              <span className="mt-1 block text-xs opacity-80">
+              <span className="mt-1 block text-xs font-medium">
                 Mã yêu cầu: {state.requestId}
               </span>
             ) : null}

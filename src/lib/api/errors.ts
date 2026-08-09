@@ -1,3 +1,5 @@
+import { resolveRequestId } from "@/lib/api/request-id";
+
 export type ApiErrorCode =
   | "CONFIGURATION_ERROR"
   | "DEPENDENCY_UNAVAILABLE"
@@ -19,7 +21,7 @@ export type ApiSuccessEnvelope<TData> = {
 };
 
 export function createRequestId(): string {
-  return crypto.randomUUID();
+  return resolveRequestId(undefined);
 }
 
 export function createApiError(

@@ -8,7 +8,7 @@ Process liveness only. Returns 200 when the Next.js process can serve requests.
 
 ### `GET /api/health/ready`
 
-Validates production env and probes Supabase Auth health with the public anon key. Returns 200 when ready; returns a generic 503 `CONFIGURATION_ERROR` or `DEPENDENCY_UNAVAILABLE` with request id and `Cache-Control: no-store`. It never returns env values.
+Validates production-required env and independently probes Supabase Auth, a read-only PostgREST query against the core learning schema, and metadata for the required private `speaking-recordings` bucket. Each probe has its own three-second timeout. Returns 200 `ready` when optional AI is disabled/configured, or 200 `degraded` when optional AI is partial/misconfigured and provider actions remain fail-closed. Missing required env returns 503 `CONFIGURATION_ERROR` with field names only; dependency failure returns 503 `DEPENDENCY_UNAVAILABLE`. Responses and logs expose neither URLs, dependency payloads nor secret values, and responses use `Cache-Control: no-store` plus `x-request-id`.
 
 ### `POST /api/internal/storage-cleanup`
 
@@ -111,6 +111,8 @@ Các tên sau là contract use-case; implementation có thể đặt trong featu
 | ---------------------------- | --------------------------------------- | ---------------------- | ---------------------------- |
 | `registerAction`             | displayName, email, password, confirm   | typed form state       | Public; Zod; generic success |
 | `loginAction`                | email, password, next?                  | redirect/typed error   | Public; safe allowlist       |
+| `forgotPasswordAction`       | email                                   | generic typed success  | Public; no enumeration       |
+| `resetPasswordAction`        | password, confirmation                  | redirect/typed error   | Recovery session required    |
 | `logoutAction`               | none                                    | redirect `/login`      | Auth; local session sign-out |
 | `updateProfileAction`        | displayName                             | typed form state       | Auth; actor ID từ server     |
 | `completeOnboarding`         | goal, availability, consent             | goal + plan preview    | Auth; transaction            |
@@ -160,6 +162,13 @@ Query: `token_hash`, `type=email|signup`, optional safe `next`.
 - Thành công tạo session cookie và redirect protected path.
 - Token sai/hết hạn redirect `/login?authError=confirmation_invalid`.
 - Response redirect có `Cache-Control: private, no-cache, no-store`.
+
+### Password recovery
+
+- `/forgot-password` always returns the same accepted response after valid input, including when the provider rejects the request, so account existence is not disclosed.
+- Supabase receives the allowlisted callback `/auth/recovery`; the callback exchanges the one-time PKCE code server-side and redirects to `/reset-password` without placing a session or password in the URL.
+- Reset validates an authenticated recovery session and the same password policy, updates the password, then signs out the local session. Invalid/expired links return a safe recovery error.
+- Email, password, recovery code and session data are never logged. Production delivery remains invite-only until SMTP/domain/redirect evidence exists.
 
 ### `logoutAction`
 
@@ -579,16 +588,35 @@ Response hiện tại:
 
 ### `GET /api/health/ready`
 
-Protected/internal nếu có thể; kiểm tra DB và required config, trả trạng thái tổng quát.
+Protected/internal nếu có thể; kiểm tra Supabase Auth dependency và production-required config. AI là optional: unset toàn bộ trả `disabled`; partial config trả 200 `degraded`/`misconfigured` và provider không chạy.
 
-Phase 1 foundation hiện kiểm tra required public environment variables. Khi thiếu hoặc sai config, endpoint trả `503` với normalized error envelope và không lộ giá trị cấu hình:
+Ready với AI disabled:
+
+```json
+{
+  "data": {
+    "status": "ready",
+    "optionalAi": {
+      "overall": "disabled",
+      "writing": "disabled",
+      "speaking": "disabled"
+    }
+  },
+  "requestId": "uuid"
+}
+```
+
+Khi thiếu hoặc sai required config, endpoint trả `503`, chỉ liệt kê tên field và không lộ giá trị:
 
 ```json
 {
   "error": {
     "code": "CONFIGURATION_ERROR",
-    "message": "Required public environment variables are missing or invalid.",
+    "message": "Required production environment variables are missing or invalid.",
     "requestId": "uuid"
+  },
+  "details": {
+    "fields": ["STORAGE_CLEANUP_SECRET"]
   }
 }
 ```

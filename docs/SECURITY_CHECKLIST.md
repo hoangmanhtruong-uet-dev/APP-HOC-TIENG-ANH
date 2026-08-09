@@ -364,3 +364,17 @@ Không phát hành private beta nếu còn một trong các điều sau:
 - [x] Recent activity and Mock history enforce limits from 1 to 20.
 - [x] Content operations remain docs/tests only; no service-role browser use, admin CMS or draft visibility expansion.
 - [x] Final remote parity 18/18, local/remote lint, rollback-only owner verifier 17/17 and full app verification are recorded in the Phase 10B completion report.
+
+## 23. Production remediation P1 controls
+
+- [x] Shared server logger emits one-line structured JSON and recursively redacts credentials, sessions and sensitive learner/provider content; regression tests cover redaction.
+- [x] Request correlation preserves a safe incoming `x-request-id` or creates a UUID and returns it in safe error results/response headers.
+- [x] Browser error capture accepts only boundary type and framework digest; arbitrary metadata, raw stack and content are rejected.
+- [x] Readiness independently verifies required configuration, Auth, read-only PostgREST/database access and the private Speaking Storage bucket with per-dependency timeout.
+- [x] AI absence is supported; partial optional AI configuration is degraded/misconfigured without crashing core readiness.
+- [x] Password recovery uses generic request responses, safe callback exchange, validated reset and no email/token/password/session logging.
+- [x] Practice dirty state, failed-save retry and pending/double-submit behavior have component tests.
+- [x] Offline fallback caches only a static offline document, never authenticated HTML or application data.
+- [x] HSTS preload/subdomains are opt-in; the default header is host-only.
+- [ ] **NOT_VERIFIED:** CSP still contains `unsafe-inline`; do not call it nonce/hash hardened.
+- [ ] **BLOCKED_BY_EXTERNAL_CONFIGURATION:** Vercel logs/alerts, Supabase production readiness, SMTP recovery, authenticated E2E, real-domain HSTS, backup/restore and monitoring require dashboard evidence.

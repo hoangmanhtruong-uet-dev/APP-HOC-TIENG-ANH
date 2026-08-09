@@ -19,7 +19,7 @@ export function EmptyState({
   return (
     <section
       className={cn(
-        "rounded-2xl border border-dashed border-[var(--border-strong)] bg-[var(--surface)] px-6 py-12 text-center",
+        "rounded-2xl border border-dashed border-[var(--border-strong)] bg-[var(--surface-raised)] px-6 py-12 text-center",
         className,
       )}
       aria-labelledby="empty-state-title"

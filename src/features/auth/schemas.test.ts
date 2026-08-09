@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { loginSchema, profileUpdateSchema, registerSchema } from "./schemas";
+import {
+  forgotPasswordSchema,
+  loginSchema,
+  profileUpdateSchema,
+  registerSchema,
+  resetPasswordSchema,
+} from "./schemas";
 
 describe("authentication schemas", () => {
   it("normalizes email and keeps password whitespace unchanged", () => {
@@ -63,5 +69,23 @@ describe("authentication schemas", () => {
     expect(
       profileUpdateSchema.safeParse({ displayName: " ".repeat(101) }).success,
     ).toBe(false);
+  });
+
+  it("validates password recovery inputs", () => {
+    expect(
+      forgotPasswordSchema.parse({ email: " USER@EXAMPLE.COM " }).email,
+    ).toBe("user@example.com");
+    expect(
+      resetPasswordSchema.safeParse({
+        password: "new-password",
+        confirmPassword: "different-password",
+      }).success,
+    ).toBe(false);
+    expect(
+      resetPasswordSchema.safeParse({
+        password: "new-password",
+        confirmPassword: "new-password",
+      }).success,
+    ).toBe(true);
   });
 });

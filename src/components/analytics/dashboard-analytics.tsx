@@ -80,7 +80,7 @@ export function DashboardAnalytics({
         className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]"
         aria-label="Tóm tắt hoạt động học"
       >
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-[0_18px_50px_rgb(var(--shadow-color)/0.06)]">
           <h2 className="text-xl font-bold">Bằng chứng theo kỹ năng</h2>
           <ul className="mt-5 space-y-4">
             {analytics.skills.slice(0, 4).map((item) => (
@@ -105,7 +105,7 @@ export function DashboardAnalytics({
           </p>
         </div>
 
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-[0_18px_50px_rgb(var(--shadow-color)/0.06)]">
           <h2 className="text-xl font-bold">Hoạt động gần đây</h2>
           {analytics.recentActivity.length > 0 ? (
             <ol className="mt-4 divide-y divide-[var(--border)]">
@@ -158,7 +158,7 @@ function ActiveMetric({
   value: number;
 }) {
   return (
-    <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
+    <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 shadow-[0_14px_40px_rgb(var(--shadow-color)/0.05)]">
       <div aria-hidden="true" className="text-[var(--primary)]">
         {icon}
       </div>

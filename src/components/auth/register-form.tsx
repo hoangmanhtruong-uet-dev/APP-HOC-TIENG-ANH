@@ -55,7 +55,7 @@ export function RegisterForm() {
   const emailError = state.fieldErrors?.email?.[0];
 
   return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_18px_50px_rgba(35,55,95,0.08)] sm:p-8">
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-[0_24px_70px_rgb(var(--shadow-color)/0.1)] sm:p-8">
       <form ref={formRef} action={formAction} className="space-y-5" noValidate>
         <div className="space-y-2">
           <label
@@ -76,7 +76,7 @@ export function RegisterForm() {
               displayNameError ? "register-display-name-error" : undefined
             }
             placeholder="Nguyễn Minh Anh…"
-            className="h-11 w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+            className="h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
           />
           {displayNameError ? (
             <p
@@ -106,7 +106,7 @@ export function RegisterForm() {
             aria-invalid={Boolean(emailError)}
             aria-describedby={emailError ? "register-email-error" : undefined}
             placeholder="ban@example.com…"
-            className="h-11 w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+            className="h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
           />
           {emailError ? (
             <p
@@ -182,7 +182,10 @@ export function RegisterForm() {
             >
               {state.message}
               {state.requestId ? (
-                <span className="mt-1 block text-xs opacity-80">
+                <span
+                  data-testid="request-id"
+                  className="mt-1 block text-xs font-medium"
+                >
                   Mã yêu cầu: {state.requestId}
                 </span>
               ) : null}

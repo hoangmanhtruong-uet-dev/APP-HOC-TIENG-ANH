@@ -1,10 +1,21 @@
 "use client";
 
-import { AlertTriangle, Check, Clock3, RotateCcw, Save } from "lucide-react";
+import {
+  AlertTriangle,
+  BookOpen,
+  Check,
+  Clock3,
+  Lightbulb,
+  ListChecks,
+  RotateCcw,
+  Save,
+  X,
+} from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
-import { Button } from "@/components/ui/button";
 import { ConfirmSubmitButton } from "@/components/shared/confirm-submit-button";
+import { Button } from "@/components/ui/button";
 import { submitMockTestSectionAction } from "@/features/mock-tests/actions";
 import type { MockRunnerContext } from "@/features/mock-tests/model";
 import {
@@ -14,7 +25,8 @@ import {
 import { formatWritingTime } from "@/features/writing/model";
 import type { WritingPracticePageData } from "@/server/writing/content";
 
-type SaveStatus = "idle" | "saving" | "saved" | "conflict" | "error";
+type SaveStatus =
+  "idle" | "saving" | "saved" | "offline" | "conflict" | "error";
 
 export function WritingRunner({
   data,
@@ -49,16 +61,15 @@ function WritingEditor({
     submission.minimumWordsMet,
   );
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
-  const [message, setMessage] = useState(
-    "Bản nháp đang đồng bộ với PostgreSQL.",
-  );
+  const [isOnline, setIsOnline] = useState(true);
+  const [message, setMessage] = useState("Draft synced with PostgreSQL.");
   const [remainingSeconds, setRemainingSeconds] = useState(() =>
     calculateRemaining(submission.serverNow, submission.expiresAt),
   );
   const [isSubmitting, startSubmitTransition] = useTransition();
   const revisionRef = useRef(submission.serverRevision);
   const lastSavedTextRef = useRef(submission.draftText);
-  const saveInFlightRef = useRef(false);
+  const savePromiseRef = useRef<Promise<boolean> | null>(null);
   const submitKeyRef = useRef(crypto.randomUUID());
 
   useEffect(() => {
@@ -77,43 +88,92 @@ function WritingEditor({
   }, [submission.expiresAt, submission.serverNow]);
 
   const save = useCallback(async () => {
-    if (
-      saveInFlightRef.current ||
-      draftText === lastSavedTextRef.current ||
-      saveStatus === "conflict"
-    ) {
-      return saveStatus !== "conflict";
+    if (saveStatus === "conflict") return false;
+    if (savePromiseRef.current) await savePromiseRef.current;
+    if (draftText === lastSavedTextRef.current) return true;
+    if (!isOnline) {
+      setSaveStatus("offline");
+      setMessage("Offline. Your latest text is still on this screen.");
+      return false;
     }
-    saveInFlightRef.current = true;
-    setSaveStatus("saving");
-    setMessage("Đang lưu vào PostgreSQL…");
-    const result = await saveWritingDraftAction({
-      submissionId: submission.id,
-      taskSlug: data.task.slug,
-      draftText,
-      expectedRevision: revisionRef.current,
-    });
-    saveInFlightRef.current = false;
-    if (result.status === "saved") {
-      revisionRef.current = result.serverRevision;
-      lastSavedTextRef.current = draftText;
-      setServerWordCount(result.wordCount);
-      setMinimumWordsMet(result.minimumWordsMet);
-      setSaveStatus("saved");
-      setMessage("Đã lưu vào PostgreSQL.");
-      return true;
+
+    const textToSave = draftText;
+    const pendingSave = (async () => {
+      setSaveStatus("saving");
+      setMessage("Saving to PostgreSQL...");
+      let result: Awaited<ReturnType<typeof saveWritingDraftAction>>;
+      try {
+        result = await saveWritingDraftAction({
+          submissionId: submission.id,
+          taskSlug: data.task.slug,
+          draftText: textToSave,
+          expectedRevision: revisionRef.current,
+        });
+      } catch {
+        const offline = !isOnline;
+        setSaveStatus(offline ? "offline" : "error");
+        setMessage(
+          offline
+            ? "Offline. Your latest text is still on this screen."
+            : "Save failed. Your latest text is still on this screen; retry when the connection is stable.",
+        );
+        return false;
+      }
+      if (result.status === "saved") {
+        revisionRef.current = result.serverRevision;
+        lastSavedTextRef.current = textToSave;
+        setServerWordCount(result.wordCount);
+        setMinimumWordsMet(result.minimumWordsMet);
+        setSaveStatus("saved");
+        setMessage("Saved to PostgreSQL.");
+        return true;
+      }
+      setSaveStatus(result.status);
+      setMessage(result.message);
+      return false;
+    })();
+    savePromiseRef.current = pendingSave;
+    try {
+      return await pendingSave;
+    } finally {
+      if (savePromiseRef.current === pendingSave) savePromiseRef.current = null;
     }
-    setSaveStatus(result.status);
-    setMessage(result.message);
-    return false;
-  }, [data.task.slug, draftText, saveStatus, submission.id]);
+  }, [data.task.slug, draftText, isOnline, saveStatus, submission.id]);
 
   useEffect(() => {
-    if (draftText === lastSavedTextRef.current || saveStatus === "conflict")
+    if (
+      draftText === lastSavedTextRef.current ||
+      !["idle", "saved"].includes(saveStatus)
+    )
       return;
     const timer = window.setTimeout(() => void save(), 800);
     return () => window.clearTimeout(timer);
   }, [draftText, save, saveStatus]);
+
+  useEffect(() => {
+    const markOffline = () => {
+      setIsOnline(false);
+      if (draftText !== lastSavedTextRef.current) {
+        setSaveStatus("offline");
+        setMessage("Offline. Your latest text is still on this screen.");
+      }
+    };
+    const retryAfterReconnect = () => {
+      setIsOnline(true);
+      if (
+        draftText !== lastSavedTextRef.current &&
+        (saveStatus === "offline" || saveStatus === "error")
+      ) {
+        setSaveStatus("idle");
+      }
+    };
+    window.addEventListener("offline", markOffline);
+    window.addEventListener("online", retryAfterReconnect);
+    return () => {
+      window.removeEventListener("offline", markOffline);
+      window.removeEventListener("online", retryAfterReconnect);
+    };
+  }, [draftText, saveStatus]);
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -138,6 +198,7 @@ function WritingEditor({
         : await submitWritingAction({
             submissionId: submission.id,
             taskSlug: data.task.slug,
+            idempotencyKey: submitKeyRef.current,
           });
       if (result?.status === "error") {
         setSaveStatus("error");
@@ -150,85 +211,85 @@ function WritingEditor({
   const isExpired = remainingSeconds === 0;
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-col gap-4 border-b border-[var(--border)] pb-5 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-[var(--primary)]">
-            Writing Task 2
-          </p>
-          <h1 className="mt-1 text-2xl font-bold text-pretty break-words sm:text-3xl">
-            {data.task.title}
-          </h1>
-        </div>
-        <span
-          aria-label={`${remainingSeconds} giây còn lại theo máy chủ`}
-          className={`inline-flex w-fit items-center gap-2 rounded-lg px-3 py-2 font-mono text-sm font-bold ${isExpired ? "bg-[var(--warning-subtle)] text-[var(--warning)]" : "bg-[var(--primary-subtle)] text-[var(--primary)]"}`}
+    <div className="mx-auto min-h-[100dvh] max-w-3xl bg-[#fbf9ff] pb-24 text-[#211b2a] lg:min-h-0 lg:rounded-3xl lg:border lg:border-[#e5dfef]">
+      <header className="flex min-h-14 items-center gap-3 border-b border-[#e9e4f0] bg-white px-4 lg:rounded-t-3xl">
+        <Link
+          href="/practice/writing"
+          aria-label="Close editor"
+          onClick={(event) => {
+            if (
+              draftText !== lastSavedTextRef.current &&
+              !window.confirm(
+                "Your latest changes have not been saved. Leave the editor?",
+              )
+            ) {
+              event.preventDefault();
+            }
+          }}
+          className="grid size-10 place-items-center rounded-full text-[#4d32d4]"
         >
-          <Clock3 aria-hidden="true" size={17} />
-          {formatWritingTime(remainingSeconds)}
-        </span>
+          <X aria-hidden="true" size={18} />
+        </Link>
+        <h1 className="min-w-0 flex-1 truncate text-center text-sm font-bold text-[#4d32d4]">
+          {data.task.title}
+        </h1>
+        <button
+          type="button"
+          onClick={() => void save()}
+          disabled={saveStatus === "saving" || saveStatus === "conflict"}
+          className="min-h-10 min-w-20 text-xs font-bold text-[#4d32d4] disabled:opacity-50"
+        >
+          {saveStatus === "saving" ? "SAVING" : "SAVE DRAFT"}
+        </button>
       </header>
 
-      {isExpired ? (
-        <p
-          role="status"
-          className="flex items-start gap-2 rounded-lg bg-[var(--warning-subtle)] px-4 py-3 text-sm font-semibold"
+      <div className="space-y-4 px-4 py-4 sm:px-6">
+        <details
+          open
+          className="rounded-2xl border border-[#ddd5e9] bg-white p-4"
         >
-          <AlertTriangle
-            aria-hidden="true"
-            className="mt-0.5 shrink-0"
-            size={18}
-          />
-          Đã hết thời gian đề xuất. Bạn vẫn có thể lưu và nộp; PostgreSQL sẽ ghi
-          nhận trạng thái nộp muộn.
-        </p>
-      ) : null}
-
-      <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(18rem,.72fr)_minmax(0,1.28fr)]">
-        <aside className="min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 lg:max-h-[calc(100vh-11rem)] lg:overflow-y-auto lg:p-6">
-          <h2 className="text-lg font-bold">Đề bài</h2>
-          <p className="mt-3 leading-7 break-words whitespace-pre-wrap">
+          <summary className="flex cursor-pointer list-none items-center gap-2 font-bold text-[#4d32d4]">
+            <ListChecks aria-hidden="true" size={17} />
+            Task Instructions
+          </summary>
+          <p className="mt-4 text-sm leading-6 text-[#5f586a]">
             {data.task.promptText}
           </p>
-          <p className="mt-5 text-sm leading-6 text-[var(--muted-foreground)]">
+          <p className="mt-3 text-xs leading-5 text-[#736c7e]">
             {data.task.instructions}
           </p>
-          <dl className="mt-5 grid grid-cols-2 gap-3 text-sm">
-            <div className="rounded-lg bg-[var(--muted)] p-3">
-              <dt className="text-[var(--muted-foreground)]">Mục tiêu</dt>
-              <dd className="mt-1 font-bold">{data.task.wordTarget} từ</dd>
-            </div>
-            <div className="rounded-lg bg-[var(--muted)] p-3">
-              <dt className="text-[var(--muted-foreground)]">Tối thiểu</dt>
-              <dd className="mt-1 font-bold">{data.task.minimumWords} từ</dd>
-            </div>
-          </dl>
-        </aside>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <span className="rounded-lg bg-[#eee8ff] px-2 py-1 text-[10px] font-bold text-[#4d32d4]">
+              {data.task.difficulty}
+            </span>
+            <span className="rounded-lg bg-[#f0edf4] px-2 py-1 text-[10px] font-bold text-[#625b6d]">
+              {data.task.minimumWords}-{data.task.maximumWords} words
+            </span>
+          </div>
+        </details>
+
+        {isExpired ? (
+          <p
+            role="status"
+            className="flex items-start gap-2 rounded-xl bg-[#fff0da] px-4 py-3 text-sm font-semibold text-[#83520b]"
+          >
+            <AlertTriangle
+              aria-hidden="true"
+              className="mt-0.5 shrink-0"
+              size={18}
+            />
+            Suggested time has ended. You can still save and submit; the server
+            will record a late submission.
+          </p>
+        ) : null}
 
         <section
-          aria-label="Trình soạn bài Writing"
-          className="min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6"
+          aria-label="Writing editor"
+          className="overflow-hidden rounded-2xl border border-[#ddd5e9] bg-white"
         >
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <label htmlFor="writing-draft" className="text-lg font-bold">
-                Bài viết của bạn
-              </label>
-              <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                {localWordCount} từ đang gõ · {serverWordCount} từ đã xác nhận
-                bởi PostgreSQL
-              </p>
-            </div>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => void save()}
-              disabled={saveStatus === "saving" || saveStatus === "conflict"}
-            >
-              <Save aria-hidden="true" size={15} /> Lưu ngay
-            </Button>
-          </div>
+          <label htmlFor="writing-draft" className="sr-only">
+            Your writing
+          </label>
           <textarea
             id="writing-draft"
             name="writingDraft"
@@ -237,65 +298,113 @@ function WritingEditor({
               setDraftText(event.target.value);
               if (saveStatus !== "conflict") setSaveStatus("idle");
             }}
+            placeholder="Start writing here..."
             maxLength={20_000}
             autoComplete="off"
             spellCheck
-            className="mt-4 min-h-[28rem] w-full resize-y rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] p-4 text-base leading-7 focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+            className="min-h-[28rem] w-full resize-y bg-white p-4 text-base leading-7 outline-none placeholder:text-[#b4adbd] sm:min-h-[32rem]"
             aria-describedby="writing-save-status writing-word-guidance"
           />
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#ece7f1] px-4 py-3 text-xs text-[#736c7e]">
+            <div className="flex items-center gap-4">
+              <BookOpen aria-hidden="true" size={15} />
+              <ListChecks aria-hidden="true" size={15} />
+              <Lightbulb aria-hidden="true" size={15} />
+            </div>
+            <span className="inline-flex items-center gap-2 font-semibold">
+              <span className="h-1.5 w-12 overflow-hidden rounded-full bg-[#ebe7f1]">
+                <span
+                  className="block h-full rounded-full bg-[#7652e8]"
+                  style={{
+                    width: `${Math.min(100, (localWordCount / data.task.wordTarget) * 100)}%`,
+                  }}
+                />
+              </span>
+              {localWordCount} / {data.task.wordTarget} words
+            </span>
+          </div>
+        </section>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
           <p
             id="writing-save-status"
             role={
-              saveStatus === "error" || saveStatus === "conflict"
+              saveStatus === "error" ||
+              saveStatus === "offline" ||
+              saveStatus === "conflict"
                 ? "alert"
                 : "status"
             }
-            className="mt-3 flex min-h-6 items-start gap-2 text-sm font-semibold"
+            className="flex min-h-6 items-center gap-2 font-semibold text-[#625b6d]"
           >
             {saveStatus === "saved" ? (
-              <Check aria-hidden="true" size={16} />
+              <Check aria-hidden="true" size={15} className="text-[#08754d]" />
             ) : null}
             {saveStatus === "saving" ? (
-              <Save aria-hidden="true" size={16} />
+              <Save aria-hidden="true" size={15} />
             ) : null}
             {message}
           </p>
-          {saveStatus === "conflict" ? (
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              className="mt-2"
-              onClick={() => window.location.reload()}
-            >
-              <RotateCcw aria-hidden="true" size={15} /> Tải bản PostgreSQL
-            </Button>
-          ) : null}
-          <div className="mt-6 border-t border-[var(--border)] pt-5">
-            <p
-              id="writing-word-guidance"
-              className="text-sm leading-6 text-[var(--muted-foreground)]"
-            >
-              {minimumWordsMet
-                ? "Bản đã lưu đạt số từ tối thiểu."
-                : `Mục tiêu tối thiểu là ${data.task.minimumWords} từ; PostgreSQL sẽ tính lại khi lưu và nộp.`}
-            </p>
-            <ConfirmSubmitButton
-              className="mt-4 w-full"
-              disabled={
-                isSubmitting ||
-                saveStatus === "saving" ||
-                saveStatus === "conflict" ||
-                draftText.trim().length === 0
-              }
-              pending={isSubmitting}
-              label="Nộp bài và khóa nội dung"
-              title="Khóa và nộp bài Writing?"
-              description="Sau khi xác nhận, nội dung đã nộp trở thành bất biến và không thể tiếp tục chỉnh sửa."
-              onConfirm={() => void submit()}
-            />
-          </div>
-        </section>
+          <span
+            data-testid="writing-timer"
+            aria-label={`${remainingSeconds} seconds remaining according to the server`}
+            className={`inline-flex items-center gap-1.5 font-mono font-bold ${isExpired ? "text-[#a05e00]" : "text-[#4d32d4]"}`}
+          >
+            <Clock3 aria-hidden="true" size={14} />
+            {formatWritingTime(remainingSeconds)}
+          </span>
+        </div>
+
+        {saveStatus === "conflict" ? (
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => window.location.reload()}
+          >
+            <RotateCcw aria-hidden="true" size={15} />
+            Load PostgreSQL version
+          </Button>
+        ) : null}
+
+        {saveStatus === "offline" || saveStatus === "error" ? (
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => void save()}
+          >
+            <RotateCcw aria-hidden="true" size={15} />
+            Retry save
+          </Button>
+        ) : null}
+
+        <p
+          id="writing-word-guidance"
+          className="text-xs leading-5 text-[#736c7e]"
+        >
+          {minimumWordsMet
+            ? `The saved draft meets the ${data.task.minimumWords}-word minimum.`
+            : `Write at least ${data.task.minimumWords} words. PostgreSQL verifies the count when saving and submitting.`}
+          {serverWordCount !== localWordCount
+            ? ` ${serverWordCount} words are currently confirmed by the server.`
+            : ""}
+        </p>
+
+        <ConfirmSubmitButton
+          className="min-h-11 w-full rounded-xl bg-[#3d22c8] text-white"
+          disabled={
+            isSubmitting ||
+            saveStatus === "saving" ||
+            saveStatus === "conflict" ||
+            draftText.trim().length === 0
+          }
+          pending={isSubmitting}
+          label="Submit for Feedback"
+          title="Submit and lock this writing?"
+          description="After confirmation, the submitted content becomes immutable and cannot be edited."
+          onConfirm={() => void submit()}
+        />
       </div>
     </div>
   );

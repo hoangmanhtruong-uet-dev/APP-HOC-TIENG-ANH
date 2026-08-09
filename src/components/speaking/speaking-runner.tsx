@@ -1,16 +1,26 @@
 "use client";
 
-import { Clock3, Mic, Square, Trash2, UploadCloud } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Clock3,
+  Mic,
+  Square,
+  Trash2,
+  UploadCloud,
+  X,
+} from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 
+import { submitMockTestSectionAction } from "@/features/mock-tests/actions";
+import type { MockRunnerContext } from "@/features/mock-tests/model";
 import {
   createSpeakingUploadIntentAction,
   submitSpeakingAction,
   verifySpeakingUploadAction,
 } from "@/features/speaking/actions";
-import { submitMockTestSectionAction } from "@/features/mock-tests/actions";
-import type { MockRunnerContext } from "@/features/mock-tests/model";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { ConfirmSubmitButton } from "@/components/shared/confirm-submit-button";
 import type { SpeakingPracticeData } from "@/server/speaking/content";
@@ -34,6 +44,7 @@ export function SpeakingRunner({
   const [recordings, setRecordings] = useState<Record<string, Recording>>({});
   const [message, setMessage] = useState("");
   const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [promptIndex, setPromptIndex] = useState(0);
   const [pending, startTransition] = useTransition();
   const recorderRef = useRef<MediaRecorder | null>(null);
   const recordingsRef = useRef<Record<string, Recording>>({});
@@ -65,7 +76,7 @@ export function SpeakingRunner({
       !navigator.mediaDevices?.getUserMedia ||
       typeof MediaRecorder === "undefined"
     ) {
-      setMessage("Trình duyệt này chưa hỗ trợ ghi âm an toàn.");
+      setMessage("This browser does not support secure audio recording.");
       return;
     }
     try {
@@ -77,7 +88,7 @@ export function SpeakingRunner({
       ].find((type) => MediaRecorder.isTypeSupported(type));
       if (!preferred) {
         stream.getTracks().forEach((track) => track.stop());
-        setMessage("Không tìm thấy định dạng audio được hỗ trợ.");
+        setMessage("No supported audio format was found.");
         return;
       }
       const recorder = new MediaRecorder(stream, { mimeType: preferred });
@@ -99,8 +110,7 @@ export function SpeakingRunner({
         );
         const url = URL.createObjectURL(blob);
         setRecordings((current) => {
-          const old = current[promptId];
-          if (old) URL.revokeObjectURL(old.url);
+          if (current[promptId]) URL.revokeObjectURL(current[promptId].url);
           const next = {
             ...current,
             [promptId]: { blob, url, duration, mimeType },
@@ -111,7 +121,7 @@ export function SpeakingRunner({
         stream.getTracks().forEach((track) => track.stop());
         setActivePrompt(null);
         setMessage(
-          "Bản ghi chỉ đang ở máy bạn. Hãy upload để server xác minh.",
+          "Recording saved on this device. Upload it for verification.",
         );
       };
       recorderRef.current = recorder;
@@ -123,12 +133,10 @@ export function SpeakingRunner({
         1_000,
       );
       setActivePrompt(promptId);
-      setMessage("Đang ghi âm…");
+      setMessage("Recording...");
       stopTimerRef.current = setTimeout(stopRecording, maximumSeconds * 1000);
     } catch {
-      setMessage(
-        "Không thể truy cập microphone. Hãy kiểm tra quyền trình duyệt.",
-      );
+      setMessage("Microphone access failed. Check your browser permission.");
     }
   }
 
@@ -142,7 +150,7 @@ export function SpeakingRunner({
     const recording = recordings[promptId];
     if (!recording) return;
     startTransition(async () => {
-      setMessage("Đang cấp quyền upload private…");
+      setMessage("Preparing a private upload...");
       const result = await createSpeakingUploadIntentAction({
         attemptId,
         promptId,
@@ -164,11 +172,11 @@ export function SpeakingRunner({
         });
       if (error) {
         setMessage(
-          "Upload private thất bại. File local vẫn còn để bạn thử lại.",
+          "Private upload failed. Your local recording is still available.",
         );
         return;
       }
-      setMessage("Server đang xác minh file thật…");
+      setMessage("Verifying the uploaded recording...");
       const verified = await verifySpeakingUploadAction({
         intentId: result.intent.intentId,
         setSlug: data.set.slug,
@@ -178,178 +186,235 @@ export function SpeakingRunner({
     });
   }
 
-  const readyCount = data.prompts.filter(
-    (prompt) => prompt.verifiedAudio,
-  ).length;
-  const requiredCount = data.prompts.filter((prompt) => prompt.required).length;
+  const readyCount = data.prompts.filter((item) => item.verifiedAudio).length;
+  const requiredCount = data.prompts.filter((item) => item.required).length;
+  const prompt = data.prompts[promptIndex];
+  if (!prompt) return null;
+  const local = recordings[prompt.id];
+  const isRecording = activePrompt === prompt.id;
+
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <header>
-        <p className="text-sm font-bold text-[var(--primary)]">
-          Speaking practice
-        </p>
-        <h1 className="mt-2 text-3xl font-bold text-pretty">
-          {data.set.title}
-        </h1>
-        <p className="mt-2 text-[var(--muted-foreground)]">
-          {readyCount}/{requiredCount} câu bắt buộc đã có audio được server xác
-          minh.
-        </p>
+    <div className="mx-auto min-h-[100dvh] max-w-3xl bg-[#fbf9ff] text-[#211b2a] lg:min-h-0 lg:rounded-3xl lg:border lg:border-[#e5dfef]">
+      <header className="flex min-h-14 items-center gap-3 border-b border-[#e9e4f0] bg-white px-4 lg:rounded-t-3xl">
+        <Link
+          href="/practice/speaking"
+          aria-label="Close recording"
+          className="grid size-10 place-items-center rounded-full text-[#4d32d4]"
+        >
+          <X aria-hidden="true" size={18} />
+        </Link>
+        <div className="min-w-0 flex-1 text-center">
+          <p className="text-[10px] font-bold text-[#736c7e] uppercase">
+            Lesson {promptIndex + 1}
+          </p>
+          <p className="truncate text-xs font-bold">{data.set.title}</p>
+        </div>
+        <span className="w-10" aria-hidden="true" />
       </header>
-      <p
-        aria-live="polite"
-        className="min-h-6 text-sm font-medium text-[var(--muted-foreground)]"
-      >
-        {message}
-      </p>
-      <ol className="space-y-5">
-        {data.prompts.map((prompt, index) => {
-          const local = recordings[prompt.id];
-          const isRecording = activePrompt === prompt.id;
-          return (
-            <li
-              key={prompt.id}
-              className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6"
+
+      <div className="flex min-h-[calc(100dvh-3.5rem)] flex-col px-5 pb-6 sm:px-8">
+        <div
+          className="mt-4 flex justify-center gap-1.5"
+          role="progressbar"
+          aria-label="Speaking prompt progress"
+          aria-valuemin={1}
+          aria-valuemax={data.prompts.length}
+          aria-valuenow={promptIndex + 1}
+          aria-valuetext={`Prompt ${promptIndex + 1} of ${data.prompts.length}`}
+        >
+          {data.prompts.map((item, index) => (
+            <span
+              key={item.id}
+              className={`h-1 rounded-full ${index === promptIndex ? "w-8 bg-[#4d32d4]" : item.verifiedAudio ? "w-4 bg-[#8ed8bd]" : "w-4 bg-[#ddd7e7]"}`}
+            />
+          ))}
+        </div>
+
+        <section className="flex flex-1 flex-col items-center justify-center py-10 text-center">
+          <p className="text-[10px] font-bold text-[#736c7e] uppercase">
+            {prompt.part.replace("_", " ")}
+          </p>
+          <h1 className="mt-4 max-w-md text-2xl leading-tight font-bold text-[#3823bd]">
+            {prompt.text}
+          </h1>
+          <p className="mt-3 max-w-sm text-xs leading-5 text-[#736c7e]">
+            {prompt.instructions ||
+              `Speak for ${prompt.minimumAnswerSeconds}-${prompt.maximumAnswerSeconds} seconds.`}
+          </p>
+
+          <div className="mt-6 min-h-12">
+            {isRecording ? (
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#fff0ef] px-3 py-1.5 text-xs font-bold text-[#b53d38]">
+                <span className="size-2 animate-pulse rounded-full bg-[#d94942]" />
+                Recording
+              </div>
+            ) : prompt.verifiedAudio ? (
+              <div className="rounded-full bg-[#e6f8ef] px-3 py-1.5 text-xs font-bold text-[#08754d]">
+                Audio verified
+              </div>
+            ) : (
+              <div className="rounded-full bg-[#f1edff] px-3 py-1.5 text-xs font-bold text-[#4d32d4]">
+                Ready to record
+              </div>
+            )}
+            <p
+              role="timer"
+              className="mt-2 font-mono text-sm font-bold text-[#4d32d4] tabular-nums"
             >
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <span className="rounded-full bg-[var(--primary-soft)] px-3 py-1 text-xs font-bold text-[var(--primary)]">
-                  {prompt.part.replace("_", " ")} · câu {index + 1}
-                </span>
-                <span className="text-sm text-[var(--muted-foreground)]">
-                  {prompt.minimumAnswerSeconds}–{prompt.maximumAnswerSeconds}{" "}
-                  giây
-                </span>
+              {String(Math.floor(recordingSeconds / 60)).padStart(2, "0")}:
+              {String(recordingSeconds % 60).padStart(2, "0")}{" "}
+              <span className="text-[#6b6476]">
+                / 00:{String(prompt.maximumAnswerSeconds).padStart(2, "0")}
+              </span>
+            </p>
+          </div>
+
+          <div
+            className="mt-6 flex h-12 items-end justify-center gap-1"
+            aria-hidden="true"
+          >
+            {[12, 20, 15, 31, 18, 40, 24, 16, 36, 14, 27, 11].map(
+              (height, index) => (
+                <span
+                  key={index}
+                  className={`w-1.5 rounded-full bg-[#5b3ddd] ${isRecording ? "animate-pulse" : ""}`}
+                  style={{ height }}
+                />
+              ),
+            )}
+          </div>
+
+          <div className="mt-7 flex items-center gap-5">
+            <button
+              type="button"
+              aria-label="Previous prompt"
+              disabled={promptIndex === 0 || Boolean(activePrompt)}
+              onClick={() => setPromptIndex((index) => Math.max(0, index - 1))}
+              className="grid size-11 place-items-center rounded-full bg-[#eeeaf4] text-[#5e5769] disabled:opacity-35"
+            >
+              <ChevronLeft aria-hidden="true" size={20} />
+            </button>
+            <button
+              type="button"
+              aria-label={isRecording ? "Stop recording" : "Start recording"}
+              disabled={pending || Boolean(activePrompt && !isRecording)}
+              onClick={() =>
+                isRecording
+                  ? stopRecording()
+                  : startRecording(prompt.id, prompt.maximumAnswerSeconds)
+              }
+              className={`grid size-16 place-items-center rounded-full text-white shadow-[0_8px_24px_rgba(77,50,212,0.28)] transition active:scale-[0.96] ${isRecording ? "bg-[#d94942]" : "bg-[#4d32d4]"}`}
+            >
+              {isRecording ? (
+                <Square aria-hidden="true" size={20} fill="currentColor" />
+              ) : (
+                <Mic aria-hidden="true" size={25} />
+              )}
+            </button>
+            <button
+              type="button"
+              aria-label="Next prompt"
+              disabled={
+                promptIndex === data.prompts.length - 1 || Boolean(activePrompt)
+              }
+              onClick={() =>
+                setPromptIndex((index) =>
+                  Math.min(data.prompts.length - 1, index + 1),
+                )
+              }
+              className="grid size-11 place-items-center rounded-full bg-[#eeeaf4] text-[#5e5769] disabled:opacity-35"
+            >
+              <ChevronRight aria-hidden="true" size={20} />
+            </button>
+          </div>
+
+          {local ? (
+            <div className="mt-7 w-full max-w-md rounded-2xl border border-[#e3ddec] bg-white p-4 text-left">
+              <audio controls src={local.url} className="w-full">
+                Your browser does not support audio.
+              </audio>
+              <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
+                <button
+                  type="button"
+                  disabled={pending || isRecording}
+                  onClick={() => upload(prompt.id)}
+                  className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#4d32d4] px-4 text-sm font-bold text-white disabled:opacity-50"
+                >
+                  <UploadCloud aria-hidden="true" size={16} />
+                  Upload & verify
+                </button>
+                <button
+                  type="button"
+                  aria-label="Delete local recording"
+                  disabled={pending || isRecording}
+                  onClick={() => {
+                    URL.revokeObjectURL(local.url);
+                    setRecordings((current) => {
+                      const next = { ...current };
+                      delete next[prompt.id];
+                      recordingsRef.current = next;
+                      return next;
+                    });
+                    setMessage("Local recording deleted.");
+                  }}
+                  className="grid size-11 place-items-center rounded-xl border border-[#ddd5e9] text-[#a43834]"
+                >
+                  <Trash2 aria-hidden="true" size={17} />
+                </button>
               </div>
-              <h2 className="mt-4 text-lg leading-7 font-bold">
-                {prompt.text}
-              </h2>
-              {prompt.instructions ? (
-                <p className="mt-2 text-sm leading-6 text-[var(--muted-foreground)]">
-                  {prompt.instructions}
-                </p>
-              ) : null}
-              {prompt.verifiedAudio?.signedUrl ? (
-                <div className="mt-4">
-                  <p className="mb-2 text-sm font-bold text-emerald-700">
-                    Đã xác minh ·{" "}
-                    {Math.round(prompt.verifiedAudio.durationSeconds)} giây
-                  </p>
-                  <audio
-                    controls
-                    preload="none"
-                    src={prompt.verifiedAudio.signedUrl}
-                    className="w-full"
-                  >
-                    Trình duyệt không hỗ trợ audio.
-                  </audio>
-                </div>
-              ) : null}
-              {local ? (
-                <div className="mt-4">
-                  <p className="mb-2 text-sm">
-                    Bản ghi local · {Math.round(local.duration)} giây
-                  </p>
-                  <audio controls src={local.url} className="w-full">
-                    Trình duyệt không hỗ trợ audio.
-                  </audio>
-                </div>
-              ) : null}
-              <div className="mt-5 flex flex-wrap gap-3">
-                {isRecording ? (
-                  <div className="flex flex-wrap items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={stopRecording}
-                      className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-red-700 px-4 py-2 font-bold text-white hover:bg-red-800 focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:outline-none"
-                    >
-                      <Square aria-hidden="true" size={17} />
-                      Dừng ghi
-                    </button>
-                    <span
-                      role="timer"
-                      aria-label={`Đã ghi ${recordingSeconds} giây`}
-                      className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-[var(--danger-subtle)] px-3 font-mono text-sm font-bold tabular-nums"
-                    >
-                      <Clock3 aria-hidden="true" size={16} />
-                      {recordingSeconds}s
-                    </span>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    disabled={Boolean(activePrompt) || pending}
-                    onClick={() =>
-                      startRecording(prompt.id, prompt.maximumAnswerSeconds)
-                    }
-                    className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-[var(--border-strong)] px-4 py-2 font-bold focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none disabled:opacity-50"
-                  >
-                    <Mic aria-hidden="true" size={17} />
-                    {prompt.verifiedAudio ? "Ghi lại" : "Ghi âm"}
-                  </button>
-                )}
-                {local ? (
-                  <>
-                    <button
-                      type="button"
-                      disabled={pending || isRecording}
-                      onClick={() => upload(prompt.id)}
-                      className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2 font-bold text-white hover:bg-[var(--primary-hover)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none disabled:opacity-50"
-                    >
-                      <UploadCloud aria-hidden="true" size={17} />
-                      Upload và xác minh
-                    </button>
-                    <button
-                      type="button"
-                      disabled={pending || isRecording}
-                      onClick={() => {
-                        URL.revokeObjectURL(local.url);
-                        setRecordings((current) => {
-                          const next = { ...current };
-                          delete next[prompt.id];
-                          recordingsRef.current = next;
-                          return next;
-                        });
-                        setMessage("Đã xóa bản ghi local khỏi trình duyệt.");
-                      }}
-                      className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-[var(--border-strong)] px-4 py-2 font-bold hover:border-[var(--destructive)] hover:text-[var(--destructive)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none disabled:opacity-50"
-                    >
-                      <Trash2 aria-hidden="true" size={17} />
-                      Xóa bản ghi local
-                    </button>
-                  </>
-                ) : null}
-              </div>
-            </li>
-          );
-        })}
-      </ol>
-      <div className="sticky bottom-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-lg">
-        <ConfirmSubmitButton
-          disabled={
-            pending || readyCount < requiredCount || Boolean(activePrompt)
-          }
-          label="Nộp attempt bất biến"
-          title="Nộp attempt Speaking?"
-          description="Các bản ghi đã xác minh sẽ được khóa với attempt này và không thể thay thế sau khi nộp."
-          onConfirm={() =>
-            startTransition(async () => {
-              const result = mockContext
-                ? await submitMockTestSectionAction({
-                    mockTestSlug: mockContext.mockTestSlug,
-                    sessionId: mockContext.sessionId,
-                    sectionAttemptId: mockContext.sectionAttemptId,
-                    idempotencyKey: submitKeyRef.current,
-                  })
-                : await submitSpeakingAction({
-                    attemptId,
-                    setSlug: data.set.slug,
-                    idempotencyKey: submitKeyRef.current,
-                  });
-              if (result?.status === "error") setMessage(result.message);
-            })
-          }
-          className="min-h-11 w-full"
-        />
+            </div>
+          ) : prompt.verifiedAudio?.signedUrl ? (
+            <audio
+              controls
+              preload="none"
+              src={prompt.verifiedAudio.signedUrl}
+              className="mt-7 w-full max-w-md"
+            >
+              Your browser does not support audio.
+            </audio>
+          ) : null}
+          <p
+            aria-live="polite"
+            className="mt-4 min-h-5 max-w-md text-xs leading-5 text-[#736c7e]"
+          >
+            {message}
+          </p>
+        </section>
+
+        <div className="rounded-2xl border border-[#e3ddec] bg-white p-4 shadow-[0_8px_24px_rgba(72,49,145,0.08)]">
+          <div className="mb-3 flex items-center justify-between text-xs text-[#736c7e]">
+            <span>
+              {readyCount}/{requiredCount} required responses
+            </span>
+            <Clock3 aria-hidden="true" size={15} />
+          </div>
+          <ConfirmSubmitButton
+            disabled={
+              pending || readyCount < requiredCount || Boolean(activePrompt)
+            }
+            label="Finish Speaking"
+            title="Submit this speaking practice?"
+            description="Verified recordings will be locked to this attempt after submission."
+            onConfirm={() =>
+              startTransition(async () => {
+                const result = mockContext
+                  ? await submitMockTestSectionAction({
+                      mockTestSlug: mockContext.mockTestSlug,
+                      sessionId: mockContext.sessionId,
+                      sectionAttemptId: mockContext.sectionAttemptId,
+                      idempotencyKey: submitKeyRef.current,
+                    })
+                  : await submitSpeakingAction({
+                      attemptId,
+                      setSlug: data.set.slug,
+                      idempotencyKey: submitKeyRef.current,
+                    });
+                if (result?.status === "error") setMessage(result.message);
+              })
+            }
+            className="min-h-11 w-full rounded-xl"
+          />
+        </div>
       </div>
     </div>
   );

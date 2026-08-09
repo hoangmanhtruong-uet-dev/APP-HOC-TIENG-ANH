@@ -13,15 +13,15 @@ const hasVerifiedEnvironment = Boolean(
 function requireLearningEnvironment(testInfo: TestInfo) {
   test.skip(
     testInfo.project.name !== "chromium-desktop",
-    "Persisted learning E2E runs once in the desktop project.",
+    "INTENTIONAL: persisted learning E2E runs once in the desktop project.",
   );
   test.skip(
     !email || !password,
-    "E2E_LEARNING_EMAIL and E2E_LEARNING_PASSWORD were not provided.",
+    "AUTH_ENV: E2E_LEARNING_EMAIL and E2E_LEARNING_PASSWORD were not provided.",
   );
   test.skip(
     !hasVerifiedEnvironment,
-    "Learning E2E requires an expected Supabase project ref matching the active environment.",
+    "AUTH_ENV: Learning E2E requires an expected Supabase project ref matching the active environment.",
   );
 }
 
@@ -40,7 +40,7 @@ test("published learning content, resume and completion persist", async ({
   await login(page);
   test.skip(
     new URL(page.url()).pathname === "/onboarding",
-    "The dedicated learning account has not completed onboarding.",
+    "AUTH_ENV: the dedicated learning account has not completed onboarding.",
   );
 
   await page.goto("/learn");
@@ -103,10 +103,14 @@ test("published learning content, resume and completion persist", async ({
   ).toBeVisible();
 
   await page.goto("/dashboard");
-  await expect(page.getByText("Hoàn thành").first()).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Learning summary" }).getByText("1", {
+      exact: true,
+    }),
+  ).toBeVisible();
   await page.goto("/progress");
   await expect(
-    page.getByRole("heading", { name: "Hoạt động gần đây" }),
+    page.getByRole("heading", { name: "Recent Activity" }),
   ).toBeVisible();
   await expect(page.getByText("Hiểu cấu trúc bài thi IELTS")).toBeVisible();
 });

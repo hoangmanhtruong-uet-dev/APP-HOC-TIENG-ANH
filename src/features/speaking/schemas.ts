@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/validation/zod";
 
 const idempotencyKey = z.string().trim().min(1).max(200);
 

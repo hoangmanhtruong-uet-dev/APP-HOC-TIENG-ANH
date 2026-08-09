@@ -13,15 +13,15 @@ const activeProjectRef = process.env.E2E_ACTIVE_SUPABASE_PROJECT_REF;
 function requireMockEnvironment(testInfo: TestInfo) {
   test.skip(
     testInfo.project.name !== "chromium-desktop",
-    "Persisted Phase 10A mutation runs once on desktop.",
+    "INTENTIONAL: persisted Phase 10A mutation runs once on desktop.",
   );
   test.skip(
     !userAEmail || !userAPassword || !userBEmail || !userBPassword,
-    "Two dedicated completed-onboarding Phase 10A accounts were not provided.",
+    "AUTH_ENV: two dedicated completed-onboarding Phase 10A accounts were not provided.",
   );
   test.skip(
     !expectedProjectRef || expectedProjectRef !== activeProjectRef,
-    "Expected Supabase project ref must match the active environment.",
+    "AUTH_ENV: expected Supabase project ref must match the active environment.",
   );
 }
 
@@ -33,7 +33,7 @@ async function login(page: Page, email: string, password: string) {
   await expect(page).toHaveURL(/\/(dashboard|onboarding)$/);
   test.skip(
     new URL(page.url()).pathname === "/onboarding",
-    "Dedicated account has not completed onboarding.",
+    "AUTH_ENV: dedicated account has not completed onboarding.",
   );
 }
 
@@ -68,6 +68,8 @@ test("published catalog, pinned session, sequential first section and owner isol
     /\/mock-tests\/academic-foundation-mock\/session\/[0-9a-f-]+$/,
   );
   const sessionPath = new URL(pageA.url()).pathname;
+  await pageA.reload();
+  await expect(pageA).toHaveURL(sessionPath);
   await expect(pageA.getByText("Chưa mở")).toHaveCount(3);
   const openSection = pageA.getByRole("button", { name: /Mở section/ });
   const continueSection = pageA.getByRole("link", { name: /^Tiếp tục/ });
