@@ -3,8 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 export async function buyStreakFreezeAction() {
-  const supabase = await createSupabaseServerClient();
+  const supabase: SupabaseClient = await createSupabaseServerClient() as unknown as SupabaseClient;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Unauthorized" };
 

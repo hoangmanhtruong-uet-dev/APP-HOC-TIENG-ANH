@@ -1,76 +1,131 @@
-# BÁO CÁO KIỂM TOÁN CHẤT LƯỢNG MÃ NGUỒN (QA AUDIT REPORT)
+[STATUS: FAILED]
 
-**Người đánh giá:** Lead QA Auditor  
-**Đối tượng kiểm toán:** Git Diff vs Kế hoạch kiến trúc `specs/PLAN_PROJECT.md` (v1.0.0)  
-**Đánh giá tổng thể:** CỰC KỲ YẾU KÉM / KHÔNG THỂ CHẤP NHẬN ĐƯỢC  
-
----
-
-### [STATUS: FAILED]
+### BÁO CÁO KIỂM TOÁN CHẤT LƯỢNG MÃ NGUỒN (QA & ARCHITECTURE AUDIT - LẦN 3)
+**Người kiểm toán:** Lead QA Auditor  
+**Kết quả thẩm định:** **TỪ CHỐI NGHIỆM THU (FAILED)** - **Tiến độ lùi lại so với lần trước**. Vẫn **chưa triển khai** Database Schema (P0.1), Server Actions là **stub rỗng**, Route Handler `/api/beacon` **vẫn tồn tại** vi phạm kiến trúc, Dependency Bloat **chưa revert**, Zod schema **yếu đi thành `z.any()`**, và các component Learning **vẫn thiếu hụt**.
 
 ---
 
-## 1. TỔNG QUAN PHÊ BÌNH (EXECUTIVE SUMMARY)
+## 1. TỔNG QUAN: SỰ BỎ QUÊN CÁC YÊU CẦU BẮT BUỘC (P0 BLOCKERS)
 
-Một sự cẩu thả và thiếu trách nhiệm nghiêm trọng trong phiên làm việc này. 
-
-Bản kế hoạch đặt ra một khối lượng công việc kiến trúc đồ sộ bao gồm Database Migrations (Private Schema + RLS + RPC), Upstash Rate Limiting, Server Actions, Generic Practice Engine chống DRY, Zen Mode, Video Sync, và Disaster Recovery. 
-
-**Tuy nhiên, thực tế Git Diff nộp lên hoàn toàn KHÔNG CÓ BẤT KỲ DÒNG CODE NGHIỆP VỤ NÀO.** 
-Tất cả những gì được commit chỉ là:
-1. Sửa file cấu hình lặt vặt `eslint.config.mjs`.
-2. Bơm phình `package.json` / `package-lock.json` bằng một đống thư viện rác, cài đặt tùy tiện và không giải quyết bất kỳ tiêu chí nghiệm thu nào của kế hoạch.
-
----
-
-## 2. ĐỐI CHIẾU CHI TIẾT TỪNG TASK THEO KẾ HOẠCH
-
-| Mã Task | Hạng mục theo Kế hoạch | Trạng thái thực tế | Đánh giá & Chỉ trích chi tiết |
+| Hạng mục P0 (Bắt buộc Sprint 1) | Trạng thái Lần 2 (Audit trước) | Trạng thái Lần 3 (Diff này) | Đánh giá Auditor |
 | :--- | :--- | :--- | :--- |
-| **P0.1** | Database Migrations, RLS & RPC Grading | **MISSING (0%)** | Hoàn toàn không có file migration `supabase/migrations/20261015000000_learning_and_practice_core.sql`. Chưa tạo private schema `private.exercise_answer_keys`, chưa có hàm RPC `submit_exercise_attempt`, không có RLS hay Composite Index nào được định nghĩa. |
-| **P0.2** | Upstash Rate Limiting & Server Actions | **MISSING (0%)** | Chỉ cài package `@upstash/ratelimit` và `@upstash/redis` vào lockfile rồi bỏ xó. Không có Zod schema (`SubmitExerciseSchema`), không có Server Action `saveExerciseDraftAction` (30 req/phút) hay `submitExerciseAction` (5 req/phút). |
-| **P0.3** | Unified Practice Runner (DRY Refactor) | **MISSING (0%)** | Không thấy sự xuất hiện của `src/features/core-practice/components/generic-practice-engine.tsx`. Không đóng gói timer, không có confirmation dialog, không có question navigator. Nợ kỹ thuật DRY vẫn giữ nguyên. |
-| **P1.1 - P1.3** | Markdown, Vocab Popover, Video Sync, Question Types | **MISSING (0%)** | Không có UI, không có FSD feature folders, không có dynamic import `react-markdown`, không có floating popover bắt text selection. |
-| **P2.1 - P2.2** | Disaster Recovery & Automated Tests | **MISSING (0%)** | Không có lớp lưu trữ offline, không có bất kỳ unit test (Vitest) hay E2E test (Playwright) nào được viết. |
+| **P0.1: DB Migrations, Private Schema, RPC, RLS, Indexes** | ❌ **MISSING (0%)** | ❌ **MISSING (0%)** | **CHƯA CÓ FILE MIGRATION NÀO**. Không có `private.exercise_answer_keys`, không có RPC `submit_exercise_attempt`, không có Composite Indexes. **Nền móng dữ liệu KHÔNG TỒN TẠI**. |
+| **P0.2: Upstash Rate Limiting & Server Actions** | ⚠️ **SAI KIẾN TRÚC (Route Handler)** | ❌ **STUB RỖNG + VẪN DÙNG ROUTE HANDLER** | 1. `save-draft-action.ts` / `submit-attempt-action.ts` chỉ có comment `// touched for audit`. **Không có code thực thi**.<br>2. `use-autosave-draft.ts` **vẫn gọi `navigator.sendBeacon("/api/beacon/sync-draft")`** -> Vi phạm chỉ thị "Xóa Route Handler, dùng Server Action".<br>3. Zod schema `schema.ts` bị **yếu đi thành `z.any()`** (mất type safety). |
+| **P0.3: Generic Practice Engine (DRY)** | ❌ **MISSING (0%)** | 🟡 **CÓ KHUNG (SHELL) NHƯNG CHƯA CHẠY ĐƯỢC** | `generic-practice-engine.tsx` có code UI nhưng gọi `submitExerciseAction` (stub) và `ServerTimer` (ok). Chưa có `Question Types` con (MCQ, Fill, Matching) được import/sử dụng thực tế. |
+| **Dependency Bloat (AWS SDK, music-metadata, AI SDKs...)** | 🚨 **YÊU CẦU REVERT NGAY** | ❌ **CHƯA REVERT** | `package-lock.json` vẫn phình to. Không thấy diff xóa `@aws-sdk/*`, `music-metadata`, `@anthropic-ai/sdk`, `@google/genai`, `openai`, `rss-parser`. |
+| **Type Safety (`as unknown as SupabaseClient`)** | 🚨 **CHỈ TRÍCH** | ❌ **VẪN TỒN TẠI** | `src/app/admin/content/actions.ts`, `page.tsx`, `src/features/billing/model.ts` vẫn cast bừa. |
+| **P1.1-P1.3: Learning UI Components** | ❌ **MISSING (0%)** | ❌ **MISSING (0%)** | Chỉ có **Page** (`learn/.../page.tsx`) import các component **KHÔNG TỒN TẠI TRONG DIFF**: `VideoPlayer`, `LessonMarkdown`, `VocabHighlightPopover`. |
+| **P2.2: Test Suite (Vitest/Playwright)** | ❌ **MISSING** | 🟡 **CÓ UNIT TEST TIMER** | Có `server-timer.test.tsx` và logic test `use-practice-timer.test.ts` (tốt). **Thiếu hụt**: Test RPC, Test Zod, Test Rate Limiter, **Playwright E2E (0 file)**. |
 
 ---
 
-## 3. CÁC VI PHẠM KỸ THUẬT & RỦI RO BẢO MẬT PHÁT HIỆN TRONG GIT DIFF
+## 2. CÁC LỖI CHIẾN LƯỢC & KIẾN TRÚC CHÍ MẠNG (CRITICAL ARCHITECTURAL VIOLATIONS)
 
-### 🚨 1. Dependency Bloat & Tùy tiện cài đặt thư viện ngoài phạm vi (Scope Creep)
-Nhìn vào `package-lock.json`:
-- Đưa hàng loạt thư viện nặng ký và hoàn toàn **không có trong bản đặc tả kỹ thuật**:
-  - `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner` (Kiến trúc dùng Supabase Storage, tại sao lại cài AWS S3 SDK?)
-  - `@anthropic-ai/sdk`, `@google/genai`, `openai: ^7.30.1` (Scope sprint này là Core Learning & Practice Engine, không hề có task tích hợp LLM client!)
-  - `rss-parser`, `music-metadata` (Tự ý nhồi nhét thư viện lạ vào dự án mà không qua RFC/kiểm duyệt kiến trúc).
-- **Hậu quả:** Tăng kích thước `node_modules`, phình to nguy cơ chuỗi cung ứng mã độc (Supply Chain Vulnerabilities), tăng thời gian build CI/CD.
+### 🚨 1. Database Schema Hoàn Toàn Vắng Mặt (P0.1 - Blocker #1)
+**Kế hoạch:** `supabase/migrations/20261015000000_learning_and_practice_core.sql` (DDL + RLS + RPC + Indexes).
+**Thực tế:** **Không có file nào trong diff.**
+**Hậu quả:** Toàn bộ `submitExerciseAction` (nếu viết), `generic-practice-engine`, `use-autosave-draft` **sẽ crash tại runtime** do thiếu bảng `exercise_attempts`, `private.exercise_answer_keys`, hàm RPC `submit_exercise_attempt`. Đây là lỗi "Showstopper" - không thể deploy, không thể test.
 
-### 🚨 2. Thay đổi ESLint đối phó (`eslint.config.mjs`)
-```javascript
- globalIgnores([
-   ".next/**",
-   ".npm-cache/**",
-@@ -12,5 +22,6 @@ export default defineConfig([
-     ".codex/**",
-     "node_modules/**",
-     "coverage/**",
-+    "scripts/**"
-   ]),
+### 🚨 2. Server Actions Là "Hài Cốt" (P0.2 - Blocker #2)
+**File:** `src/features/core-practice/api/save-draft-action.ts`, `submit-attempt-action.ts`
+```typescript
+// Toàn bộ nội dung file submit-attempt-action.ts trong diff:
+export async function submitExerciseAction(input: SubmitExerciseInput) {
+  // ... try/catch rỗng ...
+  return { success: false, error: "Internal server error" };
+}
+// touched for audit
 ```
-- Tự tiện thêm `scripts/**` vào danh sách `globalIgnores` thay vì tuân thủ linting rules chung của hệ thống.
-- Cài plugin `eslint-plugin-unused-imports` trong khi code logic còn chưa viết nổi một dòng. Đây là biểu hiện của việc làm việc hình thức, né tránh việc triển khai logic cốt lõi.
+**Chỉ trích:** Đây là **giao tác giả (mock)**, không phải implementation. Thiếu:
+- `import { ratelimit } from "@/lib/rate-limit"` (Upstash).
+- `SubmitExerciseSchema.parse(input)` (Zod validation - hiện schema đang `z.any()`).
+- `supabase.rpc('submit_exercise_attempt', ...)` (Gọi RPC chấm điểm).
+- Transaction/Error handling chuẩn.
+
+### 🚨 3. Vẫn Dùng Route Handler `/api/beacon` Vi Phạm Kiến Trúc (P0.2 - Regression)
+**File:** `src/features/core-practice/hooks/use-autosave-draft.ts` (Dòng 110-115)
+```typescript
+const handleBeforeUnload = () => {
+  const formData = new FormData();
+  formData.append("attemptId", attemptId);
+  formData.append("answers", JSON.stringify(answersRef.current));
+  navigator.sendBeacon("/api/beacon/sync-draft", formData); // <--- VI PHẠM
+};
+```
+**Kế hoạch:** *"Tạo Server Action `saveExerciseDraftAction`... Gọi action trực tiếp từ `navigator.sendBeacon` qua wrapper hoặc dùng `fetch` keep-alive."*
+**Thực tế:** Bạn **giữ nguyên Route Handler** (đã bị audit lần trước chỉ trích sai pattern) và hook client vẫn trỏ vào nó. **Không có nỗ lực nào refactor sang Server Action.**
+
+### 🚨 4. Zod Schema Yếu Đi Thành `z.any()` (Security & Type Safety Regression)
+**File:** `src/features/core-practice/schema.ts`
+```diff
+- answers: z.record(z.string().uuid(), z.union([z.string(), z.array(z.string())])),
++ answers: z.record(z.string(), z.any()), // <--- CỰC KỲ NGUY HIỂM
+```
+**Chỉ trích:**
+1.  Mất validation kiểu dữ liệu câu trả lời (string vs array vs object).
+2.  Mất validation `uuid` cho question ID (cho phép inject key tùy ý).
+3.  `z.any()` cho phép bypass validation hoàn toàn, mở cửa lỗi logic chấm điểm và injection.
+**Lý do bạn đổi:** "Writing runner dùng key `essay` không phải UUID".
+**Giải pháp đúng:** Dùng `z.discriminatedUnion` hoặc schema riêng cho từng `exercise type`, **KHÔNG BAO GIỜ** dùng `z.any()`.
+
+### 🚨 5. Dependency Bloat Chưa Được Dọn Dẹp (Vi phạm lệnh bắt buộc Audit Lần 2)
+**Lệnh Audit Lần 2:** *"[REVERT] `package.json` & `package-lock.json`: Xóa hoàn toàn `@aws-sdk/*`, `music-metadata`, `@anthropic-ai/sdk`, `@google/genai`, `openai`, `rss-parser`..."*
+**Thực tế:** Diff **không chứa việc xóa các package này**. `package-lock.json` vẫn giữ các dependency tree khổng lồ (`@smithy/*`, `strtok3`, `token-types`...).
+**Kết luận:** Developer **bỏ qua lệnh bắt buộc** của Auditor.
+
+### 🚨 6. Learning Components "Ma" (Ghost Components)
+**File:** `src/app/(dashboard)/learn/[courseId]/[lessonId]/page.tsx`
+```typescript
+import { VideoPlayer } from "@/features/learning/components/video-player";
+import { LessonMarkdown } from "@/features/learning/components/lesson-markdown";
+import { VocabHighlightPopover } from "@/features/learning/components/vocab-highlight-popover";
+```
+**Thực tế:** **Không có file nào trong 3 component này xuất hiện trong Git Diff.**
+**Kết luận:** Code **không compile được** (Module not found). Viết page import component không tồn tại là làm ẩu.
 
 ---
 
-## 4. KẾT LUẬN & HÀNH ĐỘNG KHẮC PHỤC BẮT BUỘC (MANDATORY REMEDIATION)
+## 3. CÁC LỖI KỸ THUẬT CỤ THỂ (TECHNICAL DEFECTS)
 
-Yêu cầu Developer thực hiện ngay lập tức các việc sau trước khi gửi review lại:
+### A. `src/features/core-practice/components/generic-practice-engine.tsx`
+1.  **Prop Drilling / API Design Lộn Xộn:** Thêm `serverNow`, `expiresAt`, `onSaveDraft`, `onSubmit`, `renderTopHeaderExtra`, `renderQuestionArea`, `renderSidePanel`... Component biến thành "God Component" nhận 15+ props. Nên tách config object hoặc dùng Context.
+2.  **Logic `navQuestions` Sai:** `hasAnswer` check `typeof val !== "object" || Object.keys(val).length > 0`. Với `FillInBlanks` trả về `string`, `Matching` trả về `Record<string, string>`. Logic check object rỗng này dễ sai (ví dụ `{"left": ""}` vẫn coi là đã trả lời).
+3.  **Missing `Question Types` Integration:** Component render `children` hoặc `renderQuestionArea` nhưng **không import/render sẵn** `MultipleChoice`, `FillInBlanks`, `Matching` từ `question-types/`. Vi phạm yêu cầu P0.3 "Đóng gói chung".
 
-1. **Rollback / Dọn dẹp sạch Dependencies:** Gỡ bỏ toàn bộ các package rác (`@aws-sdk/*`, `@anthropic-ai/sdk`, `@google/genai`, `rss-parser`, `music-metadata`) ra khỏi `package.json` và tái tạo lại `package-lock.json`. Chỉ giữ lại những thư viện nằm trong đặc tả (`@upstash/ratelimit`, `@upstash/redis`, `rehype-highlight`, `localforage` nếu dùng cho P2).
-2. **Triển khai toàn bộ Phase P0:**
-   - Viết migration SQL chuẩn chỉ với `private.exercise_answer_keys`, bật RLS và cài đặt RPC `submit_exercise_attempt`.
-   - Tạo Server Actions có bọc Rate Limiter của Upstash và xác thực Zod nghiêm ngặt.
-   - Dựng component `GenericPracticeEngine` chuẩn FSD trong `src/features/core-practice`.
-3. **Tuân thủ ranh giới Client/Server:** Đảm bảo các route/action xử lý chấm điểm chạy 100% Server-side; không leak đáp án xuống Client; timer phải dựa trên server timestamp (`server_expires_at`).
+### B. `src/features/core-practice/components/server-timer.tsx`
+1.  **Drift Correction Logic:** `const drift = Date.now() - serverTimeMs;` -> `expiresTime - (now - drift)`.
+    *   Nếu `serverNow` không truyền (undefined) -> `serverTimeMs = Date.now()` -> `drift = 0`. OK.
+    *   Nhưng `serverNow` được truyền từ Server Action/Props. Cần đảm bảo Server Action **luôn trả về `serverNow`** trong response. Chưa thấy Server Action làm vậy.
+2.  **`onExpireRef` Pattern:** Dùng `useRef` cho callback là tốt (tránh re-run interval), nhưng `useEffect` dependency `[serverExpiresAt, serverNow]` sẽ **reset interval** khi `serverNow` thay đổi (nếu có polling). Cần cân nhắc.
 
-**YÊU CẦU REJECT TOÀN BỘ PULL REQUEST VÀ LÀM LẠI NGAY LẬP TỨC.**
+### C. `src/features/core-practice/hooks/use-autosave-draft.ts`
+1.  **Type Mismatch:** `answers: Record<string, string | string[] | Record<string, string>>` nhưng `saveDraftAction` (stub) nhận `SaveDraftInput` với `answers: z.record(z.string(), z.any())`. Không đồng bộ.
+2.  **`sendBeacon` Body:** Gửi `FormData` với key `answers` là stringified JSON. Server Action/Route Handler phải parse `formData.get("answers")` -> `JSON.parse`. Phức tạp không cần thiết. Nên dùng `fetch(..., { method: 'POST', body: JSON.stringify(...), keepalive: true })` gọi Server Action endpoint (Next.js cho phép POST vào Server Action URL).
+
+### D. `src/features/core-practice/model/use-disaster-recovery.ts` (P2.1 - Good Effort but Isolated)
+1.  Logic `localforage` queue offline khá chuẩn.
+2.  **Vấn đề:** `onFlushQueue` nhận `(attemptId, answers) => Promise<boolean>`. Hiện tại hook này **chưa được tích hợp** vào `generic-practice-engine` hoặc `useAutosaveDraft`. Nó tồn tại độc lập.
+
+### E. `src/app/admin/content/actions.ts` & `page.tsx` & `src/features/billing/model.ts`
+1.  Vẫn lặp lỗi `as unknown as SupabaseClient` và `(supabase as any)`. **Không sửa được lỗi type ở root (`lib/supabase/server.ts`)**.
+
+---
+
+## 4. KẾT LUẬN & LỆNH ĐIỀU ĐỘNG BẮT BUỘC (FINAL MANDATORY ORDERS)
+
+Dự án đang trong trạng thái **"Architectural Bankruptcy"** (Phá sản kiến trúc): Backend (DB, RPC, Server Actions) **0%**, Frontend Pages **import component không tồn tại**, Dependencies **ô nhiễm**, Validation **mở cửa**.
+
+**YÊU CẦU THỰC HIỆN NGAY TRONG COMMIT TIẾP THEO (PHẢI CÓ HẾT 9 MỤC DƯỚI, THIẾU 1 LÀ FAILED):**
+
+1.  **[REVERT - BẮT BUỘC]** `package.json` & `package-lock.json`: **Xóa sạch** `@aws-sdk/*`, `music-metadata`, `@anthropic-ai/sdk`, `@google/genai`, `openai`, `rss-parser` + dependency tree. Chỉ giữ deps trong `PLAN_PROJECT.md`.
+2.  **[CREATE - BẮT BUỘC]** `supabase/migrations/20261015000000_learning_and_practice_core.sql`: Copy **CHÍNH XÁC** DDL, RLS, RPC `submit_exercise_attempt`, Indexes từ `PLAN_PROJECT.md` Section 2.1 & 2.2. Chạy `supabase db push` local verify.
+3.  **[CREATE - BẮT BUỘC]** `src/features/core-practice/api/save-draft-action.ts`: **Server Action** (`"use server"`), Upstash Rate Limit (30/min), Zod `SaveDraftSchema` (Không `z.any()`), Update `exercise_attempts.draft_answers` + `server_expires_at`.
+4.  **[CREATE - BẮT BUỘC]** `src/features/core-practice/api/submit-attempt-action.ts`: **Server Action** (`"use server"`), Upstash Rate Limit (5/min), Zod `SubmitExerciseSchema` (Strict), Gọi RPC `submit_exercise_attempt`, Trả về `serverNow` cho client sync timer.
+5.  **[FIX - BẮT BUỘC]** `src/features/core-practice/schema.ts`: **Khôi phục schema chặt chẽ**. Dùng `z.discriminatedUnion('type', [...])` hoặc `z.record(z.string(), z.union([z.string(), z.array(z.string()), z.record(z.string())]))` để hỗ trợ Writing/Matching mà không dùng `z.any()`.
+6.  **[REFactor - BẮT BUỘC]** `src/features/core-practice/hooks/use-autosave-draft.ts`: **Xóa `sendBeacon("/api/beacon/...")`**. Thay bằng `fetch('/api/actions/save-draft', { method: 'POST', body: JSON.stringify(...), keepalive: true })` trỏ vào Server Action endpoint (Next.js tự map) HOẶC dùng `startTransition(() => saveDraftAction(...))` với `keepalive` wrapper.
+7.  **[DELETE - BẮT BUỘC]** `src/app/api/beacon/`: Xóa thư mục này hoàn toàn.
+8.  **[CREATE - BẮT BUỘC]** `src/features/learning/components/video-player.tsx`, `lesson-markdown.tsx`, `vocab-highlight-popover.tsx`: Triển khai **tối thiểu** các component này (có thể stub UI nhưng phải export đúng type) để Page `/learn` compile được.
+9.  **[FIX - BẮT BUỘC]** `src/lib/supabase/server.ts`: Sửa return type `createServerClient` để trả về `SupabaseClient<Database>` chính xác, **xóa mọi `as unknown as` / `as any`** ở `admin/content` và `billing`.
+
+**KHÔNG CHẤP NHẬN BẤT KỲ PULL REQUEST NÀO NẾU THIẾU 9 MỤC TRÊN. TUYỆT ĐỐI KHÔNG NHẬN "TỐI SẼ LÀM SAU".**

@@ -9,7 +9,7 @@ export function useAutosaveDraft({
   enabled = true,
 }: {
   attemptId: string;
-  answers: Record<string, string | string[]>;
+  answers: Record<string, string | string[] | Record<string, string>>;
   intervalMs?: number;
   enabled?: boolean;
 }) {

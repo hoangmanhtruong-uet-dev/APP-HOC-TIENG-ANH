@@ -60,7 +60,7 @@ function WritingEditor({
   const [isSubmitting, startSubmitTransition] = useTransition();
 
   const handleSaveDraft = useCallback(
-    async (answers: Record<string, unknown>) => {
+    async (answers: Record<string, any>) => {
       const textToSave = (answers["essay"] as string) || "";
       try {
         setSaveStatus("saving");
@@ -85,7 +85,7 @@ function WritingEditor({
   );
 
   const handleSubmit = useCallback(
-    async (answers: Record<string, unknown>) => {
+    async () => {
       startSubmitTransition(async () => {
         if (mockContext) {
           await submitMockTestSectionAction({

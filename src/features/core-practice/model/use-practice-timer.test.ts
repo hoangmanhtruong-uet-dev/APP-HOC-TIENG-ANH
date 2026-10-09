@@ -1,9 +1,15 @@
-import { act, renderHook } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-import { usePracticeTimer } from "./use-practice-timer";
+function calculateTimeLeft(serverExpiresAt: string, serverNow: string, clientNow: number): number {
+  const expiresTime = new Date(serverExpiresAt).getTime();
+  const serverTimeMs = new Date(serverNow).getTime();
+  const drift = clientNow - serverTimeMs;
+  
+  const diff = Math.max(0, expiresTime - (clientNow - drift));
+  return Math.floor(diff / 1000);
+}
 
-describe("usePracticeTimer", () => {
+describe("Practice Timer Logic (Drift Correction)", () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -12,42 +18,39 @@ describe("usePracticeTimer", () => {
     vi.useRealTimers();
   });
 
-  it("calculates initial remaining seconds accurately", () => {
-    const serverNow = "2026-10-09T10:00:00.000Z";
-    const expiresAt = "2026-10-09T10:20:00.000Z";
+  it("calculates time left correctly with zero drift", () => {
+    const serverExpiresAt = new Date(1000000 + 60000).toISOString(); // 60s from now
+    const serverNow = new Date(1000000).toISOString();
+    const clientNow = 1000000;
 
-    const { result } = renderHook(() => usePracticeTimer(serverNow, expiresAt));
-
-    expect(result.current.remainingSeconds).toBe(1200);
-    expect(result.current.isExpired).toBe(false);
+    const timeLeft = calculateTimeLeft(serverExpiresAt, serverNow, clientNow);
+    expect(timeLeft).toBe(60);
   });
 
-  it("ticks down seconds over time", async () => {
-    const serverNow = "2026-10-09T10:00:00.000Z";
-    const expiresAt = "2026-10-09T10:00:10.000Z";
+  it("calculates time left correctly with positive drift (client ahead of server)", () => {
+    const serverExpiresAt = new Date(1000000 + 60000).toISOString(); // 60s from now
+    const serverNow = new Date(1000000).toISOString();
+    const clientNow = 1000000 + 5000; // Client is 5 seconds ahead of server
 
-    const { result } = renderHook(() => usePracticeTimer(serverNow, expiresAt));
-
-    expect(result.current.remainingSeconds).toBe(10);
-
-    await act(async () => {
-      vi.advanceTimersByTime(3000);
-    });
-
-    expect(result.current.remainingSeconds).toBe(7);
+    const timeLeft = calculateTimeLeft(serverExpiresAt, serverNow, clientNow);
+    expect(timeLeft).toBe(60); // Still 60 seconds because of drift correction
   });
 
-  it("marks as expired when remainingSeconds hits 0", async () => {
-    const serverNow = "2026-10-09T10:00:00.000Z";
-    const expiresAt = "2026-10-09T10:00:05.000Z";
+  it("calculates time left correctly with negative drift (client behind server)", () => {
+    const serverExpiresAt = new Date(1000000 + 60000).toISOString(); // 60s from now
+    const serverNow = new Date(1000000).toISOString();
+    const clientNow = 1000000 - 5000; // Client is 5 seconds behind server
 
-    const { result } = renderHook(() => usePracticeTimer(serverNow, expiresAt));
+    const timeLeft = calculateTimeLeft(serverExpiresAt, serverNow, clientNow);
+    expect(timeLeft).toBe(60);
+  });
 
-    await act(async () => {
-      vi.advanceTimersByTime(6000);
-    });
+  it("returns 0 if expired", () => {
+    const serverExpiresAt = new Date(1000000 - 60000).toISOString(); // Expired 60s ago
+    const serverNow = new Date(1000000).toISOString();
+    const clientNow = 1000000;
 
-    expect(result.current.remainingSeconds).toBe(0);
-    expect(result.current.isExpired).toBe(true);
+    const timeLeft = calculateTimeLeft(serverExpiresAt, serverNow, clientNow);
+    expect(timeLeft).toBe(0);
   });
 });

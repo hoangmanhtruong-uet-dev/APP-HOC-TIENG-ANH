@@ -14,7 +14,7 @@ export async function getExercises(params?: {
   limit?: number;
 }) {
    
-  const supabase = (await createSupabaseServerClient()) ;
+  const supabase = (await createSupabaseServerClient()) as any;
   const page = params?.page ?? 1;
   const limit = params?.limit ?? 12;
   const offset = (page - 1) * limit;
@@ -46,7 +46,7 @@ export async function getExercises(params?: {
 
 export async function getExerciseById(exerciseId: string) {
    
-  const supabase = (await createSupabaseServerClient()) ;
+  const supabase = (await createSupabaseServerClient()) as any;
 
   const [exerciseRes, sentencesRes] = await Promise.all([
     supabase
@@ -76,7 +76,7 @@ export async function getUserProgress(
   exerciseIds?: string[]
 ) {
    
-  const supabase = (await createSupabaseServerClient()) ;
+  const supabase = (await createSupabaseServerClient()) as any;
 
   let query = supabase
     .from('dictation_progress')
@@ -90,7 +90,7 @@ export async function getUserProgress(
   const { data, error } = await query;
   if (error) throw error;
 
-  return data as DictationProgress[];
+  return data as unknown as DictationProgress[];
 }
 
 export async function submitAnswer(params: {
@@ -102,7 +102,7 @@ export async function submitAnswer(params: {
   replayCount: number;
 }): Promise<DictationSubmitResult> {
    
-  const supabase = (await createSupabaseServerClient()) ;
+  const supabase = (await createSupabaseServerClient()) as any;
 
   const { data, error } = await supabase.rpc('fn_submit_dictation_answer', {
     p_user_id: params.userId,
@@ -114,14 +114,14 @@ export async function submitAnswer(params: {
   });
 
   if (error) throw error;
-  return data as DictationSubmitResult;
+  return data as unknown as DictationSubmitResult;
 }
 
 export async function getUserStats(
   userId: string
 ): Promise<DictationUserStats> {
    
-  const supabase = (await createSupabaseServerClient()) ;
+  const supabase = (await createSupabaseServerClient()) as any;
 
   const { data, error } = await supabase.rpc(
     'fn_get_user_dictation_stats',
@@ -129,5 +129,5 @@ export async function getUserStats(
   );
 
   if (error) throw error;
-  return data as DictationUserStats;
+  return data as unknown as DictationUserStats;
 }

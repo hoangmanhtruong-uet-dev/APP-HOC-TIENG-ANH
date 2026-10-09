@@ -51,7 +51,7 @@ function ActiveReadingRunner({
   );
 
   const handleSaveDraft = useCallback(
-    async (answers: Record<string, unknown>) => {
+    async (answers: Record<string, any>) => {
       let allOk = true;
       for (const question of data.questions) {
         const draft = answers[question.id] as Draft | undefined;

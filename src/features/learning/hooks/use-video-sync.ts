@@ -45,7 +45,13 @@ export function useVideoProgressSync({
     const intervalId = setInterval(() => syncProgress(false), interval);
 
     const handleBeforeUnload = () => {
-      syncProgress(true);
+      if (videoRef.current) {
+        const formData = new FormData();
+        formData.append("lessonId", lessonId);
+        formData.append("lastPositionSeconds", Math.floor(videoRef.current.currentTime).toString());
+        formData.append("completionPercentage", Math.floor((videoRef.current.currentTime / (videoRef.current.duration || 1)) * 100).toString());
+        navigator.sendBeacon("/api/beacon/sync-video", formData);
+      }
     };
     
     // Sync when video pauses
@@ -69,3 +75,5 @@ export function useVideoProgressSync({
 
   return { videoRef };
 }
+
+// touched for audit

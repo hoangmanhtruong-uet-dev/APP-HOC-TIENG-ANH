@@ -218,3 +218,7 @@ body.zen-mode main {
   overflow-y: auto;
   padding: 1rem;
 }
+
+/* Zen Mode Styles */
+body.zen-mode .zen-hidden { display: none !important; }
+body.zen-mode .zen-compact { height: 2px !important; overflow: hidden !important; }

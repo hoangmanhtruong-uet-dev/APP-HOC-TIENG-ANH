@@ -1,16 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Clock } from "lucide-react";
 
 export function ServerTimer({
   serverExpiresAt,
+  serverNow,
   onExpire,
 }: {
-  serverExpiresAt: string | null;
+  serverExpiresAt: string | null | undefined;
+  serverNow?: string;
   onExpire: () => void;
 }) {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const onExpireRef = useRef(onExpire);
+
+  useEffect(() => {
+    onExpireRef.current = onExpire;
+  }, [onExpire]);
 
   useEffect(() => {
     if (!serverExpiresAt) {
@@ -19,15 +26,20 @@ export function ServerTimer({
 
     const expiresTime = new Date(serverExpiresAt).getTime();
     
+    // Compute the initial difference between client and server (drift)
+    // If no serverNow provided, fallback to Date.now() meaning no drift correction.
+    const serverTimeMs = serverNow ? new Date(serverNow).getTime() : Date.now();
+    const drift = Date.now() - serverTimeMs;
+
     const updateTimer = () => {
       const now = Date.now();
-      const diff = Math.max(0, expiresTime - now);
+      const diff = Math.max(0, expiresTime - (now - drift));
       
       setTimeLeft(Math.floor(diff / 1000));
 
       if (diff <= 0) {
         clearInterval(interval);
-        onExpire();
+        onExpireRef.current();
       }
     };
 
@@ -35,7 +47,7 @@ export function ServerTimer({
     const interval = setInterval(updateTimer, 1000);
 
     return () => clearInterval(interval);
-  }, [serverExpiresAt, onExpire]);
+  }, [serverExpiresAt, serverNow]);
 
   if (timeLeft === null) {
     return (

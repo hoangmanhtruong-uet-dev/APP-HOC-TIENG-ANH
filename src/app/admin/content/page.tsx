@@ -1,6 +1,8 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { approveContent, rejectContent } from "./actions";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 export default async function AdminContentPage() {
   const supabase = await createSupabaseServerClient();
   

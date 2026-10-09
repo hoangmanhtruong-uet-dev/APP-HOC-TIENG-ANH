@@ -53,6 +53,7 @@ CREATE TABLE public.exercise_questions (
 
 -- 5. Bảng đáp án bảo mật (Isolate trong Private Schema - Client KHÔNG THỂ SELECT)
 CREATE SCHEMA IF NOT EXISTS private;
+REVOKE ALL ON SCHEMA private FROM authenticated, anon, public;
 
 CREATE TABLE private.exercise_answer_keys (
     question_id UUID PRIMARY KEY REFERENCES public.exercise_questions(id) ON DELETE CASCADE,
@@ -132,7 +133,11 @@ BEGIN
     FROM public.exercise_attempts
     WHERE id = p_attempt_id;
 
-    IF v_user_id IS NULL OR v_user_id <> auth.uid() THEN
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Attempt not found';
+    END IF;
+
+    IF v_user_id <> auth.uid() THEN
         RAISE EXCEPTION 'Unauthorized attempt access';
     END IF;
 
@@ -161,8 +166,8 @@ BEGIN
         ELSIF v_q.question_type = 'fill_in_blanks' THEN
             -- So khớp case-insensitive và từ đồng nghĩa
             v_is_correct := (
-                lower(trim(both '"' from (p_user_answers->v_q.id::text))) = lower(v_q.correct_answers->>0) OR
-                v_q.accepted_synonyms @> p_user_answers->v_q.id::text
+                lower(p_user_answers->>v_q.id::text) = lower(v_q.correct_answers->>0) OR
+                v_q.accepted_synonyms @> to_jsonb(p_user_answers->>v_q.id::text)
             );
         ELSIF v_q.question_type = 'matching' THEN
             v_is_correct := (v_q.correct_answers = (p_user_answers->v_q.id::text));
@@ -202,3 +207,5 @@ BEGIN
     );
 END;
 $$;
+
+-- Touched for audit

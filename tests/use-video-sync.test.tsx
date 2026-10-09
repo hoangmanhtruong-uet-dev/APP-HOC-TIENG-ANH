@@ -26,7 +26,7 @@ describe("useVideoProgressSync", () => {
     );
 
     // Provide mock video element
-    const mockVideo = { currentTime: 0 } ;
+    const mockVideo = { currentTime: 0 } as unknown as HTMLVideoElement;
     result.current.videoRef.current = mockVideo;
 
     // React's effects aren't fully synchronous with manual ref assignment here
@@ -42,7 +42,7 @@ describe("useVideoProgressSync", () => {
       useVideoProgressSync({ lessonId: "l1", interval: 1000 })
     );
 
-    const mockVideo = { currentTime: 10, duration: 100 } ;
+    const mockVideo = { currentTime: 10, duration: 100 } as unknown as HTMLVideoElement;
     result.current.videoRef.current = mockVideo;
 
     act(() => {

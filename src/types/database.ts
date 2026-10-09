@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -9,6 +9,9 @@
 export type Database = {
   private: {
     Tables: {
+      dictation_exercises: { Row: any; Insert: any; Update: any; Relationships: [] };
+      dictation_sentences: { Row: any; Insert: any; Update: any; Relationships: [] };
+      dictation_progress: { Row: any; Insert: any; Update: any; Relationships: [] };
       user_gamification: {
         Row: { user_id: string; total_xp: number; streak_freezes_available: number; };
         Insert: { user_id: string; total_xp?: number; streak_freezes_available?: number; };
@@ -132,6 +135,8 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      fn_submit_dictation_answer: { Args: any; Returns: any };
+      fn_get_user_dictation_stats: { Args: any; Returns: any };
       award_xp: {
         Args: { p_user_id: string; p_amount: number; p_source: string; };
         Returns: void;
@@ -279,6 +284,24 @@ export type Database = {
   };
   public: {
     Tables: {
+      vocabulary_vault: {
+        Row: { id: string; user_id: string; term: string; created_at: string; };
+        Insert: { id?: string; user_id: string; term: string; created_at?: string; };
+        Update: { id?: string; user_id?: string; term?: string; created_at?: string; };
+        Relationships: [];
+      };
+      user_lesson_progress: {
+        Row: { id: string; user_id: string; lesson_id: string; status: "in_progress" | "completed"; last_position_seconds: number; completion_percentage: number; completed_at: string | null; updated_at: string; };
+        Insert: { id?: string; user_id: string; lesson_id: string; status?: "in_progress" | "completed"; last_position_seconds?: number; completion_percentage?: number; completed_at?: string | null; updated_at?: string; };
+        Update: { id?: string; user_id?: string; lesson_id?: string; status?: "in_progress" | "completed"; last_position_seconds?: number; completion_percentage?: number; completed_at?: string | null; updated_at?: string; };
+        Relationships: [];
+      };
+      exercise_attempts: {
+        Row: { id: string; user_id: string; exercise_id: string; status: "in_progress" | "submitted" | "abandoned"; draft_answers: Json; started_at: string; server_expires_at: string | null; submitted_at: string | null; score: number; max_score: number; accuracy_percentage: number; created_at: string; updated_at: string; };
+        Insert: { id?: string; user_id: string; exercise_id: string; status?: "in_progress" | "submitted" | "abandoned"; draft_answers?: Json; started_at?: string; server_expires_at?: string | null; submitted_at?: string | null; score?: number; max_score?: number; accuracy_percentage?: number; created_at?: string; updated_at?: string; };
+        Update: { id?: string; user_id?: string; exercise_id?: string; status?: "in_progress" | "submitted" | "abandoned"; draft_answers?: Json; started_at?: string; server_expires_at?: string | null; submitted_at?: string | null; score?: number; max_score?: number; accuracy_percentage?: number; created_at?: string; updated_at?: string; };
+        Relationships: [];
+      };
       exercise_options: {
         Row: {
           created_at: string;

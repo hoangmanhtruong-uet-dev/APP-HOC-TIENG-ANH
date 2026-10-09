@@ -4,7 +4,7 @@ export async function getUserSubscriptionStatus(): Promise<{
   isPremium: boolean;
   userId: string | null;
 }> {
-  const supabase = await createSupabaseServerClient();
+  const supabase = (await createSupabaseServerClient()) as any;
   const {
     data: { user },
   } = await supabase.auth.getUser();

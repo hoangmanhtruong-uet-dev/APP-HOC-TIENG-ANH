@@ -11,33 +11,61 @@ import { Loader2, Save } from "lucide-react";
 
 export interface QuestionDefinition {
   id: string;
-  order_index: number;
-  question_type: string;
+  order_index?: number;
+  question_type?: string;
 }
 
+export type AnswerValue = string | string[] | Record<string, any>;
+
 export interface GenericPracticeEngineProps {
-  attemptId: string;
-  serverExpiresAt: string | null;
-  questions: QuestionDefinition[];
-  initialAnswers?: Record<string, string | string[]>;
-  children: (props: {
+  attemptId?: string;
+  serverExpiresAt?: string | null;
+  serverNow?: string;
+  expiresAt?: string | null;
+  title?: string;
+  domain?: string;
+  categoryLabel?: string;
+  isSubmitting?: boolean;
+  onSaveDraft?: (answers: Record<string, AnswerValue>) => Promise<boolean>;
+  onSubmit?: (answers: Record<string, AnswerValue>) => Promise<void>;
+  renderTopHeaderExtra?: () => React.ReactNode;
+  renderQuestionArea?: (props: {
     currentQuestion: QuestionDefinition;
-    answers: Record<string, string | string[]>;
-    setAnswer: (questionId: string, value: string | string[]) => void;
+    answers: Record<string, AnswerValue>;
+    setAnswer: (questionId: string, value: AnswerValue) => void;
+  }) => React.ReactNode;
+  renderSidePanel?: () => React.ReactNode;
+  questions: QuestionDefinition[];
+  initialAnswers?: Record<string, AnswerValue>;
+  children?: (props: {
+    currentQuestion: QuestionDefinition;
+    answers: Record<string, AnswerValue>;
+    setAnswer: (questionId: string, value: AnswerValue) => void;
   }) => React.ReactNode;
   contextContent?: React.ReactNode; // For reading passage or listening audio
 }
 
 export function GenericPracticeEngine({
-  attemptId,
-  serverExpiresAt,
+  attemptId = "",
+  serverExpiresAt = null,
+  serverNow,
+  expiresAt,
+  title,
+  domain,
+  categoryLabel,
+  isSubmitting: externalIsSubmitting,
+  onSaveDraft,
+  onSubmit,
+  renderTopHeaderExtra,
+  renderQuestionArea,
+  renderSidePanel,
   questions,
   initialAnswers = {},
   children,
   contextContent,
 }: GenericPracticeEngineProps) {
   const router = useRouter();
-  const [answers, setAnswers] = useState<Record<string, string | string[]>>(initialAnswers);
+  const [answers, setAnswers] = useState<Record<string, AnswerValue>>(initialAnswers);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,7 +77,7 @@ export function GenericPracticeEngine({
     intervalMs: 15000,
   });
 
-  const setAnswer = useCallback((questionId: string, value: string | string[]) => {
+  const setAnswer = useCallback((questionId: string, value: AnswerValue) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
   }, []);
 
@@ -60,14 +88,14 @@ export function GenericPracticeEngine({
   const unansweredCount = useMemo(() => {
     return questions.filter((q) => {
       const val = answers[q.id];
-      return val === undefined || val === "" || (Array.isArray(val) && val.length === 0);
+      return val === undefined || val === "" || (Array.isArray(val) && val.length === 0) || (typeof val === "object" && Object.keys(val).length === 0);
     }).length;
   }, [questions, answers]);
 
   const navQuestions = useMemo(() => {
     return questions.map((q, i) => {
       const val = answers[q.id];
-      const hasAnswer = val !== undefined && val !== "" && (!Array.isArray(val) || val.length > 0);
+      const hasAnswer = val !== undefined && val !== "" && (!Array.isArray(val) || val.length > 0) && (typeof val !== "object" || Object.keys(val).length > 0);
       return {
         id: q.id,
         index: i,
@@ -76,22 +104,33 @@ export function GenericPracticeEngine({
     });
   }, [questions, answers]);
 
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
   const submitAttempt = async () => {
     setIsSubmitting(true);
-    await forceSave(); // ensure latest draft is saved
+    setSubmitError(null);
+    try {
+      await forceSave(); // ensure latest draft is saved
 
-    const res = await submitExerciseAction({
-      attemptId,
-      answers,
-    });
+      if (onSubmit) {
+        await onSubmit(answers);
+        return;
+      }
 
-    if (res.success) {
-      // Navigate to results page
-      router.push(`/practice/result/${attemptId}`);
-    } else {
+      const res = await submitExerciseAction({
+        attemptId,
+        answers,
+      });
+
+      if (res.success) {
+        // Navigate to results page
+        router.push(`/practice/result/${attemptId}`);
+      } else {
+        setIsSubmitModalOpen(false);
+        setSubmitError(res.error || "Có lỗi xảy ra khi nộp bài. Vui lòng thử lại.");
+      }
+    } finally {
       setIsSubmitting(false);
-      setIsSubmitModalOpen(false);
-      alert(res.error || "Có lỗi xảy ra khi nộp bài. Vui lòng thử lại.");
     }
   };
 
@@ -106,7 +145,9 @@ export function GenericPracticeEngine({
     <div className="flex flex-col h-[calc(100vh-4rem)] max-w-7xl mx-auto w-full">
       {/* Sticky Top Bar */}
       <div className="flex-none bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 p-4 sticky top-0 z-40 flex items-center justify-between">
-        <ServerTimer serverExpiresAt={serverExpiresAt} onExpire={handleExpire} />
+        <ServerTimer serverExpiresAt={serverExpiresAt || expiresAt} serverNow={serverNow} onExpire={handleExpire} />
+        
+        {renderTopHeaderExtra?.()}
         
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm text-zinc-500">
@@ -142,10 +183,11 @@ export function GenericPracticeEngine({
         )}
 
         {/* Question Area Column */}
-        <div className={`${contextContent ? "lg:col-span-4" : "lg:col-span-8"} h-full overflow-y-auto bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm flex flex-col`}>
+        <div className={`${contextContent || renderSidePanel ? "lg:col-span-4" : "lg:col-span-8"} h-full overflow-y-auto bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm flex flex-col`}>
           <div className="flex-1">
             {currentQuestion ? (
-              children({ currentQuestion, answers, setAnswer })
+              (children?.({ currentQuestion, answers, setAnswer }) || 
+               renderQuestionArea?.({ currentQuestion, answers, setAnswer }))
             ) : (
               <div className="text-center text-zinc-500 mt-10">Không có câu hỏi nào.</div>
             )}

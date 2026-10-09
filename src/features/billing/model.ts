@@ -3,7 +3,7 @@ import { Database } from "@/types/database";
 import { SubscriptionTier } from "./schemas";
 
 export async function getUserTier(
-  supabase: SupabaseClient<Database>,
+  supabase: SupabaseClient<any, "public", any>,
   userId: string
 ): Promise<SubscriptionTier> {
   const { data, error } = await supabase
@@ -22,14 +22,14 @@ export async function getUserTier(
 }
 
 export async function processWebhookEvent(
-  supabaseAdmin: SupabaseClient<Database>,
+  supabaseAdmin: SupabaseClient<any, "public", any>,
   gateway: string,
   eventId: string,
   eventType: string,
   payload: any
 ): Promise<{ success: boolean; error?: string }> {
   // 1. Check if event is already processed (Idempotency)
-  const { data: existing } = await (supabaseAdmin as any)
+  const { data: existing } = await supabaseAdmin
     .from("billing_events")
     .select("id")
     .eq("gateway", gateway)
@@ -41,7 +41,7 @@ export async function processWebhookEvent(
   }
 
   // 2. Insert event
-  const { error: insertError } = await (supabaseAdmin as any)
+  const { error: insertError } = await supabaseAdmin
     .from("billing_events")
     .insert({
       gateway,
@@ -64,7 +64,7 @@ export async function processWebhookEvent(
     }
     
     // Mark as processed
-    await (supabaseAdmin as any)
+    await supabaseAdmin
       .from("billing_events")
       .update({ processed_at: new Date().toISOString() })
       .eq("gateway", gateway)
@@ -72,7 +72,7 @@ export async function processWebhookEvent(
 
     return { success: true };
   } catch (err: any) {
-    await (supabaseAdmin as any)
+    await supabaseAdmin
       .from("billing_events")
       .update({ error_message: err.message })
       .eq("gateway", gateway)

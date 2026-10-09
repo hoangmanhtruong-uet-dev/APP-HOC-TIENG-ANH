@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
   mapProgressError,
@@ -12,7 +13,7 @@ import { requireCompletedOnboarding } from "@/features/onboarding/server/learner
 import { logServerEvent } from "@/server/observability/logger";
 import { getServerRequestId } from "@/server/observability/request-context";
 
-export async function openLessonSectionAction(input: any) {
+export async function openLessonSectionAction(input: unknown) {
   return mutateLessonProgress("open", input);
 }
 
@@ -30,7 +31,7 @@ export async function completeLessonSectionAction(
 
 async function mutateLessonProgress(
   operation: "open" | "complete",
-  input: any,
+  input: unknown,
 ): Promise<LearningProgressActionState> {
   const requestId = await getServerRequestId();
   const parsed = lessonProgressMutationSchema.safeParse(input);
@@ -44,7 +45,7 @@ async function mutateLessonProgress(
 
   try {
     await requireCompletedOnboarding();
-    const supabase = await createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient() as unknown as SupabaseClient;
     const functionName =
       operation === "complete"
         ? "complete_lesson_section"
@@ -69,9 +70,9 @@ async function mutateLessonProgress(
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         await supabase.rpc("award_xp", {
-          target_user_id: user.id,
-          xp_amount: 10,
-          xp_source: "lesson_section_completed",
+          p_user_id: user.id,
+          p_amount: 10,
+          p_source: "lesson_section_completed",
         });
       }
     }
