@@ -10,7 +10,7 @@ import {
   submitPracticeSchema,
 } from "@/features/practice/schemas";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { requireCompletedOnboarding } from "@/server/onboarding/learner-profile";
+import { requireCompletedOnboarding } from "@/features/onboarding/server/learner-profile";
 import { logServerEvent } from "@/server/observability/logger";
 import { getServerRequestId } from "@/server/observability/request-context";
 

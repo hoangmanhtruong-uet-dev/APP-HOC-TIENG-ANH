@@ -12,7 +12,7 @@ import {
   type SubmitListeningPracticeInput,
 } from "@/features/listening/schemas";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { requireCompletedOnboarding } from "@/server/onboarding/learner-profile";
+import { requireCompletedOnboarding } from "@/features/onboarding/server/learner-profile";
 
 export type ListeningSaveState =
   | { status: "saved"; clientRevision: number; savedAt: string }

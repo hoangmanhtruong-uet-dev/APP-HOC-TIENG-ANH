@@ -50,11 +50,15 @@ export default function TermsPage() {
               </ul>
             </section>
             <section>
-              <h2>Nội dung học tập và AI</h2>
+              <h2>Bản quyền nội dung & Tài sản trí tuệ</h2>
               <p className="mt-3">
-                Kết quả chấm và feedback AI chỉ phục vụ luyện tập, không phải
-                điểm IELTS chính thức. Bạn vẫn chịu trách nhiệm kiểm tra nội
-                dung trước khi dựa vào kết quả cho quyết định quan trọng.
+                Đề thi và nội dung học thuật trên hệ thống IELTS Flow được biên soạn độc lập bởi đội ngũ chuyên gia hoặc sử dụng các nguồn tài liệu có giấy phép hợp lệ. Nội dung không sao chép nguyên gốc từ các bộ đề thi có bản quyền của IDP, British Council, hay Cambridge University Press & Assessment. Mọi hành vi sao chép, trích xuất dữ liệu nội dung từ hệ thống cho mục đích thương mại đều bị nghiêm cấm.
+              </p>
+            </section>
+            <section>
+              <h2>Nội dung học tập và AI Feedback</h2>
+              <p className="mt-3">
+                Kết quả chấm, ước lượng band điểm và feedback AI trên IELTS Flow chỉ mang tính chất tham khảo phục vụ quá trình tự học. Kết quả này <strong>không đại diện và không có giá trị thay thế</strong> cho điểm thi IELTS chính thức được cấp bởi IDP hoặc British Council. Bạn tự chịu trách nhiệm khi sử dụng kết quả này cho các quyết định cá nhân.
               </p>
             </section>
             <section>
@@ -88,7 +92,14 @@ export default function TermsPage() {
             >
               Chính sách quyền riêng tư
             </Link>{" "}
-            để biết cách dữ liệu được xử lý.
+            và{" "}
+            <Link
+              className="font-semibold text-[var(--primary)] underline"
+              href="/refund"
+            >
+              Chính sách hoàn tiền
+            </Link>{" "}
+            để biết cách dữ liệu và giao dịch được xử lý.
           </p>
         </Container>
       </main>

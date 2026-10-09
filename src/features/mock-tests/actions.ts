@@ -11,7 +11,7 @@ import {
   type SubmitMockSectionInput,
 } from "@/features/mock-tests/schemas";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { getMockSessionPage } from "@/server/mock-tests/content";
+import { getMockSessionPage } from "@/features/mock-tests/server/content";
 
 export async function startMockTestAction(formData: FormData) {
   const parsed = startMockTestSchema.safeParse({

@@ -4,13 +4,13 @@ import {
   PlacementIntro,
   PlacementQuestions,
   PlacementResult,
-} from "@/components/placement/placement-test";
-import { requireCurrentAccount } from "@/server/auth/account";
+} from "@/features/placement/components/placement-test";
+import { requireCurrentAccount } from "@/features/auth/server/account";
 import {
   getActivePlacementTest,
   getActivePlacementAttempt,
   getPlacementResult,
-} from "@/server/placement/content";
+} from "@/features/placement/server/content";
 
 export const metadata: Metadata = {
   title: "Kiểm tra trình độ đầu vào",

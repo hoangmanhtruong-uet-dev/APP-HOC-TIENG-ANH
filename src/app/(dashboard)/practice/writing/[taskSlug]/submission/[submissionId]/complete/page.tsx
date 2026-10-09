@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { WritingComplete } from "@/components/writing/writing-complete";
+import { WritingComplete } from "@/features/writing/components/writing-complete";
 import {
   getWritingCatalog,
   getWritingSubmissionReview,
-} from "@/server/writing/content";
+} from "@/features/writing/server/content";
 
 export const metadata: Metadata = { title: "Writing Practice Complete" };
 

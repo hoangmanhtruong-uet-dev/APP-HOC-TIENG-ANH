@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { ReadingRunner } from "@/components/reading/reading-runner";
-import { ReadingStart } from "@/components/reading/reading-start";
+import { ReadingRunner } from "@/features/reading/components/reading-runner";
+import { ReadingStart } from "@/features/reading/components/reading-start";
 import { parseMockRunnerContext } from "@/features/mock-tests/schemas";
-import { getReadingPracticePage } from "@/server/reading/content";
+import { getReadingPracticePage } from "@/features/reading/server/content";
 
 export const metadata: Metadata = { title: "Luyện Reading" };
 

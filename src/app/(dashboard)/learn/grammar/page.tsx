@@ -2,9 +2,9 @@ import { Bell, BookOpenText } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { GrammarCatalog } from "@/components/learning/grammar-catalog";
-import { getGrammarCatalog } from "@/server/learning/foundations";
-import { getRecentAttemptHistory } from "@/server/practice/content";
+import { GrammarCatalog } from "@/features/learning/components/grammar-catalog";
+import { getGrammarCatalog } from "@/features/learning/server/foundations";
+import { getRecentAttemptHistory } from "@/features/practice/server/content";
 
 export const metadata: Metadata = {
   title: "Grammar",

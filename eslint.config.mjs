@@ -11,6 +11,6 @@ export default defineConfig([
     ".agents/**",
     ".codex/**",
     "node_modules/**",
-    "coverage/**",
+    "coverage/**"
   ]),
 ]);

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { ListeningRunner } from "@/components/listening/listening-runner";
-import { ListeningStart } from "@/components/listening/listening-start";
+import { ListeningRunner } from "@/features/listening/components/listening-runner";
+import { ListeningStart } from "@/features/listening/components/listening-start";
 import { parseMockRunnerContext } from "@/features/mock-tests/schemas";
-import { getListeningPracticePage } from "@/server/listening/content";
+import { getListeningPracticePage } from "@/features/listening/server/content";
 
 export const metadata: Metadata = { title: "Listening practice" };
 

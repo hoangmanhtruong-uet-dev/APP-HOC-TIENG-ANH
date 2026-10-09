@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let payload: unknown;
+  let payload: any;
   try {
     payload = await request.json();
   } catch {

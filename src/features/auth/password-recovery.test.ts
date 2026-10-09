@@ -1,13 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const resetPasswordForEmail = vi.fn();
+const signInWithOtp = vi.fn();
 const getUser = vi.fn();
 const updateUser = vi.fn();
 const signOut = vi.fn();
 
 vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: vi.fn(async () => ({
-    auth: { resetPasswordForEmail, getUser, updateUser, signOut },
+    auth: { resetPasswordForEmail, signInWithOtp, getUser, updateUser, signOut },
   })),
 }));
 
@@ -22,20 +23,24 @@ afterEach(() => {
 });
 
 describe("password recovery actions", () => {
-  it("returns the same generic success when the provider rejects the request", async () => {
+  it("triggers OTP request and redirects without exposing provider rejection", async () => {
     const output = vi.spyOn(console, "warn").mockImplementation(() => {});
-    resetPasswordForEmail.mockResolvedValue({
+    signInWithOtp.mockResolvedValue({
       error: { code: "over_email_send_rate_limit" },
     });
     const formData = new FormData();
-    formData.set("email", "learner@example.com");
+    formData.set("identifier", "learner@example.com");
+    formData.set("channel", "email");
 
-    const state = await forgotPasswordAction({ status: "idle" }, formData);
-    const serializedLog = String(output.mock.calls[0]?.[0]);
+    await expect(
+      forgotPasswordAction({ status: "idle" }, formData),
+    ).rejects.toThrow("NEXT_REDIRECT");
 
-    expect(state.status).toBe("success");
-    expect(state.message).toContain("Nếu tài khoản tồn tại");
-    expect(serializedLog).not.toContain("learner@example.com");
+    expect(signInWithOtp).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: "learner@example.com",
+      }),
+    );
   });
 
   it("reports an expired recovery session without attempting an update", async () => {

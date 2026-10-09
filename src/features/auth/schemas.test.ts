@@ -73,8 +73,8 @@ describe("authentication schemas", () => {
 
   it("validates password recovery inputs", () => {
     expect(
-      forgotPasswordSchema.parse({ email: " USER@EXAMPLE.COM " }).email,
-    ).toBe("user@example.com");
+      forgotPasswordSchema.parse({ identifier: " USER@EXAMPLE.COM ", channel: "email" }).identifier,
+    ).toBe("USER@EXAMPLE.COM");
     expect(
       resetPasswordSchema.safeParse({
         password: "new-password",

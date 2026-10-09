@@ -4,7 +4,6 @@ import {
   BrainCircuit,
   CalendarDays,
   CheckCircle2,
-  ChevronDown,
   Headphones,
   MessageCircleQuestion,
   Mic2,
@@ -20,6 +19,8 @@ import Link from "next/link";
 import { MarketingHeader } from "@/components/layout/marketing-header";
 import { Container } from "@/components/shared/container";
 import { Button } from "@/components/ui/button";
+import { RevealStagger, RevealFade } from "@/components/shared/reveal-stagger";
+import { FaqAccordion } from "@/components/shared/faq-accordion";
 
 export const metadata: Metadata = {
   title: "Học IELTS có lộ trình",
@@ -71,7 +72,7 @@ const faqs = [
     answer:
       "IELTS Flow chỉ hiển thị hoạt động, kết quả và bài đã hoàn thành từ dữ liệu thật của tài khoản. Hệ thống không tạo điểm số hoặc thành tích giả.",
   },
-] as const;
+];
 
 export default function HomePage() {
   return (
@@ -90,7 +91,7 @@ export default function HomePage() {
             aria-hidden="true"
             className="absolute top-20 -right-28 size-80 rounded-full bg-[var(--primary-subtle)]"
           />
-          <Container className="relative grid min-h-[calc(100dvh-5rem)] items-center gap-7 py-8 md:grid-cols-[1.04fr_0.96fr] md:gap-12 md:py-12 lg:gap-16">
+          <Container className="relative grid min-h-[calc(100dvh-5rem)] items-center gap-7 pt-16 pb-8 md:grid-cols-[1.04fr_0.96fr] md:gap-12 md:pt-24 md:pb-12 lg:gap-16">
             <div className="hero-visual order-1 min-w-0">
               <div className="relative overflow-hidden rounded-[2rem] bg-[var(--accent-subtle)] shadow-[0_24px_60px_rgb(var(--shadow-color)/0.14)]">
                 <Image
@@ -114,15 +115,17 @@ export default function HomePage() {
                 />
                 Lộ trình hiểu bạn
               </div>
-              <h1 className="mt-5 text-4xl leading-[1.08] font-extrabold tracking-[-0.045em] text-[var(--foreground)] sm:text-5xl lg:text-[3.55rem]">
-                Học đúng bài, tiến bộ rõ mỗi ngày
-              </h1>
+              <RevealFade>
+                <h1 className="mt-5 text-4xl leading-[1.1] font-extrabold tracking-tighter text-[var(--foreground)] sm:text-5xl lg:text-[3.55rem]">
+                  Học đúng bài, tiến bộ rõ mỗi ngày
+                </h1>
+              </RevealFade>
               <p className="mt-5 max-w-[48ch] text-base leading-7 text-[var(--muted-foreground)] sm:text-lg">
                 Indigo Scholar biến mục tiêu và kết quả luyện tập của bạn thành
                 một hành trình học dễ theo, dễ duy trì.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <Button asChild size="lg" className="sm:min-w-48">
+                <Button asChild size="lg" className="sm:min-w-48 active:scale-[0.98] transition-transform">
                   <Link href="/register">
                     Bắt đầu học
                     <ArrowRight
@@ -148,10 +151,10 @@ export default function HomePage() {
           aria-labelledby="journey-title"
         >
           <Container>
-            <div className="mx-auto max-w-2xl text-center">
+            <RevealFade className="mx-auto max-w-2xl text-center">
               <h2
                 id="journey-title"
-                className="text-3xl font-extrabold tracking-[-0.035em] sm:text-4xl"
+                className="text-3xl font-extrabold tracking-tighter sm:text-4xl"
               >
                 Indigo Scholar giúp bạn học nhẹ đầu hơn
               </h2>
@@ -159,7 +162,7 @@ export default function HomePage() {
                 Không cần tự ghép tài liệu hay đoán bài tiếp theo. Mọi kỹ năng
                 nằm trong một hành trình liền mạch.
               </p>
-            </div>
+            </RevealFade>
             <div className="mt-10 overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-3 shadow-[0_24px_70px_rgb(var(--shadow-color)/0.1)] sm:p-5">
               <Image
                 src="/images/ielts-flow-learning-path.webp"
@@ -178,10 +181,10 @@ export default function HomePage() {
           aria-labelledby="benefits-title"
         >
           <Container>
-            <div className="max-w-2xl">
+            <RevealFade className="max-w-2xl">
               <h2
                 id="benefits-title"
-                className="text-3xl font-extrabold tracking-[-0.035em] sm:text-4xl"
+                className="text-3xl font-extrabold tracking-tighter sm:text-4xl"
               >
                 Một nơi cho toàn bộ việc học IELTS
               </h2>
@@ -189,15 +192,15 @@ export default function HomePage() {
                 Học kiến thức, luyện kỹ năng và xem tiến độ mà không phải đổi
                 qua nhiều công cụ.
               </p>
-            </div>
+            </RevealFade>
 
             <div className="mt-10 grid gap-4 lg:grid-cols-12">
-              <article className="relative overflow-hidden rounded-[2rem] bg-[var(--primary)] p-7 text-white shadow-[0_18px_50px_rgb(var(--shadow-color)/0.18)] sm:p-9 lg:col-span-7 lg:min-h-80">
+              <article className="group relative overflow-hidden rounded-[2rem] bg-[var(--primary)] p-7 text-white shadow-[0_18px_50px_rgb(var(--shadow-color)/0.18)] hover:-translate-y-1 hover:shadow-xl transition-all duration-300 sm:p-9 lg:col-span-7 lg:min-h-80">
                 <div
                   aria-hidden="true"
                   className="absolute -right-14 -bottom-16 size-56 rounded-full bg-white/10"
                 />
-                <CalendarDays aria-hidden="true" size={32} strokeWidth={2} />
+                <CalendarDays aria-hidden="true" size={32} strokeWidth={1.5} />
                 <h3 className="mt-16 max-w-md text-2xl font-extrabold tracking-[-0.025em] sm:text-3xl">
                   Lộ trình vừa với nhịp sống của bạn
                 </h3>
@@ -207,12 +210,12 @@ export default function HomePage() {
                 </p>
               </article>
 
-              <article className="rounded-[2rem] border border-[var(--border)] bg-[var(--accent-subtle)] p-7 sm:p-8 lg:col-span-5">
+              <article className="rounded-[2rem] border border-[var(--border)] bg-[var(--accent-subtle)] p-7 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 sm:p-8 lg:col-span-5">
                 <NotebookPen
                   aria-hidden="true"
                   size={30}
                   className="text-[var(--coral)]"
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                 />
                 <h3 className="mt-10 text-2xl font-extrabold tracking-[-0.025em]">
                   Biết vì sao mình sai
@@ -223,13 +226,13 @@ export default function HomePage() {
                 </p>
               </article>
 
-              <article className="rounded-[2rem] border border-[var(--primary-soft)] bg-[var(--primary-subtle)] p-7 sm:p-8 lg:col-span-5">
+              <article className="rounded-[2rem] border border-[var(--primary-soft)] bg-[var(--primary-subtle)] p-7 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 sm:p-8 lg:col-span-5">
                 <div
                   className="flex gap-3 text-[var(--primary)]"
                   aria-hidden="true"
                 >
-                  <Headphones size={27} strokeWidth={2} />
-                  <Mic2 size={27} strokeWidth={2} />
+                  <Headphones size={27} strokeWidth={1.5} />
+                  <Mic2 size={27} strokeWidth={1.5} />
                 </div>
                 <h3 className="mt-10 text-2xl font-extrabold tracking-[-0.025em]">
                   4 kỹ năng, một tiến độ
@@ -240,12 +243,12 @@ export default function HomePage() {
                 </p>
               </article>
 
-              <article className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface-raised)] p-7 shadow-[0_18px_50px_rgb(var(--shadow-color)/0.08)] sm:p-9 lg:col-span-7">
+              <article className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface-raised)] p-7 shadow-[0_18px_50px_rgb(var(--shadow-color)/0.08)] hover:-translate-y-1 hover:shadow-xl transition-all duration-300 sm:p-9 lg:col-span-7">
                 <CheckCircle2
                   aria-hidden="true"
                   size={32}
                   className="text-[var(--success)]"
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                 />
                 <h3 className="mt-10 text-2xl font-extrabold tracking-[-0.025em] sm:text-3xl">
                   Chỉ hiển thị tiến bộ thật
@@ -264,22 +267,22 @@ export default function HomePage() {
           aria-labelledby="rhythm-title"
         >
           <Container>
-            <div className="mx-auto max-w-2xl text-center">
+            <RevealFade className="mx-auto max-w-2xl text-center">
               <h2
                 id="rhythm-title"
-                className="text-3xl font-extrabold tracking-[-0.035em] sm:text-4xl"
+                className="text-3xl font-extrabold tracking-tighter sm:text-4xl"
               >
                 Một vòng học dễ duy trì
               </h2>
               <p className="mt-4 leading-7 text-[var(--muted-foreground)]">
                 Mỗi buổi học đều trả lời rõ: học gì, sửa gì và đi tiếp thế nào.
               </p>
-            </div>
-            <ol className="mt-12 grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+            </RevealFade>
+            <RevealStagger className="mt-12 grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
               {learningRhythm.map((item, index) => {
                 const Icon = item.icon;
                 return (
-                  <li key={item.title} className="relative pt-6 lg:pt-0">
+                  <div key={item.title} className="relative pt-6 lg:pt-0">
                     <div className="flex items-center gap-4 lg:block">
                       <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-[var(--surface)] text-[var(--primary)] shadow-[0_10px_30px_rgb(var(--shadow-color)/0.1)]">
                         <Icon aria-hidden="true" size={26} strokeWidth={2} />
@@ -300,10 +303,10 @@ export default function HomePage() {
                         size={25}
                       />
                     ) : null}
-                  </li>
+                  </div>
                 );
               })}
-            </ol>
+            </RevealStagger>
           </Container>
         </section>
 
@@ -312,16 +315,16 @@ export default function HomePage() {
           aria-labelledby="faq-title"
         >
           <Container className="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:gap-16">
-            <div>
+            <RevealFade>
               <MessageCircleQuestion
                 aria-hidden="true"
                 size={38}
                 className="text-[var(--primary)]"
-                strokeWidth={2}
+                strokeWidth={1.5}
               />
               <h2
                 id="faq-title"
-                className="mt-5 text-3xl font-extrabold tracking-[-0.035em] sm:text-4xl"
+                className="mt-5 text-3xl font-extrabold tracking-tighter sm:text-4xl"
               >
                 Bạn hỏi, IELTS Flow trả lời
               </h2>
@@ -329,26 +332,9 @@ export default function HomePage() {
                 Những điều quan trọng trước khi bạn bắt đầu một lộ trình học
                 mới.
               </p>
-            </div>
-            <div className="space-y-3">
-              {faqs.map((item) => (
-                <details
-                  key={item.question}
-                  className="group rounded-2xl border border-[var(--border)] bg-[var(--background)] px-5 py-1 open:bg-[var(--primary-subtle)] sm:px-6"
-                >
-                  <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 py-3 font-extrabold focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none [&::-webkit-details-marker]:hidden">
-                    {item.question}
-                    <ChevronDown
-                      aria-hidden="true"
-                      className="shrink-0 text-[var(--primary)] transition-transform duration-200 group-open:rotate-180"
-                      size={22}
-                    />
-                  </summary>
-                  <p className="max-w-2xl pb-5 leading-7 text-[var(--muted-foreground)]">
-                    {item.answer}
-                  </p>
-                </details>
-              ))}
+            </RevealFade>
+            <div className="pt-2">
+              <FaqAccordion items={[...faqs]} />
             </div>
           </Container>
         </section>
@@ -367,7 +353,7 @@ export default function HomePage() {
                 className="absolute right-[9%] bottom-9 text-white/30"
                 size={42}
               />
-              <h2 className="relative mx-auto max-w-2xl text-3xl font-extrabold tracking-[-0.035em] sm:text-4xl">
+              <h2 className="relative mx-auto max-w-2xl text-3xl font-extrabold tracking-tighter sm:text-4xl">
                 Bắt đầu hành trình IELTS của riêng bạn
               </h2>
               <p className="relative mx-auto mt-4 max-w-xl leading-7 text-white/95">
@@ -377,7 +363,7 @@ export default function HomePage() {
               <Button
                 asChild
                 size="lg"
-                className="relative mt-8 bg-white text-[var(--primary)] shadow-[0_5px_0_#d3def8] hover:bg-[var(--accent-subtle)]"
+                className="relative mt-8 bg-white text-[var(--primary)] shadow-[0_5px_0_#d3def8] hover:bg-[var(--accent-subtle)] active:translate-y-1 active:shadow-none transition-all"
               >
                 <Link href="/register">
                   Bắt đầu học ngay
@@ -397,6 +383,18 @@ export default function HomePage() {
           <div className="flex flex-wrap gap-5">
             <Link
               className="font-semibold hover:text-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+              href="/terms"
+            >
+              Terms of Service
+            </Link>
+            <Link
+              className="font-semibold hover:text-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+              href="/privacy"
+            >
+              Privacy Policy
+            </Link>
+            <Link
+              className="font-semibold hover:text-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
               href="#faq-title"
             >
               Câu hỏi thường gặp
@@ -408,6 +406,12 @@ export default function HomePage() {
               Đăng nhập
             </Link>
           </div>
+        </Container>
+        <Container className="mt-8 pt-8 border-t border-[var(--border)] text-xs text-[var(--muted-foreground)]">
+          <p className="max-w-3xl">
+            IELTS is a registered trademark of University of Cambridge ESOL, the British Council, and IDP Education Australia. 
+            This website is not affiliated, approved or endorsed by the University of Cambridge ESOL, the British Council, and IDP Education Australia.
+          </p>
         </Container>
       </footer>
     </div>

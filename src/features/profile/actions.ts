@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { requireCurrentAccount } from "@/server/auth/account";
+import { requireCurrentAccount } from "@/features/auth/server/account";
 import { logServerEvent } from "@/server/observability/logger";
 import { getServerRequestId } from "@/server/observability/request-context";
 import type { ActionState } from "@/features/auth/action-state";

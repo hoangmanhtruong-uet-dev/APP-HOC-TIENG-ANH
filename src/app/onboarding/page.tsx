@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
-import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
-import { getAccountLabel } from "@/server/auth/account";
-import { requirePendingOnboarding } from "@/server/onboarding/learner-profile";
+import { OnboardingWizard } from "@/features/onboarding/components/onboarding-wizard";
+import { getAccountLabel } from "@/features/auth/server/account";
+import { requirePendingOnboarding } from "@/features/onboarding/server/learner-profile";
 
 export const metadata: Metadata = {
   title: "Thiết lập hồ sơ học tập",

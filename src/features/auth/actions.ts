@@ -15,13 +15,14 @@ import {
   loginSchema,
   registerSchema,
   resetPasswordSchema,
+  verifyOtpSchema,
 } from "./schemas";
-import { siteConfig } from "@/config/site";
 
 type LoginField = "email" | "password";
 type RegisterField =
   "displayName" | "email" | "password" | "confirmPassword" | "acceptPolicies";
-type ForgotPasswordField = "email";
+type ForgotPasswordField = "identifier" | "channel";
+type VerifyOtpField = "identifier" | "token" | "type";
 type ResetPasswordField = "password" | "confirmPassword";
 
 function valueOf(formData: FormData, key: string) {
@@ -176,51 +177,135 @@ export async function forgotPasswordAction(
 ): Promise<ActionState<ForgotPasswordField>> {
   const requestId = await getServerRequestId();
   const result = forgotPasswordSchema.safeParse({
-    email: valueOf(formData, "email"),
+    identifier: valueOf(formData, "identifier"),
+    channel: valueOf(formData, "channel"),
   });
   if (!result.success) {
     return {
       status: "error",
-      message: "Hãy kiểm tra lại địa chỉ email.",
+      message: "Hãy kiểm tra lại thông tin cung cấp.",
       fieldErrors: result.error.flatten().fieldErrors,
       requestId,
     };
   }
 
+  const { identifier, channel } = result.data;
+  const isEmail = channel === "email" || identifier.includes("@");
+  
   try {
-    const callbackUrl = new URL("/auth/recovery", siteConfig.url);
-    callbackUrl.searchParams.set("next", "/reset-password");
     const supabase = await createSupabaseServerClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(
-      result.data.email,
-      { redirectTo: callbackUrl.toString() },
-    );
+    let error;
+
+    if (isEmail) {
+      const res = await supabase.auth.signInWithOtp({
+        email: identifier,
+        options: {
+          shouldCreateUser: false,
+        }
+      });
+      error = res.error;
+    } else {
+      const res = await supabase.auth.signInWithOtp({
+        phone: identifier,
+        options: {
+          channel: channel === "whatsapp" ? "whatsapp" : "sms",
+          shouldCreateUser: false,
+        }
+      });
+      error = res.error;
+    }
+
     if (error) {
       logServerEvent("warn", {
         event: "auth.password_recovery.request_rejected",
         requestId,
         route: "forgotPasswordAction",
-        stage: "request recovery email",
+        stage: "request recovery otp",
         errorCode: error.code ?? "AUTH_PROVIDER_ERROR",
       });
+      // Continue anyway to prevent enumeration
     }
   } catch (error) {
     logServerEvent("error", {
       event: "auth.password_recovery.request_failed",
       requestId,
       route: "forgotPasswordAction",
-      stage: "request recovery email",
+      stage: "request recovery otp",
       errorCode: "AUTH_UNEXPECTED_ERROR",
       error,
     });
   }
 
-  return {
-    status: "success",
-    message:
-      "Nếu tài khoản tồn tại, hướng dẫn đặt lại mật khẩu sẽ được gửi tới email đó.",
-    requestId,
-  };
+  const actualChannel = isEmail ? "email" : channel === "whatsapp" ? "whatsapp" : "sms";
+  
+  redirect(`/verify-otp?target=${encodeURIComponent(identifier)}&channel=${actualChannel}`);
+}
+
+export async function verifyOtpAction(
+  _previousState: ActionState<VerifyOtpField>,
+  formData: FormData,
+): Promise<ActionState<VerifyOtpField>> {
+  const requestId = await getServerRequestId();
+  const result = verifyOtpSchema.safeParse({
+    identifier: valueOf(formData, "identifier"),
+    token: valueOf(formData, "token"),
+    type: valueOf(formData, "type"),
+  });
+
+  if (!result.success) {
+    return {
+      status: "error",
+      message: "Mã OTP không hợp lệ.",
+      fieldErrors: result.error.flatten().fieldErrors,
+      requestId,
+    };
+  }
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { identifier, token, type } = result.data;
+    
+    // Type is 'email', 'sms', or 'whatsapp'. Wait, Supabase verifyOtp takes 'email', 'sms' etc.
+    const verifyType = type === "email" ? "email" : "sms"; // Actually supabase verifyOtp takes 'sms' for both sms/whatsapp
+    const params = type === "email" ? { email: identifier, token, type: 'email' as const } : { phone: identifier, token, type: 'sms' as const };
+    
+    const { error } = await supabase.auth.verifyOtp(params);
+
+    if (error) {
+      logServerEvent("warn", {
+        event: "auth.verify_otp.rejected",
+        requestId,
+        route: "verifyOtpAction",
+        stage: "verify otp",
+        errorCode: error.code ?? "AUTH_PROVIDER_ERROR",
+      });
+      return {
+        status: "error",
+        message: "Mã OTP không đúng hoặc đã hết hạn.",
+        requestId,
+      };
+    }
+  } catch (error) {
+    logServerEvent("error", {
+      event: "auth.verify_otp.failed",
+      requestId,
+      route: "verifyOtpAction",
+      stage: "verify otp",
+      errorCode: "AUTH_UNEXPECTED_ERROR",
+      error,
+    });
+    return {
+      status: "error",
+      message: "Đã có lỗi xảy ra. Hãy thử lại.",
+      requestId,
+    };
+  }
+
+    return {
+      status: "success",
+      message: "Xác thực thành công!",
+      requestId,
+    };
 }
 
 export async function resetPasswordAction(

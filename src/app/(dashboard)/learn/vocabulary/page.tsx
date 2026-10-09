@@ -8,11 +8,11 @@ import {
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { VocabularyCatalog } from "@/components/learning/vocabulary-catalog";
+import { VocabularyCatalog } from "@/features/learning/components/vocabulary-catalog";
 import {
   getVocabularyCatalog,
   getVocabularyProgressSummary,
-} from "@/server/learning/foundations";
+} from "@/features/learning/server/foundations";
 
 export const metadata: Metadata = {
   title: "Vocabulary",

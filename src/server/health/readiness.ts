@@ -67,7 +67,7 @@ async function checkDatabase(baseUrl: string, anonKey: string) {
   });
   if (!response.ok) throw new DependencyReadinessError("database");
   try {
-    const body: unknown = await response.json();
+    const body: any = await response.json();
     if (!Array.isArray(body)) throw new Error("malformed_database_response");
   } catch (error) {
     throw new DependencyReadinessError("database", { cause: error });
@@ -91,12 +91,12 @@ async function checkStorage(
   );
   if (!response.ok) throw new DependencyReadinessError("storage");
   try {
-    const body: unknown = await response.json();
+    const body: any = await response.json();
     if (
       !body ||
       typeof body !== "object" ||
-      (body as { id?: unknown }).id !== "speaking-recordings" ||
-      (body as { public?: unknown }).public !== false
+      (body as { id?: any }).id !== "speaking-recordings" ||
+      (body as { public?: any }).public !== false
     ) {
       throw new Error("malformed_or_public_storage_bucket");
     }

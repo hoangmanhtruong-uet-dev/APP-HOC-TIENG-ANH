@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { WritingImprovement } from "@/components/writing/writing-improvement";
-import { getWritingImprovementReview } from "@/server/writing/content";
+import { WritingImprovement } from "@/features/writing/components/writing-improvement";
+import { getWritingImprovementReview } from "@/features/writing/server/content";
 
 export const metadata: Metadata = { title: "Writing Improvement" };
 

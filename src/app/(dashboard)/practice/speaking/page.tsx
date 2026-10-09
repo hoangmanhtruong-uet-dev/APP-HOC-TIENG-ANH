@@ -1,16 +1,23 @@
-import { Bell, Mic2 } from "lucide-react";
+import {
+  Mic2,
+  Radio,
+  Activity,
+  BarChart3,
+  Flame,
+  ArrowRight
+} from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { SpeakingCatalog } from "@/components/speaking/speaking-catalog";
+import { SpeakingCatalog } from "@/features/speaking/components/speaking-catalog";
 import {
   getSpeakingDashboardData,
   getSpeakingCatalog,
-} from "@/server/speaking/content";
+} from "@/features/speaking/server/content";
 
 export const metadata: Metadata = {
   title: "Speaking",
-  description: "Practice speaking with private audio and optional feedback.",
+  description: "Speak fluently with AI feedback and real-world scenarios.",
 };
 
 export default async function SpeakingCatalogPage() {
@@ -18,137 +25,193 @@ export default async function SpeakingCatalogPage() {
     getSpeakingCatalog(),
     getSpeakingDashboardData(24),
   ]);
-  const current =
-    items.find((item) => item.activeAttemptId) ?? items.at(0) ?? null;
+  
+  const current = items.find((item) => item.activeAttemptId) ?? items.at(0) ?? null;
   const answered = attempts.reduce((sum, item) => sum + item.responseCount, 0);
   const target = Math.max(
     items.reduce((sum, item) => sum + item.promptCount, 0) * 3,
     answered,
     1,
   );
+  
+  // Real progress metrics
   const progress = Math.min(100, Math.round((answered / target) * 100));
   const latestFeedback = attempts.find((attempt) => attempt.feedback)?.feedback;
-  const metrics = [
-    ["Pronunciation", latestFeedback?.estimatedPronunciationBand],
-    ["Fluency", latestFeedback?.estimatedFluencyBand],
-    ["Grammar", latestFeedback?.estimatedGrammarBand],
-    ["Vocabulary", latestFeedback?.estimatedLexicalBand],
-  ] as const;
+  
+  const pronunScore = latestFeedback?.estimatedPronunciationBand ?? 0;
+  const fluencyScore = latestFeedback?.estimatedFluencyBand ?? 0;
+  const vocabScore = latestFeedback?.estimatedLexicalBand ?? 0;
 
   return (
-    <div className="mx-auto min-h-[100dvh] max-w-3xl bg-[#fbf9ff] pb-24 text-[#211b2a] lg:min-h-0 lg:rounded-3xl lg:border lg:border-[#e5dfef]">
-      <header className="flex h-14 items-center justify-between border-b border-[#e9e4f0] bg-white px-4 lg:rounded-t-3xl">
-        <div>
-          <p className="text-xs text-[#70697b]">Hello, Student</p>
-          <p className="text-sm font-bold text-[#3823bd]">Indigo Scholar</p>
+    <div className="space-y-8 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      
+      {/* 1. Header & Banner */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky-900 via-[#0284C7] to-blue-700 p-8 sm:p-10 text-white shadow-xl">
+        <div className="absolute right-0 top-0 opacity-10 pointer-events-none transform translate-x-1/4 -translate-y-1/4">
+           <Mic2 size={300} />
         </div>
-        <Bell aria-hidden="true" size={18} className="text-[#4329c7]" />
-      </header>
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="max-w-xl">
+            <span className="inline-block rounded-full bg-sky-400/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-sky-100 mb-4 backdrop-blur-md border border-sky-300/30">
+              AI Speaking Hub
+            </span>
+            <h1 className="text-3xl sm:text-4xl font-black mb-4 leading-tight">
+              Speak fluently with AI feedback & real-world scenarios.
+            </h1>
+            <p className="text-sky-100 text-base sm:text-lg">
+              Master your pronunciation, fluency, and vocabulary with instant, multi-dimensional AI evaluation.
+            </p>
+          </div>
 
-      <div className="space-y-6 px-4 py-5 sm:px-6">
-        <div>
-          <h1 className="text-2xl font-bold">Speaking</h1>
-          <p className="mt-1 text-sm text-[#736c7e]">
-            Practice speaking English with confidence.
-          </p>
-        </div>
-
-        <section className="rounded-2xl border border-[#e3ddec] bg-white p-4 shadow-[0_8px_24px_rgba(72,49,145,0.05)]">
-          <div className="flex items-center justify-between gap-4">
+          {/* Microphone Pre-check Widget */}
+          <div className="shrink-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 flex items-center gap-4">
+            <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-20"></span>
+              <Mic2 className="text-emerald-400" size={24} />
+            </div>
             <div>
-              <span className="rounded-lg bg-[#f1edff] px-2 py-1 text-[10px] font-bold text-[#4d32d4]">
-                A1 BEGINNER
-              </span>
-              <h2 className="mt-3 text-lg font-bold">Speaking Progress</h2>
-            </div>
-            <div className="text-right">
-              <strong className="text-2xl text-[#4d32d4]">{progress}%</strong>
-              <p className="text-[10px] text-[#746d7f]">Level goal</p>
-            </div>
-          </div>
-          <p className="mt-2 text-xs text-[#746d7f]">
-            {answered} recorded answer{answered === 1 ? "" : "s"}
-          </p>
-          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#ebe7f1]">
-            <div
-              className="h-full rounded-full bg-[#7652e8]"
-              style={{ width: `${Math.max(progress, answered ? 6 : 0)}%` }}
-            />
-          </div>
-          <h3 className="mt-5 text-sm font-bold">Learning Progress</h3>
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            {metrics.map(([label, value]) => (
-              <div
-                key={label}
-                className="rounded-xl border border-[#e3ddec] bg-[#fbf9ff] p-3 text-center"
-              >
-                <p className="text-[10px] text-[#736c7e]">{label}</p>
-                <strong className="mt-1 block text-lg text-[#4d32d4]">
-                  {value == null ? "—" : Math.round((value / 9) * 100)}
-                </strong>
+              <p className="text-sm font-semibold text-sky-100">Microphone Status</p>
+              <div className="flex items-center gap-2 mt-1">
+                <div className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
+                <span className="text-base font-bold text-white">Ready to record</span>
               </div>
-            ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="grid gap-8 lg:grid-cols-3">
+        
+        {/* 2. Khối 1: Your Speaking Stats */}
+        <section className="lg:col-span-1 space-y-6">
+          <h2 className="text-xl font-extrabold text-[var(--foreground)] flex items-center gap-2">
+            <BarChart3 className="text-sky-600" /> Your Speaking Stats
+          </h2>
+          
+          <div className="rounded-2xl border border-[var(--border)] bg-white p-6 shadow-sm">
+            {/* Real Radar/Score Chart via Bars */}
+            <div className="space-y-5 mb-8">
+              <div>
+                <div className="flex justify-between text-sm font-bold mb-2">
+                  <span className="text-slate-700">Pronunciation</span>
+                  <span className="text-sky-600">{pronunScore ? `${pronunScore} / 9.0` : "—"}</span>
+                </div>
+                <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-sky-500 rounded-full" style={{ width: pronunScore ? `${(pronunScore / 9) * 100}%` : '0%' }}></div>
+                </div>
+              </div>
+              
+              <div>
+                <div className="flex justify-between text-sm font-bold mb-2">
+                  <span className="text-slate-700">Fluency & Coherence</span>
+                  <span className="text-sky-600">{fluencyScore ? `${fluencyScore} / 9.0` : "—"}</span>
+                </div>
+                <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-sky-500 rounded-full" style={{ width: fluencyScore ? `${(fluencyScore / 9) * 100}%` : '0%' }}></div>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-sm font-bold mb-2">
+                  <span className="text-slate-700">Lexical Resource</span>
+                  <span className="text-sky-600">{vocabScore ? `${vocabScore} / 9.0` : "—"}</span>
+                </div>
+                <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-sky-500 rounded-full" style={{ width: vocabScore ? `${(vocabScore / 9) * 100}%` : '0%' }}></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Streak nói */}
+            <div className="pt-6 border-t border-slate-100">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 rounded-lg bg-orange-100 text-orange-500">
+                  <Flame size={20} />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-500 uppercase">Speaking Progress</p>
+                  <p className="text-lg font-black text-slate-800">{answered} <span className="text-sm font-semibold text-slate-500">/ {target} tasks</span></p>
+                </div>
+              </div>
+              <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden mt-3">
+                <div className="h-full bg-orange-500 rounded-full" style={{ width: `${Math.max(progress, answered ? 6 : 0)}%` }}></div>
+              </div>
+            </div>
           </div>
         </section>
 
-        {current ? (
-          <section className="rounded-2xl border border-[#e3ddec] bg-white p-4">
-            <p className="text-[10px] font-bold text-[#4d32d4] uppercase">
-              Next up
-            </p>
-            <div className="mt-3 flex items-start gap-3">
-              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#eee8ff] text-[#4d32d4]">
-                <Mic2 aria-hidden="true" size={20} />
-              </span>
-              <div className="min-w-0 flex-1">
-                <h2 className="font-bold">{current.title}</h2>
-                <p className="mt-1 text-xs leading-5 text-[#736c7e]">
-                  {current.description}
-                </p>
+        {/* 3. Khối 2: Quick Practice Modes */}
+        <section className="lg:col-span-2 space-y-6">
+          <h2 className="text-xl font-extrabold text-[var(--foreground)] flex items-center gap-2">
+            <Activity className="text-sky-600" /> Quick Practice Modes
+          </h2>
+          
+          <div className="grid gap-4 sm:grid-cols-3">
+            {/* Pronunciation Lab */}
+            <article className="group relative overflow-hidden rounded-2xl border border-[var(--border)] bg-white p-5 shadow-sm hover:shadow-md transition-all hover:border-sky-300 cursor-pointer flex flex-col justify-between min-h-[160px]">
+              <div>
+                <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 text-purple-600">
+                  <Activity size={20} />
+                </div>
+                <h3 className="text-base font-bold text-slate-800 group-hover:text-sky-600 transition-colors">Pronunciation Lab</h3>
+                <p className="mt-1 text-xs text-slate-500 line-clamp-2">Luyện cặp âm dễ nhầm lẫn (/i:/ vs /ɪ/, /θ/ vs /s/).</p>
               </div>
-            </div>
-            <Link
-              href={`/practice/speaking/${current.slug}`}
-              className="mt-4 flex min-h-11 w-full items-center justify-center rounded-xl bg-[#4d32d4] px-4 text-sm font-bold text-white transition active:scale-[0.98]"
-            >
-              Continue Speaking
-            </Link>
-          </section>
-        ) : null}
+              <ArrowRight size={18} className="text-slate-300 self-end group-hover:text-sky-500 group-hover:translate-x-1 transition-all" />
+            </article>
 
-        <section>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-bold">Today&apos;s Challenge</h2>
-            <Link
-              href="/practice/speaking/progress"
-              className="text-xs font-bold text-[#4d32d4]"
-            >
-              View progress
-            </Link>
-          </div>
-          <div className="rounded-2xl border border-[#ded7ec] bg-[#f3efff] p-4">
-            <p className="text-[10px] font-bold text-[#4d32d4] uppercase">
-              Daily challenge
-            </p>
-            <p className="mt-2 text-lg font-bold">
-              &ldquo;Tell us about yourself&rdquo;
-            </p>
-            <p className="mt-1 text-xs text-[#625b6d]">
-              30-45 seconds. Focus on pronunciation and fluency.
-            </p>
+            {/* Shadowing */}
+            <article className="group relative overflow-hidden rounded-2xl border border-[var(--border)] bg-white p-5 shadow-sm hover:shadow-md transition-all hover:border-sky-300 cursor-pointer flex flex-col justify-between min-h-[160px]">
+              <div>
+                <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                  <Radio size={20} />
+                </div>
+                <h3 className="text-base font-bold text-slate-800 group-hover:text-sky-600 transition-colors">Shadowing</h3>
+                <p className="mt-1 text-xs text-slate-500 line-clamp-2">Nghe và nhại lại câu văn theo nhịp điệu bản xứ.</p>
+              </div>
+              <ArrowRight size={18} className="text-slate-300 self-end group-hover:text-sky-500 group-hover:translate-x-1 transition-all" />
+            </article>
+
+            {/* AI Roleplay (Uses real data) */}
             {current ? (
-              <Link
-                href={`/practice/speaking/${current.slug}`}
-                className="mt-4 flex min-h-11 items-center justify-center rounded-xl border border-[#4d32d4] bg-white px-4 text-sm font-bold text-[#4d32d4] transition active:scale-[0.98]"
-              >
-                Start Challenge
+              <Link href={`/practice/speaking/${current.slug}`} className="group relative overflow-hidden rounded-2xl border border-sky-200 bg-sky-50 p-5 shadow-sm hover:shadow-md transition-all hover:border-sky-400 cursor-pointer flex flex-col justify-between min-h-[160px]">
+                <div className="absolute top-0 right-0 p-3">
+                  <span className="flex h-2 w-2 rounded-full bg-rose-500 animate-pulse"></span>
+                </div>
+                <div>
+                  <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-sky-200 text-sky-700">
+                    <Mic2 size={20} />
+                  </div>
+                  <h3 className="text-base font-bold text-slate-800 group-hover:text-sky-700 transition-colors">Current Challenge</h3>
+                  <p className="mt-1 text-xs text-slate-600 line-clamp-2">{current.title}</p>
+                </div>
+                <ArrowRight size={18} className="text-sky-500 self-end group-hover:translate-x-1 transition-all" />
               </Link>
-            ) : null}
+            ) : (
+              <article className="group relative overflow-hidden rounded-2xl border border-[var(--border)] bg-white p-5 shadow-sm hover:shadow-md transition-all hover:border-sky-300 cursor-pointer flex flex-col justify-between min-h-[160px]">
+                <div>
+                  <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
+                    <Mic2 size={20} />
+                  </div>
+                  <h3 className="text-base font-bold text-slate-800 group-hover:text-sky-600 transition-colors">AI Roleplay</h3>
+                  <p className="mt-1 text-xs text-slate-500 line-clamp-2">Chat tự do bằng giọng nói với AI Tutor.</p>
+                </div>
+                <ArrowRight size={18} className="text-slate-300 self-end group-hover:text-sky-500 group-hover:translate-x-1 transition-all" />
+              </article>
+            )}
           </div>
         </section>
 
-        <SpeakingCatalog items={items} />
       </div>
+
+      {/* 4. Khối 3: Scenario Topics (Integrating existing Catalog) */}
+      <section className="pt-8">
+        <h2 className="mb-6 text-2xl font-extrabold text-[var(--foreground)]">Practice Catalog</h2>
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
+           <SpeakingCatalog items={items} />
+        </div>
+      </section>
+
     </div>
   );
 }

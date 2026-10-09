@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { SpeakingReview } from "@/components/speaking/speaking-review";
-import { getSpeakingAttemptReview } from "@/server/speaking/content";
+import { SpeakingReview } from "@/features/speaking/components/speaking-review";
+import { getSpeakingAttemptReview } from "@/features/speaking/server/content";
 
 export const metadata: Metadata = { title: "Review Speaking" };
 export default async function SpeakingAttemptPage({

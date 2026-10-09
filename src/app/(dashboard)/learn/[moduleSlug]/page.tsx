@@ -3,14 +3,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { LearningProgress } from "@/components/learning/learning-progress";
-import { ModuleLessons } from "@/components/learning/module-lessons";
+import { LearningProgress } from "@/features/learning/components/learning-progress";
+import { ModuleLessons } from "@/features/learning/components/module-lessons";
 import {
   LEARNING_DIFFICULTY_LABELS,
   LEARNING_SKILL_LABELS,
   LEARNING_TEST_TYPE_LABELS,
 } from "@/features/learning/constants";
-import { getLearningModule } from "@/server/learning/content";
+import { getLearningModule } from "@/features/learning/server/content";
 
 export const metadata: Metadata = { title: "Module học tập" };
 

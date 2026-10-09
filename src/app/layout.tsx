@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { CrispProvider } from "@/components/shared/crisp-provider";
 import { siteConfig } from "@/config/site";
 import { OfflineFallbackRegistration } from "@/components/shared/offline-fallback-registration";
 
@@ -33,6 +36,9 @@ export default function RootLayout({
       <body>
         {children}
         <OfflineFallbackRegistration />
+        <CrispProvider />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

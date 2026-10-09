@@ -8,11 +8,11 @@ import {
 } from "@/features/learning/action-state";
 import { lessonProgressMutationSchema } from "@/features/learning/schemas";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { requireCompletedOnboarding } from "@/server/onboarding/learner-profile";
+import { requireCompletedOnboarding } from "@/features/onboarding/server/learner-profile";
 import { logServerEvent } from "@/server/observability/logger";
 import { getServerRequestId } from "@/server/observability/request-context";
 
-export async function openLessonSectionAction(input: unknown) {
+export async function openLessonSectionAction(input: any) {
   return mutateLessonProgress("open", input);
 }
 
@@ -30,7 +30,7 @@ export async function completeLessonSectionAction(
 
 async function mutateLessonProgress(
   operation: "open" | "complete",
-  input: unknown,
+  input: any,
 ): Promise<LearningProgressActionState> {
   const requestId = await getServerRequestId();
   const parsed = lessonProgressMutationSchema.safeParse(input);
@@ -63,6 +63,17 @@ async function mutateLessonProgress(
         errorCode: error.code ?? "PROGRESS_PROVIDER_ERROR",
       });
       return mapProgressError(error.code, requestId);
+    }
+
+    if (operation === "complete") {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.rpc("award_xp", {
+          target_user_id: user.id,
+          xp_amount: 10,
+          xp_source: "lesson_section_completed",
+        });
+      }
     }
 
     revalidateLearningPaths(parsed.data.moduleSlug, parsed.data.lessonSlug);

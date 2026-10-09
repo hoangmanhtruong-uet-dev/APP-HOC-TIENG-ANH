@@ -8,7 +8,7 @@ import {
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { getWritingHistoryDashboard } from "@/server/writing/content";
+import { getWritingHistoryDashboard } from "@/features/writing/server/content";
 
 export const metadata: Metadata = { title: "Writing History" };
 

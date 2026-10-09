@@ -30,7 +30,7 @@ export const mockRunnerContextSchema = z.object({
 
 export type SubmitMockSectionInput = z.infer<typeof submitMockSectionSchema>;
 
-export function parseMockRunnerContext(input: unknown) {
+export function parseMockRunnerContext(input: any) {
   const parsed = mockRunnerContextSchema.safeParse(input);
   if (!parsed.success) return undefined;
   return {

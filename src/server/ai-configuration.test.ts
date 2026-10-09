@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getSpeakingAiConfiguration } from "@/server/speaking/ai-review";
-import { getWritingAiConfiguration } from "@/server/writing/ai-feedback";
+import { getSpeakingAiConfiguration } from "@/features/speaking/server/ai-review";
+import { getWritingAiConfiguration } from "@/features/writing/server/ai-feedback";
 
 const OPTIONAL_AI_ENV = [
   "OPENAI_API_KEY",

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "@/lib/validation/zod";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { getActivePlacementTest } from "@/server/placement/content";
+import { getActivePlacementTest } from "@/features/placement/server/content";
 import { logServerEvent } from "@/server/observability/logger";
 import { getServerRequestId } from "@/server/observability/request-context";
 

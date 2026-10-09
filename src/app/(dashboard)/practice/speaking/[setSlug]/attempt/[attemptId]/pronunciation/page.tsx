@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { PronunciationPractice } from "@/components/speaking/pronunciation-practice";
-import { getSpeakingAttemptReview } from "@/server/speaking/content";
+import { PronunciationPractice } from "@/features/speaking/components/pronunciation-practice";
+import { getSpeakingAttemptReview } from "@/features/speaking/server/content";
 
 export const metadata: Metadata = { title: "Pronunciation Practice" };
 

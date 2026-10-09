@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { MockTestDetail } from "@/components/mock-tests/mock-test-detail";
-import { getMockTestDetail } from "@/server/mock-tests/content";
+import { MockTestDetail } from "@/features/mock-tests/components/mock-test-detail";
+import { getMockTestDetail } from "@/features/mock-tests/server/content";
 
 export const metadata: Metadata = { title: "Chi tiết mock test" };
 

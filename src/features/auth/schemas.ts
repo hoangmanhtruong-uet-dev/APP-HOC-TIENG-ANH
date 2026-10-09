@@ -52,7 +52,14 @@ export const loginSchema = z.object({
 });
 
 export const forgotPasswordSchema = z.object({
-  email: normalizedEmailSchema,
+  identifier: z.string().trim().min(1, "Vui lòng nhập email hoặc số điện thoại."),
+  channel: z.enum(["email", "sms", "whatsapp"]).default("email"),
+});
+
+export const verifyOtpSchema = z.object({
+  identifier: z.string().trim().min(1, "Thiếu thông tin liên hệ."),
+  token: z.string().trim().length(6, "Mã OTP phải gồm 6 chữ số."),
+  type: z.enum(["email", "sms", "whatsapp"]).default("email"),
 });
 
 export const resetPasswordSchema = z

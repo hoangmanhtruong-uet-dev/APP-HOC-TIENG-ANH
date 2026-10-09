@@ -4,10 +4,12 @@ import {
   BookOpenText,
   ChartNoAxesCombined,
   GraduationCap,
+  Headphones,
   House,
   Map,
   Menu,
   Settings,
+  Sparkles,
   UserRound,
   X,
 } from "lucide-react";
@@ -15,25 +17,29 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import { LogoutButton } from "@/components/auth/logout-button";
+import { LogoutButton } from "@/features/auth/components/logout-button";
 import { AppLogo } from "@/components/shared/app-logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navigation = [
-  { href: "/dashboard", label: "Trang chủ", icon: House },
-  { href: "/learn", label: "Học", icon: BookOpenText },
-  { href: "/roadmap", label: "Lộ trình", icon: Map },
-  { href: "/progress", label: "Tiến độ", icon: ChartNoAxesCombined },
-  { href: "/profile", label: "Hồ sơ", icon: UserRound },
+  { href: "/dashboard", label: "Home", icon: House },
+  { href: "/learn", label: "Learn", icon: BookOpenText },
+  { href: "/dictation", label: "Dictation", icon: Headphones },
+  { href: "/plans", label: "Plans", icon: GraduationCap },
+  { href: "/roadmap", label: "Roadmap", icon: Map },
+  { href: "/progress", label: "Progress", icon: ChartNoAxesCombined },
+  { href: "/pricing", label: "Pricing", icon: Sparkles },
+  { href: "/profile", label: "Profile & Settings", icon: UserRound },
 ] as const;
 
 const mobileNavigation = [
-  { href: "/dashboard", label: "Trang chủ", icon: House },
-  { href: "/roadmap", label: "Lộ trình", icon: GraduationCap },
-  { href: "/progress", label: "Tiến độ", icon: ChartNoAxesCombined },
-  { href: "/profile", label: "Hồ sơ", icon: UserRound },
+  { href: "/dashboard", label: "Home", icon: House },
+  { href: "/roadmap", label: "Roadmap", icon: GraduationCap },
+  { href: "/progress", label: "Progress", icon: ChartNoAxesCombined },
+  { href: "/profile", label: "Profile", icon: UserRound },
 ] as const;
+
 
 function isCurrentRoute(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -43,7 +49,7 @@ function DesktopNavigation() {
   const pathname = usePathname();
   return (
     <nav
-      aria-label="Điều hướng học tập"
+      aria-label="Learning navigation"
       className="hidden items-center gap-1 lg:flex"
     >
       {navigation.map((item) => {
@@ -56,9 +62,9 @@ function DesktopNavigation() {
             prefetch={false}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none",
+              "flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-[#4338CA] focus-visible:outline-none",
               active
-                ? "bg-[var(--primary-subtle)] text-[var(--primary)]"
+                ? "bg-[#efedff] text-[#4338CA]"
                 : "text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]",
             )}
           >
@@ -70,6 +76,7 @@ function DesktopNavigation() {
     </nav>
   );
 }
+
 
 export function AppShell({
   children,
@@ -109,7 +116,7 @@ export function AppShell({
   return (
     <div className="min-h-[100dvh] bg-[var(--background)]">
       <a className="skip-link" href="#main-content">
-        Bỏ qua điều hướng
+        Skip navigation
       </a>
       <header
         className={cn(
@@ -125,8 +132,8 @@ export function AppShell({
           <Link
             href="/settings"
             prefetch={false}
-            aria-label="Mở cài đặt"
-            className="hidden size-11 items-center justify-center rounded-xl text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none lg:flex"
+            aria-label="Settings"
+            className="hidden size-11 items-center justify-center rounded-xl text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[#4338CA] focus-visible:ring-2 focus-visible:ring-[#4338CA] focus-visible:outline-none lg:flex"
           >
             <Settings aria-hidden="true" size={20} strokeWidth={1.8} />
           </Link>
@@ -136,7 +143,7 @@ export function AppShell({
             variant="ghost"
             size="icon"
             className="ml-auto lg:hidden"
-            aria-label="Mở tài khoản"
+            aria-label="Open menu"
             aria-expanded={mobileOpen}
             aria-controls="account-drawer"
             onClick={() => setMobileOpen(true)}
@@ -161,7 +168,7 @@ export function AppShell({
           <button
             type="button"
             className="absolute inset-0 bg-[#17152b]/35"
-            aria-label="Đóng tài khoản"
+            aria-label="Close menu"
             onClick={() => setMobileOpen(false)}
           />
           <aside
@@ -169,7 +176,7 @@ export function AppShell({
             id="account-drawer"
             role="dialog"
             aria-modal="true"
-            aria-label="Tài khoản"
+            aria-label="Account"
             className="absolute inset-y-0 right-0 flex w-[min(86vw,22rem)] flex-col bg-white p-5 shadow-[-20px_0_60px_rgb(var(--shadow-color)/0.18)]"
           >
             <div className="flex items-center justify-between">
@@ -178,13 +185,13 @@ export function AppShell({
                 type="button"
                 variant="ghost"
                 size="icon"
-                aria-label="Đóng tài khoản"
+                aria-label="Close menu"
                 onClick={() => setMobileOpen(false)}
               >
                 <X aria-hidden="true" size={22} />
               </Button>
             </div>
-            <div className="mt-8 rounded-2xl bg-[var(--primary-subtle)] p-5">
+            <div className="mt-8 rounded-2xl bg-[#efedff] p-5">
               <p className="font-bold text-[var(--foreground)]">
                 {account.label}
               </p>
@@ -193,12 +200,20 @@ export function AppShell({
               </p>
             </div>
             <Link
+              href="/pricing"
+              prefetch={false}
+              onClick={() => setMobileOpen(false)}
+              className="mt-1 flex min-h-12 items-center gap-3 rounded-xl px-3 font-semibold text-[var(--foreground)] hover:bg-[var(--muted)]"
+            >
+              <Sparkles aria-hidden="true" size={20} className="text-[#4338CA]" /> Upgrade to Pro
+            </Link>
+            <Link
               href="/settings"
               prefetch={false}
               onClick={() => setMobileOpen(false)}
-              className="mt-4 flex min-h-12 items-center gap-3 rounded-xl px-3 font-semibold text-[var(--foreground)] hover:bg-[var(--muted)]"
+              className="mt-1 flex min-h-12 items-center gap-3 rounded-xl px-3 font-semibold text-[var(--foreground)] hover:bg-[var(--muted)]"
             >
-              <Settings aria-hidden="true" size={20} /> Cài đặt
+              <Settings aria-hidden="true" size={20} /> Settings
             </Link>
             <LogoutButton className="mt-auto" />
           </aside>
@@ -206,7 +221,7 @@ export function AppShell({
       ) : null}
 
       <nav
-        aria-label="Điều hướng nhanh"
+        aria-label="Quick navigation"
         className="fixed right-0 bottom-0 left-0 z-40 border-t border-[var(--border)] bg-white/96 px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden"
       >
         <div className="mx-auto grid max-w-lg grid-cols-4 gap-1">
@@ -225,14 +240,14 @@ export function AppShell({
                 prefetch={false}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-semibold text-[var(--muted-foreground)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none",
-                  active && "text-[var(--primary)]",
+                  "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-semibold text-[var(--muted-foreground)] transition-colors focus-visible:ring-2 focus-visible:ring-[#4338CA] focus-visible:outline-none",
+                  active && "text-[#4338CA]",
                 )}
               >
                 <span
                   className={cn(
                     "grid size-8 place-items-center rounded-full",
-                    active && "bg-[var(--primary)] text-white",
+                    active && "bg-[#4338CA] text-white",
                   )}
                 >
                   <Icon aria-hidden="true" size={17} strokeWidth={1.9} />

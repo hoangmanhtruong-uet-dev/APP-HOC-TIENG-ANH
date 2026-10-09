@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { ReadingResult } from "@/components/reading/reading-result";
-import { getReadingPracticeResult } from "@/server/reading/content";
+import { ReadingResult } from "@/features/reading/components/reading-result";
+import { getReadingPracticeResult } from "@/features/reading/server/content";
 
 export const metadata: Metadata = { title: "Kết quả Reading" };
 

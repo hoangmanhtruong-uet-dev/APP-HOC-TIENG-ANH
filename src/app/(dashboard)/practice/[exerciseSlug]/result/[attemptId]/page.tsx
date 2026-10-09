@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { PracticeResultView } from "@/components/practice/practice-result";
+import { PracticeResultView } from "@/features/practice/components/practice-result";
 import { attemptRouteSchema } from "@/features/practice/schemas";
-import { getPracticeResult } from "@/server/practice/content";
+import { getPracticeResult } from "@/features/practice/server/content";
 
 export const metadata: Metadata = { title: "Kết quả luyện tập" };
 

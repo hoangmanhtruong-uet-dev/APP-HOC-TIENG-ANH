@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
-import { MockTestCatalog } from "@/components/mock-tests/mock-test-catalog";
-import { getMockTestCatalog } from "@/server/mock-tests/content";
+import { MockTestCatalog } from "@/features/mock-tests/components/mock-test-catalog";
+import { getMockTestCatalog } from "@/features/mock-tests/server/content";
 
 export const metadata: Metadata = { title: "Mock tests" };
 

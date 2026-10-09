@@ -11,11 +11,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import { LessonMarkdown } from "@/components/learning/lesson-markdown";
+import { LessonMarkdown } from "@/features/learning/components/lesson-markdown";
 import {
   getGrammarCatalog,
   getGrammarTopic,
-} from "@/server/learning/foundations";
+} from "@/features/learning/server/foundations";
 
 type PageProps = { params: Promise<{ slug: string }> };
 

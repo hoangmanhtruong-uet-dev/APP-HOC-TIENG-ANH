@@ -16,7 +16,7 @@ import {
   type SubmitWritingInput,
 } from "@/features/writing/schemas";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { requireCompletedOnboarding } from "@/server/onboarding/learner-profile";
+import { requireCompletedOnboarding } from "@/features/onboarding/server/learner-profile";
 import {
   buildWritingFeedbackPayload,
   classifyWritingAiError,
@@ -24,7 +24,7 @@ import {
   createWritingFeedbackSignature,
   generateWritingFeedback,
   getWritingAiConfiguration,
-} from "@/server/writing/ai-feedback";
+} from "@/features/writing/server/ai-feedback";
 
 export type WritingSaveState =
   | {
@@ -103,6 +103,9 @@ export async function saveWritingDraftAction(
   };
 }
 
+import { getUserSubscriptionStatus } from "@/lib/auth/subscription-guard";
+import { userFreeDailyQuota } from "@/lib/rate-limit";
+
 export async function submitWritingAction(input: SubmitWritingInput) {
   const parsed = submitWritingSchema.safeParse(input);
   if (!parsed.success) {
@@ -112,6 +115,18 @@ export async function submitWritingAction(input: SubmitWritingInput) {
     };
   }
   await requireCompletedOnboarding();
+  const { isPremium, userId } = await getUserSubscriptionStatus();
+
+  if (userId && !isPremium) {
+    const { success } = await userFreeDailyQuota.limit(`writing-${userId}`);
+    if (!success) {
+      return {
+        status: "error" as const,
+        message:
+          "Nâng cấp/Giới hạn: Bạn đã hết lượt nộp bài hôm nay (Tối đa 2 bài/ngày).",
+      };
+    }
+  }
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.rpc("submit_writing_submission", {
     p_submission_id: parsed.data.submissionId,

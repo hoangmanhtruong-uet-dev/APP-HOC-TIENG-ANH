@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { ListeningResult } from "@/components/listening/listening-result";
-import { getListeningPracticeResult } from "@/server/listening/content";
+import { ListeningResult } from "@/features/listening/components/listening-result";
+import { getListeningPracticeResult } from "@/features/listening/server/content";
 
 export const metadata: Metadata = { title: "Listening result" };
 

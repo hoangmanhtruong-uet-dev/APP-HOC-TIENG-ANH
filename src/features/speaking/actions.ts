@@ -16,12 +16,12 @@ import {
   type VerifySpeakingUploadInput,
 } from "@/features/speaking/schemas";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { requireCompletedOnboarding } from "@/server/onboarding/learner-profile";
+import { requireCompletedOnboarding } from "@/features/onboarding/server/learner-profile";
 import {
   createSpeakingSignature,
   getSpeakingPipelineSigningSecret,
   verifySpeakingAudio,
-} from "@/server/speaking/audio-verification";
+} from "@/features/speaking/server/audio-verification";
 
 export async function startSpeakingAction(formData: FormData) {
   const parsed = startSpeakingSchema.safeParse({
@@ -148,6 +148,9 @@ export async function verifySpeakingUploadAction(
   }
 }
 
+import { getUserSubscriptionStatus } from "@/lib/auth/subscription-guard";
+import { userFreeDailyQuota } from "@/lib/rate-limit";
+
 export async function submitSpeakingAction(input: SubmitSpeakingInput) {
   const parsed = submitSpeakingSchema.safeParse(input);
   if (!parsed.success)
@@ -156,6 +159,19 @@ export async function submitSpeakingAction(input: SubmitSpeakingInput) {
       message: "Không xác định được bài cần nộp.",
     };
   await requireCompletedOnboarding();
+  const { isPremium, userId } = await getUserSubscriptionStatus();
+
+  if (userId && !isPremium) {
+    const { success } = await userFreeDailyQuota.limit(`speaking-${userId}`);
+    if (!success) {
+      return {
+        status: "error" as const,
+        message:
+          "Nâng cấp/Giới hạn: Bạn đã hết lượt nộp bài hôm nay (Tối đa 2 bài/ngày).",
+      };
+    }
+  }
+
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.rpc("submit_speaking_attempt", {
     p_attempt_id: parsed.data.attemptId,

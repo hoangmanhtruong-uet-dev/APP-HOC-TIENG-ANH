@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { WritingRunner } from "@/components/writing/writing-runner";
-import { WritingStart } from "@/components/writing/writing-start";
+import { WritingRunner } from "@/features/writing/components/writing-runner";
+import { WritingStart } from "@/features/writing/components/writing-start";
 import { parseMockRunnerContext } from "@/features/mock-tests/schemas";
-import { getWritingPracticePage } from "@/server/writing/content";
+import { getWritingPracticePage } from "@/features/writing/server/content";
 
 export const metadata: Metadata = { title: "Luyện Writing" };
 

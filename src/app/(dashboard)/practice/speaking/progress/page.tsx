@@ -5,7 +5,7 @@ import Link from "next/link";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
-import { getRecentSpeakingAttempts } from "@/server/speaking/content";
+import { getRecentSpeakingAttempts } from "@/features/speaking/server/content";
 
 export const metadata: Metadata = { title: "Tiến độ Speaking" };
 

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { SpeakingRunner } from "@/components/speaking/speaking-runner";
-import { SpeakingStart } from "@/components/speaking/speaking-start";
+import { SpeakingRunner } from "@/features/speaking/components/speaking-runner";
+import { SpeakingStart } from "@/features/speaking/components/speaking-start";
 import { parseMockRunnerContext } from "@/features/mock-tests/schemas";
-import { getSpeakingPracticePage } from "@/server/speaking/content";
+import { getSpeakingPracticePage } from "@/features/speaking/server/content";
 
 export const metadata: Metadata = { title: "Luyện Speaking" };
 export default async function SpeakingPracticePage({

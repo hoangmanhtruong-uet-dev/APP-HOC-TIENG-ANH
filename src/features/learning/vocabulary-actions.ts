@@ -6,7 +6,7 @@ import { z } from "@/lib/validation/zod";
 
 import { learningSlugSchema } from "@/features/learning/schemas";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { requireCompletedOnboarding } from "@/server/onboarding/learner-profile";
+import { requireCompletedOnboarding } from "@/features/onboarding/server/learner-profile";
 
 const vocabularyReviewSchema = z.object({
   vocabularyEntryId: z.uuid(),

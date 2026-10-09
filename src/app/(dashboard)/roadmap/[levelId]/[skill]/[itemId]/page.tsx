@@ -15,7 +15,7 @@ import {
   ExerciseCard,
   PrimaryLink,
   RoadmapBreadcrumb,
-} from "@/components/roadmap/roadmap-shared";
+} from "@/features/roadmap/components/roadmap-shared";
 import {
   getRoadmapLesson,
   getRoadmapLevel,
@@ -28,7 +28,7 @@ import {
   type IELTSSkill,
   type RoadmapPractice,
 } from "@/content/ielts-roadmap";
-import { requireCompletedOnboarding } from "@/server/onboarding/learner-profile";
+import { requireCompletedOnboarding } from "@/features/onboarding/server/learner-profile";
 
 export const metadata: Metadata = { title: "Bài học theo lộ trình" };
 

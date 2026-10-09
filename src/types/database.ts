@@ -9,6 +9,24 @@
 export type Database = {
   private: {
     Tables: {
+      user_gamification: {
+        Row: { user_id: string; total_xp: number; streak_freezes_available: number; };
+        Insert: { user_id: string; total_xp?: number; streak_freezes_available?: number; };
+        Update: { user_id?: string; total_xp?: number; streak_freezes_available?: number; };
+        Relationships: [];
+      };
+      xp_events: {
+        Row: { id: string; user_id: string; amount: number; source: string; created_at: string; };
+        Insert: { id?: string; user_id: string; amount: number; source: string; created_at?: string; };
+        Update: { id?: string; user_id?: string; amount?: number; source?: string; created_at?: string; };
+        Relationships: [];
+      };
+      subscriptions: {
+        Row: { user_id: string; plan_id: string; status: string; current_period_end: string; };
+        Insert: { user_id: string; plan_id: string; status: string; current_period_end: string; };
+        Update: { user_id?: string; plan_id?: string; status?: string; current_period_end?: string; };
+        Relationships: [];
+      };
       exercise_answer_keys: {
         Row: {
           case_sensitive: boolean;
@@ -114,6 +132,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      award_xp: {
+        Args: { p_user_id: string; p_amount: number; p_source: string; };
+        Returns: void;
+      };
       completed_learner_exists: { Args: never; Returns: boolean };
       count_writing_words: { Args: { input_text: string }; Returns: number };
       exercise_set_is_accessible: {

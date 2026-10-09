@@ -9,15 +9,15 @@ import {
   type RequestSpeakingAiInput,
 } from "@/features/speaking/schemas";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { requireCompletedOnboarding } from "@/server/onboarding/learner-profile";
+import { requireCompletedOnboarding } from "@/features/onboarding/server/learner-profile";
 import {
   checksumTranscriptBundle,
   classifySpeakingAiError,
   generateSpeakingFeedback,
   getSpeakingAiConfiguration,
   transcribeSpeakingAudio,
-} from "@/server/speaking/ai-review";
-import { createSpeakingSignature } from "@/server/speaking/audio-verification";
+} from "@/features/speaking/server/ai-review";
+import { createSpeakingSignature } from "@/features/speaking/server/audio-verification";
 
 export async function requestSpeakingAiReviewAction(
   input: RequestSpeakingAiInput,

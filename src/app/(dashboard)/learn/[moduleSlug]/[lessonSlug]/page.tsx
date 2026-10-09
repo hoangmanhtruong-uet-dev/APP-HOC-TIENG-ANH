@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { LessonReader } from "@/components/learning/lesson-reader";
-import { getLessonReader } from "@/server/learning/content";
+import { LessonReader } from "@/features/learning/components/lesson-reader";
+import { getLessonReader } from "@/features/learning/server/content";
 
 export const metadata: Metadata = { title: "Bài học" };
 

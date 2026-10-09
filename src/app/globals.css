@@ -193,3 +193,28 @@ p {
     scroll-behavior: auto !important;
   }
 }
+
+
+@keyframes bell-fill { 0% { opacity: 0; } 25% { transform: rotate(25deg); } 50% { transform: rotate(-20deg) scale(1.2); } 75% { transform: rotate(15deg); } }
+
+/* Zen Mode (P1.2) */
+body.zen-mode {
+  overflow: hidden;
+}
+
+body.zen-mode header,
+body.zen-mode footer,
+body.zen-mode nav,
+body.zen-mode aside,
+body.zen-mode .no-zen {
+  display: none !important;
+}
+
+body.zen-mode main {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background-color: var(--background);
+  overflow-y: auto;
+  padding: 1rem;
+}

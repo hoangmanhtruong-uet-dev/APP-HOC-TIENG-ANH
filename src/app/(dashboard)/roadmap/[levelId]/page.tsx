@@ -13,7 +13,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { RoadmapBreadcrumb } from "@/components/roadmap/roadmap-shared";
+import { RoadmapBreadcrumb } from "@/features/roadmap/components/roadmap-shared";
 import {
   getRoadmapLevel,
   getSkillStage,
@@ -23,7 +23,7 @@ import {
   ROADMAP_SKILLS,
 } from "@/content/ielts-roadmap";
 import { getStarterWeeks } from "@/content/starter-roadmap";
-import { requireCompletedOnboarding } from "@/server/onboarding/learner-profile";
+import { requireCompletedOnboarding } from "@/features/onboarding/server/learner-profile";
 
 export const metadata: Metadata = {
   title: "Chi tiết lộ trình IELTS",

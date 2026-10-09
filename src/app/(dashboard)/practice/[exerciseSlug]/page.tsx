@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { PracticeRunner } from "@/components/practice/practice-runner";
-import { getPracticePage } from "@/server/practice/content";
+import { PracticeRunner } from "@/features/practice/components/practice-runner";
+import { getPracticePage } from "@/features/practice/server/content";
 
 export const metadata: Metadata = { title: "Luyện tập" };
 

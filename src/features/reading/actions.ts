@@ -12,7 +12,7 @@ import {
   type SubmitReadingPracticeInput,
 } from "@/features/reading/schemas";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { requireCompletedOnboarding } from "@/server/onboarding/learner-profile";
+import { requireCompletedOnboarding } from "@/features/onboarding/server/learner-profile";
 
 export type ReadingSaveState =
   | {
