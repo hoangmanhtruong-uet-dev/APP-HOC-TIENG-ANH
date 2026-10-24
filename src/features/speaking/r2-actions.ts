@@ -46,8 +46,7 @@ export async function saveR2AudioAction(
   const { account } = await requireCompletedOnboarding();
   const supabase = await import("@/lib/supabase/server").then(m => m.createSupabaseServerClient());
 
-  // @ts-expect-error: Next.js types haven't been regenerated to include finalize_r2_speaking_upload
-  const { data, error } = await supabase.rpc("finalize_r2_speaking_upload", {
+  const { data, error } = await (supabase as any).rpc("finalize_r2_speaking_upload", {
     p_attempt_id: attemptId,
     p_prompt_id: promptId,
     p_storage_path: fileKey,

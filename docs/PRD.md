@@ -88,41 +88,54 @@ Không dùng time-on-site làm thước đo thành công chính.
 - Dùng rule minh bạch trước ML phức tạp.
 - Không hy sinh quyền riêng tư để lấy analytics hoặc tiện vận hành.
 
-## 6. Phạm vi MVP
+## 6. Phạm vi launch (theo Plan Go-Live v1.0.2)
 
-### 6.1. Must-have
+Launch đầu tiên là **miễn phí**, không bật billing. AI feedback Writing/Speaking đang tắt (ENV-04/05). Billing (Phase 11) và AI feedback được bật sau private beta.
 
-| Epic              | Yêu cầu MVP                                                                                          |
-| ----------------- | ---------------------------------------------------------------------------------------------------- |
-| Auth & profile    | Register/login/logout/reset; profile; settings; protected routes                                     |
-| Goal & onboarding | Test type, band hiện tại/mục tiêu, exam date, time budget, study days, weak skills                   |
-| Planning          | Plan 4 tuần deterministic; tối đa 2 focus skills/tuần; daily tasks; reschedule/regenerate có version |
-| Dashboard Today   | Task hôm nay, continue draft, estimated time, progress tuần, streak cơ bản                           |
-| Content core      | Lesson/question/prompt có taxonomy, lifecycle và version snapshot                                    |
-| Vocabulary        | Notebook, tránh trùng, SRS đơn giản, review queue                                                    |
-| Reading           | Tối thiểu 3 dạng câu, timer, autosave, submit, score, review                                         |
-| Listening         | Tối thiểu 2 section, audio player, transcript chỉ mở sau submit                                      |
-| Writing           | Task 2 editor, word count, autosave, immutable submit, AI feedback, revision                         |
-| Speaking          | Part 2 recorder, private upload, transcript, feedback, delete flow                                   |
-| Error notebook    | Lỗi có source, evidence, correction, review state và next review                                     |
-| Progress          | Weekly summary, task completion, accuracy/mastery cơ bản                                             |
-| Admin             | CRUD draft, validate, review, publish/archive; question/prompt; job/error visibility                 |
-| Platform          | Feature flags, structured logs, error tracking, audit, CI và E2E critical paths                      |
+### 6.1. Bật khi launch (Must-have)
 
-### 6.2. Should-have sau khi core ổn
+| Epic              | Yêu cầu launch                                                                                       | Trạng thái |
+| ----------------- | ---------------------------------------------------------------------------------------------------- | ---------- |
+| Auth & profile    | Register/login/logout/reset; profile; settings; protected routes                                     | ✅ Sẵn sàng |
+| Goal & onboarding | Test type, band hiện tại/mục tiêu, exam date, time budget, study days, weak skills                   | ✅ Sẵn sàng |
+| Planning          | Plan 4 tuần deterministic; tối đa 2 focus skills/tuần; daily tasks; reschedule/regenerate có version | ✅ Sẵn sàng |
+| Dashboard Today   | Task hôm nay, continue draft, estimated time, progress tuần, streak cơ bản                           | ✅ Sẵn sàng |
+| Content core      | Lesson/question/prompt có taxonomy, lifecycle và version snapshot                                    | ⚠️ G1 đang soạn (~160 item) |
+| Vocabulary        | Notebook, tránh trùng, SRS đơn giản, review queue                                                    | ✅ Sẵn sàng |
+| Reading           | Tối thiểu 3 dạng câu, timer, autosave, submit, score, review                                         | ✅ Sẵn sàng |
+| Listening         | Tối thiểu 2 section, audio player, transcript chỉ mở sau submit                                      | ✅ Sẵn sàng |
+| Writing           | Task 2 editor, word count, autosave, immutable submit (AI feedback tắt)                              | ✅ Sẵn sàng |
+| Speaking          | Part 2 recorder, private upload, transcript (AI feedback tắt)                                        | ✅ Sẵn sàng |
+| Error notebook    | Lỗi có source, evidence, correction, review state và next review                                     | ✅ Sẵn sàng |
+| Progress          | Weekly summary, task completion, accuracy/mastery cơ bản                                             | ✅ Sẵn sàng |
+| Admin             | CRUD draft, validate, review, publish/archive; question/prompt; job/error visibility                 | ✅ Sẵn sàng |
+| Platform          | Feature flags, structured logs, error tracking, audit, CI và E2E critical paths                      | ✅ Sẵn sàng |
+| Mock test         | 1 mock test Academic hoàn chỉnh (4 section)                                                          | ✅ Sẵn sàng |
+| Gamification      | Streak/XP nhẹ (Phase 13)                                                                             | ✅ Sẵn sàng |
+
+### 6.2. Tắt / Để sau launch
+
+| Tính năng | Lý do | Kích hoạt khi |
+|-----------|-------|--------------|
+| Billing / Subscriptions (Phase 11) | Launch miễn phí trước, giữ code sau | Sau private beta, nếu cần bù chi phí hạ tầng |
+| AI Writing feedback | ENV-04, tắt theo thiết kế launch đầu | Sau eval gate đạt ngưỡng (KI-005) |
+| AI Speaking feedback | ENV-05, tắt theo thiết kế launch đầu | Sau upload/transcript ổn định |
+| IELTS General Training | Chỉ launch Academic | Sau khi có content GT riêng |
+
+### 6.3. Should-have sau khi core ổn
 
 - Diagnostic đủ 4 kỹ năng.
 - Weekly review tự động và plan adjustment.
 - Writing revision compare, Speaking retry compare.
 - Content import workflow và analytics nâng cao.
 
-### 6.3. Could-have sau MVP
+### 6.4. Could-have sau MVP
 
 - AI Tutor theo context hẹp.
 - PWA/offline nhẹ cho vocabulary và draft.
 - Text-to-Speech, admin analytics, leaderboard nhỏ.
 
-### 6.4. Won't-have trong MVP
+### 6.5. Won't-have trong MVP
 
 - Marketplace giáo viên, social network, livestream/video call.
 - Mobile native, realtime AI voice liên tục.

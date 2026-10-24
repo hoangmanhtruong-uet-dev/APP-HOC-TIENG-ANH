@@ -1,0 +1,510 @@
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap");
+
+.learn-scope {
+  --ink: #0C0E1D;
+  --panel: #141731;
+  --panel2: #1B1F40;
+  --line: #2B3060;
+  --text: #EEF0FF;
+  --mute: #98A0CF;
+  --indigo: #5B5FEF;
+  --indigo-hi: #7C80FF;
+  --mark: #F6E85C;
+  --ok: #5EE0A0;
+  --head: "Bricolage Grotesque", "Be Vietnam Pro", system-ui, sans-serif;
+  --body: "Be Vietnam Pro", system-ui, sans-serif;
+
+  background-color: var(--ink);
+  color: var(--text);
+  font-family: var(--body);
+  min-height: 100vh;
+}
+
+.learn-scope h1,
+.learn-scope h2,
+.learn-scope h3,
+.learn-scope .font-head {
+  font-family: var(--head);
+}
+
+.learn-scope .wrap {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 48px);
+}
+
+.learn-scope .pagehead {
+  padding: 40px 0 22px;
+}
+.learn-scope .pagehead h1 {
+  font: 800 clamp(30px, 4vw, 44px) / 1.05 var(--head);
+  letter-spacing: -0.035em;
+}
+.learn-scope .pagehead p {
+  color: var(--mute);
+  margin-top: 8px;
+}
+
+/* continue */
+.learn-scope .cont {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: center;
+  background: var(--indigo);
+  border-radius: 24px;
+  padding: 28px 30px;
+  position: relative;
+  overflow: hidden;
+}
+.learn-scope .cont::after {
+  content: "";
+  position: absolute;
+  right: -60px;
+  top: -70px;
+  width: 230px;
+  height: 230px;
+  border-radius: 50%;
+  border: 36px solid rgba(255, 255, 255, 0.07);
+  pointer-events: none;
+}
+.learn-scope .cont small {
+  font-weight: 600;
+  font-size: 13px;
+  opacity: 0.8;
+}
+.learn-scope .cont h2 {
+  font-size: clamp(24px, 3.2vw, 34px);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  margin: 6px 0 16px;
+}
+.learn-scope .cbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-weight: 600;
+  font-size: 14px;
+}
+.learn-scope .cbar .t {
+  width: min(300px, 50vw);
+  height: 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.22);
+  overflow: hidden;
+}
+.learn-scope .cbar .t i {
+  display: block;
+  height: 100%;
+  background: var(--mark);
+  border-radius: 8px;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.learn-scope .go {
+  background: var(--mark);
+  color: var(--ink);
+  font: 800 17px var(--head);
+  padding: 16px 28px;
+  border-radius: 14px;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  cursor: pointer;
+  border: 0;
+}
+.learn-scope .go:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(246, 232, 92, 0.28);
+}
+
+/* toolbar */
+.learn-scope .tools {
+  position: sticky;
+  top: 68px;
+  z-index: 10;
+  background: var(--ink);
+  padding: 18px 0 0;
+  margin-top: 26px;
+}
+.learn-scope .bar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.learn-scope .search {
+  flex: 1;
+  max-width: 460px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  height: 48px;
+  border-radius: 14px;
+  border: 1.5px solid var(--line);
+  background: var(--panel);
+  transition: border-color 0.15s;
+}
+.learn-scope .search:focus-within {
+  border-color: var(--indigo-hi);
+}
+.learn-scope .search svg {
+  flex: none;
+  color: var(--mute);
+}
+.learn-scope .search input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: 0;
+  outline: 0;
+  color: var(--text);
+  font: inherit;
+}
+.learn-scope .search input::placeholder {
+  color: var(--mute);
+}
+.learn-scope .search kbd {
+  font: 600 12px var(--body);
+  color: var(--mute);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1px 8px;
+}
+.learn-scope .fwrap {
+  position: relative;
+  margin-left: auto;
+}
+.learn-scope .fbtn {
+  height: 48px;
+  padding: 0 18px;
+  border-radius: 14px;
+  border: 1.5px solid var(--line);
+  background: var(--panel);
+  font-weight: 600;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s;
+  border-top: 1.5px solid var(--line);
+  border-bottom: 1.5px solid var(--line);
+  border-left: 1.5px solid var(--line);
+  border-right: 1.5px solid var(--line);
+}
+.learn-scope .fbtn:hover,
+.learn-scope .fbtn[aria-expanded="true"] {
+  border-color: var(--indigo-hi);
+}
+.learn-scope .fbtn b {
+  background: var(--mark);
+  color: var(--ink);
+  border-radius: 99px;
+  font-size: 12px;
+  padding: 0 8px;
+}
+.learn-scope .menu {
+  position: absolute;
+  right: 0;
+  top: 56px;
+  width: 230px;
+  background: var(--panel2);
+  border: 1.5px solid var(--line);
+  border-radius: 16px;
+  padding: 8px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  z-index: 20;
+}
+.learn-scope .menu[hidden] {
+  display: none;
+}
+.learn-scope .menu button {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  padding: 11px 12px;
+  border-radius: 10px;
+  color: var(--mute);
+  background: transparent;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.learn-scope .menu button:hover {
+  background: var(--panel);
+  color: var(--text);
+}
+.learn-scope .menu button[aria-checked="true"] {
+  color: var(--text);
+  font-weight: 600;
+}
+.learn-scope .menu button[aria-checked="true"]::after {
+  content: "✓";
+  color: var(--mark);
+}
+.learn-scope .tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-top: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.learn-scope .tabs::-webkit-scrollbar {
+  display: none;
+}
+.learn-scope .tab {
+  padding: 12px 16px;
+  color: var(--mute);
+  font-weight: 600;
+  white-space: nowrap;
+  position: relative;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.learn-scope .tab:hover {
+  color: var(--text);
+}
+.learn-scope .tab[aria-selected="true"] {
+  color: var(--text);
+}
+.learn-scope .tab[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: -1px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--mark);
+}
+.learn-scope .tab span {
+  font-size: 12px;
+  color: var(--mute);
+  background: var(--panel2);
+  padding: 0 8px;
+  border-radius: 99px;
+}
+
+/* sections */
+.learn-scope section.s {
+  margin-top: 40px;
+}
+.learn-scope .sh {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.learn-scope .sh h2 {
+  font: 800 24px var(--head);
+  letter-spacing: -0.025em;
+}
+.learn-scope .sh p {
+  color: var(--mute);
+  font-size: 14px;
+}
+.learn-scope .cards {
+  display: grid;
+  gap: 18px;
+}
+.learn-scope .cards.four {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+.learn-scope .cards.two {
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+}
+.learn-scope .card {
+  --a: var(--indigo-hi);
+  background: var(--panel);
+  border: 1.5px solid var(--line);
+  border-radius: 22px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.15s, transform 0.15s;
+  animation: learn-card-in 0.25s ease both;
+}
+@keyframes learn-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.learn-scope .card:hover {
+  border-color: var(--a);
+  transform: translateY(-3px);
+}
+.learn-scope .card .top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+.learn-scope .ic {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font: 800 17px var(--head);
+  color: var(--a);
+  background: color-mix(in srgb, var(--a) 15%, transparent);
+}
+.learn-scope .tag {
+  font: 700 10.5px var(--body);
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border-radius: 8px;
+  color: var(--a);
+  background: color-mix(in srgb, var(--a) 14%, transparent);
+}
+.learn-scope .card h3 {
+  font: 800 21px / 1.15 var(--head);
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+.learn-scope .card p {
+  color: var(--mute);
+  font-size: 14px;
+  flex: 1;
+  margin-bottom: 20px;
+}
+.learn-scope .meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13px;
+  color: var(--mute);
+  margin-bottom: 8px;
+}
+.learn-scope .meta b {
+  font: 800 22px var(--head);
+  color: var(--text);
+  letter-spacing: -0.03em;
+}
+.learn-scope .track {
+  height: 6px;
+  border-radius: 6px;
+  background: var(--panel2);
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+.learn-scope .track i {
+  display: block;
+  height: 100%;
+  background: var(--a);
+  border-radius: 6px;
+  min-width: 0;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.learn-scope .cta {
+  padding: 13px;
+  border-radius: 12px;
+  border: 1.5px solid var(--line);
+  font-weight: 700;
+  text-align: center;
+  transition: 0.15s;
+  color: inherit;
+  text-decoration: none;
+  display: block;
+}
+.learn-scope .card:hover .cta,
+.learn-scope .cta:focus-visible {
+  background: var(--a);
+  border-color: var(--a);
+  color: var(--ink);
+}
+
+/* horizontal card */
+.learn-scope .card.h {
+  flex-direction: row;
+  gap: 18px;
+  align-items: flex-start;
+}
+.learn-scope .card.h .body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.learn-scope .card.h .ic {
+  flex: none;
+}
+.learn-scope .card.h .tag {
+  align-self: flex-start;
+  margin-bottom: 8px;
+}
+.learn-scope .card.h .cta {
+  align-self: flex-start;
+  padding: 11px 20px;
+}
+
+/* empty state */
+.learn-scope .empty {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--mute);
+}
+.learn-scope .empty h2 {
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.learn-scope .empty button {
+  margin-top: 18px;
+  padding: 12px 22px;
+  border-radius: 12px;
+  background: var(--indigo);
+  color: var(--text);
+  font-weight: 700;
+  border: 0;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.learn-scope .empty button:hover {
+  background: var(--indigo-hi);
+}
+.learn-scope .foot {
+  height: 72px;
+}
+
+@media (max-width: 700px) {
+  .learn-scope .cont {
+    grid-template-columns: 1fr;
+  }
+  .learn-scope .cards.two {
+    grid-template-columns: 1fr;
+  }
+  .learn-scope .card.h {
+    flex-direction: column;
+  }
+  .learn-scope .search kbd {
+    display: none;
+  }
+  .learn-scope .fbtn span {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .learn-scope * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

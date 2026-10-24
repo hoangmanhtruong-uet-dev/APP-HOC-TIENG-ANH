@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ServerTimer } from "./server-timer";
 import { SubmitConfirmModal } from "./submit-confirm-modal";
@@ -71,6 +71,27 @@ export function GenericPracticeEngine({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Draft autosave
+  const [saveStatusText, setSaveStatusText] = useState<string>("");
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    if (!onSaveDraft) return;
+    const timer = setTimeout(async () => {
+      setSaveStatusText("saving...");
+      try {
+        const ok = await onSaveDraft(answers);
+        if (ok) setSaveStatusText("saved");
+      } catch {
+        setSaveStatusText("error");
+      }
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [answers, onSaveDraft]);
+
   const { status: saveStatus, forceSave } = useAutosaveDraft({
     attemptId,
     answers,
@@ -151,9 +172,15 @@ export function GenericPracticeEngine({
         
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm text-zinc-500">
-            {saveStatus === "saving" && <Loader2 className="w-4 h-4 animate-spin" />}
-            {saveStatus === "saved" && <span className="text-green-600 dark:text-green-500 flex items-center gap-1"><Save className="w-3.5 h-3.5"/> Đã lưu nháp</span>}
-            {saveStatus === "error" && <span className="text-red-500">Lỗi lưu nháp</span>}
+            {(saveStatus === "saving" || saveStatusText === "saving...") && <Loader2 className="w-4 h-4 animate-spin" />}
+            {saveStatusText ? (
+              <span className="text-emerald-600 font-medium">{saveStatusText}</span>
+            ) : (
+              <>
+                {saveStatus === "saved" && <span className="text-green-600 dark:text-green-500 flex items-center gap-1"><Save className="w-3.5 h-3.5"/> Đã lưu nháp</span>}
+                {saveStatus === "error" && <span className="text-red-500">Lỗi lưu nháp</span>}
+              </>
+            )}
           </div>
           
           <button
@@ -176,9 +203,9 @@ export function GenericPracticeEngine({
       <div className="flex-1 overflow-hidden grid lg:grid-cols-12 gap-6 p-4 md:p-6 bg-zinc-50 dark:bg-zinc-950">
         
         {/* Context / Passage Column */}
-        {contextContent && (
+        {(contextContent || renderSidePanel) && (
           <div className="lg:col-span-6 h-full overflow-y-auto bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
-            {contextContent}
+            {contextContent || renderSidePanel?.()}
           </div>
         )}
 

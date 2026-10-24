@@ -80,7 +80,7 @@ export const getLearnerAnalytics = cache(async (limit = 8) => {
       }
     : emptyOverview;
 
-  const skills: SkillProgress[] = skillsResult.data.flatMap((row) => {
+  const skills: SkillProgress[] = skillsResult.data.flatMap((row: any) => {
     if (!isAnalyticsSkill(row.skill)) return [];
     return [
       {
@@ -98,7 +98,7 @@ export const getLearnerAnalytics = cache(async (limit = 8) => {
     ];
   });
 
-  const recentActivity: RecentActivity[] = activityResult.data.map((row) => ({
+  const recentActivity: RecentActivity[] = activityResult.data.map((row: any) => ({
     activityType: row.activity_type,
     skill: row.skill,
     entityId: row.entity_id,
@@ -113,7 +113,7 @@ export const getLearnerAnalytics = cache(async (limit = 8) => {
       : null,
   }));
 
-  const mockTests: MockTestHistory[] = mockResult.data.map((row) => ({
+  const mockTests: MockTestHistory[] = mockResult.data.map((row: any) => ({
     sessionId: row.session_id,
     mockTestSlug: row.mock_test_slug,
     title: row.title,

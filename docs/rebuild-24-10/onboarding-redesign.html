@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IELTS Flow – Thiết lập hồ sơ học</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0C0E1D; --panel:#141731; --panel2:#1B1F40; --line:#2B3060;
+  --text:#EEF0FF; --mute:#98A0CF; --indigo:#5B5FEF; --indigo-hi:#7C80FF; --mark:#F6E85C; --ok:#5EE0A0;
+  --head:"Bricolage Grotesque","Be Vietnam Pro",system-ui,sans-serif;
+  --body:"Be Vietnam Pro",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:var(--ink);color:var(--text);font:400 15px/1.55 var(--body);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+:focus-visible{outline:2px solid var(--mark);outline-offset:3px;border-radius:8px}
+
+.app{min-height:100vh;display:flex;flex-direction:column}
+header{display:flex;align-items:center;justify-content:space-between;padding:18px clamp(16px,4vw,48px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px;font:800 20px var(--head);letter-spacing:-.02em}
+.logo{width:36px;height:36px;border-radius:10px;background:var(--indigo);display:grid;place-items:center;font-size:14px}
+.hr{display:flex;align-items:center;gap:20px;color:var(--mute);font-size:13px}
+.saved{display:flex;align-items:center;gap:8px}
+.saved i{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.hr button:hover{color:var(--text)}
+
+main{flex:1;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr);gap:clamp(24px,5vw,72px);max-width:1180px;width:100%;margin:0 auto;padding:clamp(24px,5vw,56px) clamp(16px,4vw,48px)}
+
+/* progress */
+.prog{display:flex;gap:6px;margin-bottom:12px}
+.prog span{flex:1;height:4px;border-radius:4px;background:var(--line);transition:background .3s}
+.prog span.done{background:var(--indigo)}
+.prog span.now{background:var(--mark)}
+.stepmeta{display:flex;justify-content:space-between;color:var(--mute);font-size:13px;margin-bottom:clamp(28px,6vh,56px)}
+.stepmeta b{color:var(--text);font-weight:600}
+
+/* step panel */
+.panel{animation:in .28s ease both}
+@keyframes in{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+h1{font:800 clamp(32px,4.6vw,52px)/1.04 var(--head);letter-spacing:-.035em;margin-bottom:14px;max-width:15ch}
+.lead{color:var(--mute);max-width:46ch;margin-bottom:32px}
+.mk{background:linear-gradient(transparent 58%,rgba(246,232,92,.9) 58% 92%,transparent 92%);color:var(--ink);padding:0 .12em;margin:0 -.06em;border-radius:2px}
+
+.opts{display:grid;gap:12px}
+.opts.two{grid-template-columns:1fr 1fr}
+.opt{text-align:left;padding:18px 20px;border:1.5px solid var(--line);border-radius:16px;background:var(--panel);transition:border-color .15s,background .15s,transform .15s}
+.opt:hover{border-color:var(--indigo-hi);transform:translateY(-2px)}
+.opt[aria-pressed=true]{border-color:var(--mark);background:var(--panel2)}
+.opt strong{display:block;font:700 17px var(--head);margin-bottom:2px}
+.opt small{color:var(--mute);font-size:13.5px}
+.opt .chk{float:right;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:12px;color:var(--ink)}
+.opt[aria-pressed=true] .chk{background:var(--mark);border-color:var(--mark)}
+
+.bands{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.band{padding:16px 0;text-align:center;border:1.5px solid var(--line);border-radius:14px;background:var(--panel);font:700 22px var(--head);transition:.15s}
+.band:hover{border-color:var(--indigo-hi);transform:translateY(-2px)}
+.band[aria-pressed=true]{background:var(--mark);color:var(--ink);border-color:var(--mark)}
+.band:disabled{opacity:.3;cursor:not-allowed;transform:none}
+.skip{margin-top:14px;color:var(--mute);font-size:14px;text-decoration:underline;text-underline-offset:4px}
+.skip[aria-pressed=true]{color:var(--mark)}
+.skip:hover{color:var(--text)}
+
+input[type=date]{width:100%;padding:18px 20px;border-radius:16px;border:1.5px solid var(--line);background:var(--panel);color:var(--text);font:600 18px var(--body);color-scheme:dark}
+input[type=date]:focus{border-color:var(--indigo-hi);outline:0}
+
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:28px}
+.day{padding:14px 0;border-radius:12px;border:1.5px solid var(--line);background:var(--panel);font-weight:600;text-align:center}
+.day[aria-pressed=true]{background:var(--indigo);border-color:var(--indigo)}
+.lbl{font:600 13px var(--body);color:var(--mute);margin-bottom:10px;display:flex;justify-content:space-between}
+.lbl b{color:var(--mark);font-size:15px}
+input[type=range]{width:100%;accent-color:var(--mark);height:28px}
+
+.sum{border:1.5px solid var(--line);border-radius:18px;background:var(--panel);overflow:hidden}
+.sum div{display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid var(--line)}
+.sum div:last-child{border:0}
+.sum span{color:var(--mute);font-size:14px}
+.sum b{font-weight:600;text-align:right}
+.sum button{margin-left:14px;color:var(--indigo-hi);font-size:13px}
+
+.nav{display:flex;gap:12px;margin-top:36px;align-items:center}
+.btn{padding:16px 28px;border-radius:14px;font:700 16px var(--head);background:var(--indigo);transition:.15s}
+.btn:hover:not(:disabled){background:var(--indigo-hi);transform:translateY(-1px)}
+.btn:disabled{background:var(--panel2);color:var(--mute);cursor:not-allowed}
+.btn.big{padding:18px 34px;font-size:18px}
+.back{padding:16px 18px;color:var(--mute)}
+.back:hover{color:var(--text)}
+.hint{color:var(--mute);font-size:13px;margin-left:auto}
+
+/* live plan card */
+aside{position:sticky;top:32px;align-self:start}
+.card{background:var(--panel);border:1.5px solid var(--line);border-radius:24px;padding:28px;position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:repeating-linear-gradient(90deg,var(--indigo) 0 14px,transparent 14px 20px)}
+.card h3{font:600 13px var(--body);color:var(--mute);margin-bottom:18px}
+.path{display:flex;align-items:baseline;gap:14px;font:800 clamp(52px,7vw,84px)/1 var(--head);letter-spacing:-.05em;margin-bottom:6px}
+.path em{font-style:normal;color:var(--mute);font-size:.5em}
+.path .t{color:var(--ink);background:var(--mark);padding:0 .1em;border-radius:6px}
+.path .ph{color:var(--line)}
+.pathsub{color:var(--mute);font-size:14px;margin-bottom:26px;min-height:22px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border-radius:14px;overflow:hidden;margin-bottom:22px}
+.stats div{background:var(--panel2);padding:14px 16px}
+.stats small{display:block;color:var(--mute);font-size:12.5px}
+.stats b{font:700 22px var(--head)}
+.stats b.ph{color:var(--line)}
+.meter{height:10px;border-radius:10px;background:var(--panel2);overflow:hidden;margin:8px 0 8px}
+.meter i{display:block;height:100%;width:0;background:var(--ok);border-radius:10px;transition:width .5s,background .3s}
+.verdict{font-size:13.5px;color:var(--mute);min-height:40px}
+.verdict.warn{color:var(--mark)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;min-height:30px}
+.chips span{padding:5px 12px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);font-size:13px}
+.note{margin-top:14px;font-size:12px;color:var(--mute);padding:0 6px}
+
+.done{text-align:left}
+.done .tick{width:64px;height:64px;border-radius:20px;background:var(--ok);color:var(--ink);display:grid;place-items:center;font-size:30px;margin-bottom:24px}
+
+@media(max-width:860px){
+  main{grid-template-columns:1fr}
+  aside{position:static;order:-1}
+  .card{padding:20px}.path{font-size:48px}
+  .stats,.chips,.note,.verdict{display:none}
+  .pathsub{margin:0}
+  .opts.two{grid-template-columns:1fr}
+  .hint{display:none}
+  .hr .saved span{display:none}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand"><div class="logo">IS</div>Indigo Scholar</div>
+    <div class="hr"><div class="saved"><i></i><span>Tự động lưu</span></div><button>Đăng xuất</button></div>
+  </header>
+  <main>
+    <section>
+      <div class="prog" id="prog"></div>
+      <div class="stepmeta"><span id="stepName"></span><span id="stepCount"></span></div>
+      <div id="stage"></div>
+    </section>
+    <aside aria-label="Lộ trình ước tính">
+      <div class="card">
+        <h3>Lộ trình của bạn</h3>
+        <div class="path" id="path"></div>
+        <div class="pathsub" id="pathsub"></div>
+        <div class="stats">
+          <div><small>Còn lại</small><b id="sWeeks" class="ph">–</b></div>
+          <div><small>Cần học tổng</small><b id="sHours" class="ph">–</b></div>
+          <div><small>Cần mỗi tuần</small><b id="sNeed" class="ph">–</b></div>
+          <div><small>Bạn dành mỗi tuần</small><b id="sHave" class="ph">–</b></div>
+        </div>
+        <div class="lbl"><span>Khả năng kịp mục tiêu</span></div>
+        <div class="meter"><i id="meter"></i></div>
+        <div class="verdict" id="verdict">Trả lời vài câu, lộ trình sẽ hiện ra ở đây.</div>
+        <div class="chips" id="chips"></div>
+      </div>
+      <p class="note">Ước tính theo quy ước phổ biến: khoảng 200 giờ học để tăng 1.0 band. Thực tế tuỳ mỗi người.</p>
+    </aside>
+  </main>
+</div>
+
+<script>
+const S={exam:null,cur:null,curSkip:false,tar:null,date:'',noDate:false,days:[0,1,2,3,4],hrs:1.5,skills:[]};
+const STEPS=['Bắt đầu','Bài thi','Hiện tại','Mục tiêu','Ngày thi','Lịch học','Kỹ năng','Xác nhận'];
+const DAYN=['T2','T3','T4','T5','T6','T7','CN'];
+const SK={L:['Listening','Nghe hiểu, bắt từ khoá'],R:['Reading','Đọc nhanh, quản lý thời gian'],W:['Writing','Task 1 và Task 2'],S:['Speaking','Phát âm, trôi chảy']};
+let step=0,fresh=true;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=n=>Number.isInteger(n)?n+'.0':String(n);
+const weeksLeft=()=>{if(!S.date)return null;const d=(new Date(S.date)-new Date())/864e5;return d>0?Math.max(1,Math.ceil(d/7)):0};
+const needHours=()=>(S.cur!=null&&S.tar!=null)?Math.max(0,(S.tar-S.cur)/.5*100):null;
+const haveWeek=()=>S.days.length*S.hrs;
+
+function valid(){
+  switch(step){
+    case 1:return !!S.exam;
+    case 2:return S.cur!=null||S.curSkip;
+    case 3:return S.tar!=null;
+    case 4:return S.noDate||weeksLeft()>0;
+    case 5:return S.days.length>0;
+    case 6:return S.skills.length>0;
+    default:return true;
+  }
+}
+function bandBtns(key,min,max,disabledFn){
+  let h='<div class="bands">';
+  for(let b=min;b<=max+.01;b+=.5)h+=`<button class="band" data-k="${key}" data-v="${b}" aria-pressed="${S[key]===b}" ${disabledFn&&disabledFn(b)?'disabled':''}>${fmt(b)}</button>`;
+  return h+'</div>';
+}
+const views=[
+()=>`<h1>Chào Trường, mình xếp <span class="mk">lộ trình</span> cho bạn nhé</h1>
+  <p class="lead">Bảy câu hỏi ngắn, khoảng 2 phút. Bên phải, lộ trình sẽ thành hình dần theo từng câu trả lời của bạn. Bạn có thể sửa lại bất cứ lúc nào trong Hồ sơ.</p>
+  <div class="nav"><button class="btn big" data-next>Bắt đầu thiết lập</button></div>`,
+()=>`<h1>Bạn thi dạng nào?</h1><p class="lead">Hai dạng có Writing và Reading khác nhau, nên mình cần biết để chọn đúng đề luyện.</p>
+  <div class="opts two">
+   <button class="opt" data-k="exam" data-v="ac" aria-pressed="${S.exam==='ac'}"><span class="chk">✓</span><strong>Academic</strong><small>Du học, đại học, sau đại học</small></button>
+   <button class="opt" data-k="exam" data-v="gt" aria-pressed="${S.exam==='gt'}"><span class="chk">✓</span><strong>General Training</strong><small>Định cư, làm việc, đi nước ngoài</small></button>
+  </div>`,
+()=>`<h1>Điểm hiện tại của bạn?</h1><p class="lead">Chọn band overall gần nhất, từ bài thi thật hoặc bài thi thử.</p>
+  ${bandBtns('cur',3.5,7.5)}
+  <button class="skip" data-skipcur aria-pressed="${S.curSkip}">Mình chưa thi bao giờ</button>`,
+()=>`<h1>Bạn muốn đạt band mấy?</h1><p class="lead">Mục tiêu phải cao hơn điểm hiện tại. Chọn mức bạn cần cho hồ sơ, không phải mức bạn nghĩ là dễ.</p>
+  ${bandBtns('tar',5,9,b=>S.cur!=null&&b<=S.cur)}`,
+()=>{const min=new Date(Date.now()+864e5).toISOString().slice(0,10);
+ return `<h1>Bao giờ bạn thi?</h1><p class="lead">Có ngày thi, mình mới tính được mỗi tuần bạn cần học bao nhiêu.</p>
+  <input type="date" id="date" min="${min}" value="${S.date}" ${S.noDate?'disabled':''} aria-label="Ngày thi">
+  <button class="skip" data-nodate aria-pressed="${S.noDate}">Mình chưa đặt lịch thi</button>`},
+()=>`<h1>Bạn học vào những ngày nào?</h1><p class="lead">Chọn ngày và thời lượng mỗi buổi bạn giữ được đều đặn.</p>
+  <div class="days">${DAYN.map((d,i)=>`<button class="day" data-day="${i}" aria-pressed="${S.days.includes(i)}">${d}</button>`).join('')}</div>
+  <div class="lbl"><span>Thời lượng mỗi buổi</span><b id="hv">${S.hrs} giờ</b></div>
+  <input type="range" id="hrs" min="0.5" max="4" step="0.5" value="${S.hrs}" aria-label="Giờ học mỗi buổi">`,
+()=>`<h1>Kỹ năng nào cần ưu tiên?</h1><p class="lead">Chọn những kỹ năng bạn thấy yếu nhất. Mình sẽ cho chúng nhiều thời gian hơn.</p>
+  <div class="opts two">${Object.entries(SK).map(([k,[n,d]])=>`<button class="opt" data-sk="${k}" aria-pressed="${S.skills.includes(k)}"><span class="chk">✓</span><strong>${n}</strong><small>${d}</small></button>`).join('')}</div>`,
+()=>{const w=weeksLeft();
+ return `<h1>Kiểm tra lại rồi vào học</h1><p class="lead">Mọi thứ đều sửa được sau này.</p>
+ <div class="sum">
+  <div><span>Bài thi</span><b>${S.exam==='ac'?'Academic':'General Training'}<button data-go="1">Sửa</button></b></div>
+  <div><span>Điểm hiện tại</span><b>${S.cur!=null?fmt(S.cur):'Chưa thi'}<button data-go="2">Sửa</button></b></div>
+  <div><span>Mục tiêu</span><b>${fmt(S.tar)}<button data-go="3">Sửa</button></b></div>
+  <div><span>Ngày thi</span><b>${S.noDate?'Chưa đặt lịch':new Date(S.date).toLocaleDateString('vi-VN')}<button data-go="4">Sửa</button></b></div>
+  <div><span>Lịch học</span><b>${S.days.map(i=>DAYN[i]).join(', ')} · ${S.hrs} giờ/buổi<button data-go="5">Sửa</button></b></div>
+  <div><span>Ưu tiên</span><b>${S.skills.map(k=>SK[k][0]).join(', ')}<button data-go="6">Sửa</button></b></div>
+ </div>
+ <div class="nav"><button class="btn big" data-finish>Hoàn tất và vào học</button><button class="back" data-back>Quay lại</button></div>`}
+];
+
+function render(){
+  $('prog').innerHTML=STEPS.map((_,i)=>`<span class="${i<step?'done':i===step?'now':''}"></span>`).join('');
+  $('stepName').innerHTML=`<b>${STEPS[step]}</b>`;
+  $('stepCount').textContent=`${step+1} / ${STEPS.length}`;
+  let html=views[step]();
+  if(step>0&&step<7){
+    html+=`<div class="nav">${step>0?'<button class="back" data-back>Quay lại</button>':''}<button class="btn" data-next ${valid()?'':'disabled'}>Tiếp tục</button><span class="hint">Enter để tiếp tục</span></div>`;
+  }
+  $('stage').innerHTML=`<div class="panel">${html}</div>`;
+  bind();paint();
+}
+function bind(){
+  const q=s=>document.querySelectorAll(s);
+  q('[data-next]').forEach(b=>b.onclick=()=>{if(valid()){step++;render()}});
+  q('[data-back]').forEach(b=>b.onclick=()=>{step--;render()});
+  q('[data-go]').forEach(b=>b.onclick=()=>{step=+b.dataset.go;render()});
+  q('[data-k]').forEach(b=>b.onclick=()=>{const v=b.dataset.v;S[b.dataset.k]=isNaN(v)?v:+v;
+    if(b.dataset.k==='cur')S.curSkip=false;
+    if(b.dataset.k==='tar'||b.dataset.k==='cur'){if(S.tar!=null&&S.cur!=null&&S.tar<=S.cur)S.tar=null}
+    render()});
+  q('[data-skipcur]').forEach(b=>b.onclick=()=>{S.curSkip=!S.curSkip;if(S.curSkip)S.cur=null;render()});
+  q('[data-nodate]').forEach(b=>b.onclick=()=>{S.noDate=!S.noDate;if(S.noDate)S.date='';render()});
+  q('[data-day]').forEach(b=>b.onclick=()=>{const i=+b.dataset.day;S.days=S.days.includes(i)?S.days.filter(x=>x!==i):[...S.days,i];render()});
+  q('[data-sk]').forEach(b=>b.onclick=()=>{const k=b.dataset.sk;S.skills=S.skills.includes(k)?S.skills.filter(x=>x!==k):[...S.skills,k];render()});
+  const d=$('date');if(d)d.onchange=()=>{S.date=d.value;render();$('date')&&$('date').focus()};
+  const h=$('hrs');if(h)h.oninput=()=>{S.hrs=+h.value;$('hv').textContent=S.hrs+' giờ';paint()};
+  q('[data-finish]').forEach(b=>b.onclick=finish);
+}
+function paint(){
+  const a=S.cur!=null?fmt(S.cur):(S.curSkip?'0.0':null),t=S.tar!=null?fmt(S.tar):null;
+  $('path').innerHTML=(S.cur!=null?`<span>${a}</span>`:`<span class="ph">${S.curSkip?'?':'–.–'}</span>`)+'<em>→</em>'+(t?`<span class="t">${t}</span>`:'<span class="ph">–.–</span>');
+  const w=weeksLeft(),nh=needHours(),hv=haveWeek();
+  $('pathsub').textContent=S.exam?(S.exam==='ac'?'IELTS Academic':'IELTS General Training'):'Chọn dạng bài thi để bắt đầu';
+  const set=(id,txt)=>{const e=$(id);e.textContent=txt??'–';e.classList.toggle('ph',txt==null)};
+  set('sWeeks',w>0?w+' tuần':(S.noDate?'Chưa đặt':null));
+  set('sHours',nh!=null?Math.round(nh)+' giờ':null);
+  const need=(nh!=null&&w>0)?nh/w:null;
+  set('sNeed',need!=null?need.toFixed(1)+' giờ':null);
+  set('sHave',step>=5||S.days.length?hv.toFixed(1)+' giờ':null);
+  const m=$('meter'),v=$('verdict');v.className='verdict';
+  if(need!=null&&step>=5){
+    const r=Math.min(1,hv/need);m.style.width=(r*100)+'%';
+    if(r>=1){m.style.background='var(--ok)';v.textContent='Lịch học hiện tại đủ để kịp mục tiêu.'}
+    else{m.style.background='var(--mark)';v.classList.add('warn');v.textContent=`Thiếu khoảng ${(need-hv).toFixed(1)} giờ mỗi tuần. Thêm một buổi hoặc kéo dài mỗi buổi để kịp.`}
+  }else if(nh!=null&&S.noDate){m.style.width='0';v.textContent=`Bạn cần khoảng ${Math.round(nh)} giờ học. Đặt ngày thi để biết nhịp học mỗi tuần.`}
+  else{m.style.width='0';v.textContent='Trả lời vài câu, lộ trình sẽ hiện ra ở đây.'}
+  $('chips').innerHTML=S.skills.map(k=>`<span>${SK[k][0]}</span>`).join('');
+}
+function finish(){
+  $('prog').innerHTML=STEPS.map(()=>'<span class="done"></span>').join('');
+  $('stepName').innerHTML='<b>Hoàn tất</b>';$('stepCount').textContent='';
+  $('stage').innerHTML=`<div class="panel done"><div class="tick">✓</div><h1>Lộ trình đã sẵn sàng</h1><p class="lead">Mình đã xếp bài học đầu tiên cho bạn, bắt đầu từ ${S.skills.map(k=>SK[k][0]).join(' và ')}.</p><div class="nav"><button class="btn big">Vào trang học</button></div></div>`;
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&step<7&&!['BUTTON','INPUT'].includes(document.activeElement.tagName)||e.key==='Enter'&&document.activeElement.tagName==='INPUT'&&document.activeElement.type==='date'){
+    if(step===0||valid()){step++;render()}}
+});
+render();
+</script>
+</body>
+</html>

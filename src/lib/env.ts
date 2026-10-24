@@ -28,6 +28,13 @@ const serverEnvSchema = z
     SPEAKING_PIPELINE_SIGNING_SECRET: z.string().trim().min(32).optional(),
     SUPABASE_SERVICE_ROLE_KEY: z.string().trim().min(1).optional(),
     STORAGE_CLEANUP_SECRET: z.string().trim().min(32).optional(),
+    BILLING_ENABLED: z
+      .string()
+      .optional()
+      .refine(
+        (val) => val === undefined || val === "true" || val === "false",
+        "BILLING_ENABLED phải là 'true' hoặc 'false' nếu được set.",
+      ),
   })
   .superRefine((env, context) => {
     if (env.NODE_ENV === "production" && !env.NEXT_PUBLIC_SUPPORT_EMAIL) {

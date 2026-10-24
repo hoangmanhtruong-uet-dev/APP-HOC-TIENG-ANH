@@ -1,0 +1,82 @@
+/* Dark Navy Theme for Listening Hub */
+
+.listening-theme-root {
+  background-color: #0C0E1D;
+  color: #EEF0FF;
+  min-height: 100dvh;
+}
+
+.listening-card {
+  background-color: #141731;
+  border: 1px solid #2B3060;
+  border-radius: 1.25rem;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.listening-card:hover {
+  background-color: #1B1F40;
+  border-color: #3F478C;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.5), 0 0 20px -5px rgba(99, 102, 241, 0.15);
+}
+
+.listening-card-subtle {
+  background-color: rgba(20, 23, 49, 0.6);
+  border: 1px solid rgba(43, 48, 96, 0.6);
+  backdrop-filter: blur(12px);
+  border-radius: 1.25rem;
+}
+
+.listening-badge-navy {
+  background-color: rgba(99, 102, 241, 0.15);
+  color: #A5B4FC;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.listening-badge-yellow {
+  background-color: rgba(246, 232, 92, 0.15);
+  color: #F6E85C;
+  border: 1px solid rgba(246, 232, 92, 0.3);
+}
+
+.listening-badge-emerald {
+  background-color: rgba(52, 211, 153, 0.15);
+  color: #34D399;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.listening-player-glass {
+  background: rgba(20, 23, 49, 0.92);
+  backdrop-filter: blur(20px);
+  border: 1px solid #2B3060;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 30px -5px rgba(99, 102, 241, 0.2);
+}
+
+@keyframes wave-bounce {
+  0%, 100% {
+    height: 15%;
+  }
+  50% {
+    height: 95%;
+  }
+}
+
+.wave-bar-anim {
+  animation: wave-bounce 1s ease-in-out infinite alternate;
+}
+
+/* Custom scrollbar for clean UI */
+.listening-theme-root ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.listening-theme-root ::-webkit-scrollbar-track {
+  background: #0C0E1D;
+}
+.listening-theme-root ::-webkit-scrollbar-thumb {
+  background: #2B3060;
+  border-radius: 9999px;
+}
+.listening-theme-root ::-webkit-scrollbar-thumb:hover {
+  background: #434C94;
+}

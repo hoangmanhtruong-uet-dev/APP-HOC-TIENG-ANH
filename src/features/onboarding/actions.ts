@@ -77,7 +77,7 @@ export async function saveOnboardingStepAction(
   const supabase = await createSupabaseServerClient();
   const { data: existing, error: readError } = await supabase
     .from("learner_profiles")
-    .select("onboarding_completed_at, onboarding_step")
+    .select("onboarding_completed_at, onboarding_step, test_type")
     .eq("user_id", account.user.id)
     .maybeSingle();
 
@@ -118,15 +118,19 @@ export async function saveOnboardingStepAction(
     update = { current_band: result.data.currentBand };
     nextStep = 4;
   } else if (step === 4) {
+    const rawGoal = stringValue(formData, "primaryGoal");
+    const inferredGoal =
+      rawGoal ||
+      (existing?.test_type === "general_training" ? "work" : "study_abroad");
     const result = targetStepSchema.safeParse({
       targetBand: stringValue(formData, "targetBand"),
-      primaryGoal: stringValue(formData, "primaryGoal"),
+      primaryGoal: inferredGoal,
     });
     if (!result.success)
       return validationError(requestId, result.error.flatten().fieldErrors);
     update = {
       target_band: result.data.targetBand,
-      primary_goal: result.data.primaryGoal,
+      primary_goal: (result.data.primaryGoal ?? inferredGoal) as any,
     };
     nextStep = 5;
   } else if (step === 5) {

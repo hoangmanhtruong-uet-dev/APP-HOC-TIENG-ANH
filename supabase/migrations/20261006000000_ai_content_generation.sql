@@ -23,5 +23,5 @@ CREATE POLICY "Admins can manage ai generated contents"
     ON public.ai_generated_contents 
     FOR ALL 
     TO authenticated 
-    USING (auth.uid() IN (SELECT user_id FROM auth.users)) -- Just placeholder for now, since we don't have an admin role table
-    WITH CHECK (auth.uid() IN (SELECT user_id FROM auth.users));
+    USING (auth.uid() IN (SELECT id FROM auth.users)) -- Placeholder: auth.users primary key is id
+    WITH CHECK (auth.uid() IN (SELECT id FROM auth.users));

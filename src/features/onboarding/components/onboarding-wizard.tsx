@@ -1,247 +1,87 @@
 "use client";
 
+import React, { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import {
-  Award,
-  BookOpen,
-  Briefcase,
-  Calendar,
-  Check,
   ChevronLeft,
   ChevronRight,
-  Clock,
-  Compass,
-  Flame,
-  Globe,
-  GraduationCap,
-  Headphones,
-  Mic,
-  PenTool,
-  ShieldCheck,
+  Check,
+  Calendar,
   Sparkles,
-  Zap,
+  ArrowRight,
+  LogOut,
 } from "lucide-react";
-import Link from "next/link";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
+import { LogoutButton } from "@/features/auth/components/logout-button";
+import { AppLogo } from "@/components/shared/app-logo";
 import {
   completeOnboardingAction,
-  type OnboardingActionState,
   saveOnboardingStepAction,
+  type OnboardingActionState,
 } from "@/features/onboarding/actions";
 import {
-  BAND_SCORES,
-  DAILY_STUDY_MINUTES,
-  GOAL_LABELS,
-  isPrimaryGoal,
-  isPrioritySkill,
-  isTestType,
   ONBOARDING_STEPS,
-  PRIMARY_GOALS,
   PRIORITY_SKILLS,
-  SKILL_LABELS,
+  type PrioritySkill,
   TEST_TYPE_LABELS,
+  SKILL_LABELS,
+  GOAL_LABELS,
+  type PrimaryGoal,
+  isTestType,
+  isPrimaryGoal,
 } from "@/features/onboarding/constants";
 import type { LearnerProfile } from "@/features/onboarding/server/learner-profile";
 import { cn } from "@/lib/utils";
 
-const initialActionState: OnboardingActionState = { status: "idle" };
 const FORM_STEP_COUNT = ONBOARDING_STEPS.length - 1;
-const ALL_PRIORITY_SKILLS = [...PRIORITY_SKILLS];
+const ALL_PRIORITY_SKILLS: PrioritySkill[] = [...PRIORITY_SKILLS];
+const DAY_NAMES = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 
-type WizardValues = {
-  testType: string;
-  currentBand: string;
-  targetBand: string;
-  primaryGoal: string;
-  targetExamDate: string;
-  dailyStudyMinutes: string;
-  studyDaysPerWeek: string;
-  prioritySkills: string[];
+const SKILL_DESCRIPTIONS: Record<string, { name: string; desc: string }> = {
+  listening: { name: "Listening", desc: "Nghe hiểu, bắt từ khoá" },
+  reading: { name: "Reading", desc: "Đọc nhanh, quản lý thời gian" },
+  writing: { name: "Writing", desc: "Task 1 và Task 2" },
+  speaking: { name: "Speaking", desc: "Phát âm, trôi chảy" },
 };
 
-function initialValues(profile: LearnerProfile | null): WizardValues {
-  return {
-    testType: profile?.test_type ?? "",
-    currentBand:
-      profile?.current_band === null || profile?.current_band === undefined
-        ? "unknown"
-        : String(profile.current_band),
-    targetBand:
-      profile?.target_band === null || profile?.target_band === undefined
-        ? ""
-        : String(profile.target_band),
-    primaryGoal: profile?.primary_goal ?? "",
-    targetExamDate: profile?.target_exam_date ?? "",
-    dailyStudyMinutes:
-      profile?.daily_study_minutes === null ||
-      profile?.daily_study_minutes === undefined
-        ? ""
-        : String(profile.daily_study_minutes),
-    studyDaysPerWeek:
-      profile?.study_days_per_week === null ||
-      profile?.study_days_per_week === undefined
-        ? ""
-        : String(profile.study_days_per_week),
-    prioritySkills: profile?.priority_skills.filter(isPrioritySkill) ?? [],
-  };
+function formatBand(n: number | null) {
+  if (n === null) return "–.–";
+  return Number.isInteger(n) ? `${n}.0` : String(n);
 }
 
-function formatExamDate(value: string) {
-  if (!value) return "Chưa xác định";
-  const date = new Date(value + "T00:00:00Z");
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(date);
-}
-
-function formatWeeklyStudyTime(minutesValue: string, daysValue: string) {
-  const weeklyMinutes = Number(minutesValue) * Number(daysValue);
+function formatWeeklyStudyTime(minutesValue: number, daysCount: number) {
+  const weeklyMinutes = minutesValue * daysCount;
   if (!Number.isFinite(weeklyMinutes) || weeklyMinutes <= 0) return null;
   const hours = Math.floor(weeklyMinutes / 60);
   const minutes = weeklyMinutes % 60;
-  const parts = [hours ? hours + " giờ" : "", minutes ? minutes + " phút" : ""];
+  const parts = [hours ? `${hours} giờ` : "", minutes ? `${minutes} phút` : ""];
   return parts.filter(Boolean).join(" ") + " mỗi tuần";
 }
 
-function getBandDescription(bandStr: string) {
-  if (bandStr === "unknown") return "Chưa làm bài thi hoặc chưa rõ trình độ hiện tại.";
-  const val = Number(bandStr);
-  if (val <= 4.5) return "B1 - Sơ trung cấp: Đã có nền tảng cơ bản, cần củng cố từ vựng & cấu trúc câu.";
-  if (val <= 5.5) return "B2 - Trung cấp: Giao tiếp ổn định, cần cải thiện phản xạ và độ chính xác.";
-  if (val <= 6.5) return "B2+ - Khá: Đạt chuẩn hầu hết đại học quốc tế, cần bứt phá các kỹ năng viết & nói.";
-  if (val <= 7.5) return "C1 - Cao cấp: Thành thạo tiếng Anh, tập trung tối ưu điểm Writing Task 2 & Speaking Part 3.";
-  return "C2 - Master: Trình độ xuất sắc, sẵn sàng cho các mục tiêu học thuật đỉnh cao.";
-}
-
-function SubmitStepButton() {
+function CompleteSubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button
       type="submit"
       disabled={pending}
-      className="group min-w-36 rounded-xl bg-[var(--primary)] text-white shadow-md transition-all hover:bg-[var(--primary-hover)] active:scale-[0.98]"
+      aria-label="Hoàn tất thiết lập"
+      className="btn big flex items-center justify-center gap-2 rounded-2xl bg-[var(--indigo)] px-7 py-4 text-base font-bold text-white transition-all hover:bg-[var(--indigo-hi)] active:scale-[0.98]"
     >
       {pending ? (
         <span className="flex items-center gap-2">
           <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-          Đang lưu…
-        </span>
-      ) : (
-        <>
-          Lưu và tiếp tục
-          <ChevronRight
-            aria-hidden="true"
-            size={18}
-            className="transition-transform duration-200 group-hover:translate-x-0.5"
-          />
-        </>
-      )}
-    </Button>
-  );
-}
-
-function CompleteButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button
-      type="submit"
-      size="lg"
-      disabled={pending}
-      className="group min-w-44 rounded-xl bg-emerald-600 font-bold text-white shadow-lg transition-all hover:bg-emerald-700 active:scale-[0.98]"
-    >
-      {pending ? (
-        <span className="flex items-center gap-2">
-          <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-          Đang hoàn tất…
+          Đang vào lớp học…
         </span>
       ) : (
         <>
           Hoàn tất thiết lập
-          <Check aria-hidden="true" size={19} className="transition-transform group-hover:scale-110" />
+          <Check aria-hidden="true" size={19} />
         </>
       )}
     </Button>
-  );
-}
-
-function FieldError({ id, errors }: { id: string; errors?: string[] }) {
-  if (!errors?.[0]) return null;
-  return (
-    <div
-      id={id}
-      className="mt-2.5 flex items-center gap-2 rounded-lg border border-[var(--destructive)]/30 bg-[var(--destructive-subtle)] px-3 py-2 text-xs font-semibold text-[var(--destructive)]"
-    >
-      <span className="size-1.5 rounded-full bg-[var(--destructive)]" />
-      {errors[0]}
-    </div>
-  );
-}
-
-function StepHeading({
-  title,
-  description,
-  badgeText,
-}: {
-  title: string;
-  description: string;
-  badgeText?: string;
-}) {
-  return (
-    <div className="space-y-2">
-      {badgeText ? (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--primary-subtle)] px-3 py-1 text-xs font-bold text-[var(--primary)] border border-[var(--primary-soft)]/60">
-          <Sparkles className="size-3" />
-          {badgeText}
-        </span>
-      ) : null}
-      <h1
-        id="onboarding-step-title"
-        tabIndex={-1}
-        className="rounded-md text-2xl font-black tracking-tight text-[var(--foreground)] sm:text-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-4"
-      >
-        {title}
-      </h1>
-      <p className="max-w-2xl text-sm leading-relaxed text-[var(--muted-foreground)] sm:text-base">
-        {description}
-      </p>
-    </div>
-  );
-}
-
-function FormFooter({
-  step,
-  onBack,
-  returnToReview,
-}: {
-  step: number;
-  onBack: () => void;
-  returnToReview: boolean;
-}) {
-  return (
-    <div className="mt-8 flex flex-col-reverse gap-3 border-t border-[var(--border)]/70 pt-6 sm:flex-row sm:items-center sm:justify-between">
-      <Button
-        type="button"
-        variant="ghost"
-        onClick={onBack}
-        className="rounded-xl text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
-      >
-        <ChevronLeft aria-hidden="true" size={18} />
-        Quay lại
-      </Button>
-      <input type="hidden" name="step" value={step} />
-      <input
-        type="hidden"
-        name="returnToReview"
-        value={returnToReview ? "true" : "false"}
-      />
-      <SubmitStepButton />
-    </div>
   );
 }
 
@@ -254,998 +94,982 @@ export function OnboardingWizard({
   displayName: string;
   initialStep?: number;
 }) {
-  const [step, setStep] = useState(() => {
-    const persistedStep = learnerProfile?.onboarding_step ?? 1;
-    return Math.min(8, Math.max(1, persistedStep, initialStep ?? 1));
+  const [step, setStep] = useState<number>(() => {
+    const persisted = learnerProfile?.onboarding_step ?? 1;
+    return Math.min(8, Math.max(1, persisted, initialStep ?? 1));
   });
-  const [values, setValues] = useState(() => initialValues(learnerProfile));
-  const [hasExamDate, setHasExamDate] = useState(
-    Boolean(learnerProfile?.target_exam_date),
-  );
-  const [editingFromReview, setEditingFromReview] = useState(false);
-  const [saveState, saveAction] = useActionState(
-    saveOnboardingStepAction,
-    initialActionState,
-  );
-  const [completeState, completeAction] = useActionState(
-    completeOnboardingAction,
-    initialActionState,
-  );
-  const previousRequestId = useRef<string | undefined>(undefined);
 
-  useEffect(() => {
-    if (
-      saveState.status === "success" &&
-      saveState.nextStep &&
-      saveState.requestId !== previousRequestId.current
-    ) {
-      previousRequestId.current = saveState.requestId;
-      setEditingFromReview(false);
-      setStep(saveState.nextStep);
-      requestAnimationFrame(() =>
-        document.getElementById("onboarding-step-title")?.focus(),
-      );
-    } else if (
-      saveState.status === "error" &&
-      saveState.requestId !== previousRequestId.current
-    ) {
-      previousRequestId.current = saveState.requestId;
-      requestAnimationFrame(() =>
-        document
-          .querySelector<HTMLElement>(
-            "[aria-invalid=true], [aria-describedby$='-error']",
-          )
-          ?.focus(),
-      );
+  const [exam, setExam] = useState<"academic" | "general_training" | null>(
+    (learnerProfile?.test_type as any) ?? null,
+  );
+  const [cur, setCur] = useState<number | null>(learnerProfile?.current_band ?? null);
+  const [curSkip, setCurSkip] = useState<boolean>(
+    learnerProfile?.current_band === null && (learnerProfile?.onboarding_step ?? 1) > 3,
+  );
+  const [tar, setTar] = useState<number | null>(learnerProfile?.target_band ?? null);
+  const [date, setDate] = useState<string>(learnerProfile?.target_exam_date ?? "");
+  const [noDate, setNoDate] = useState<boolean>(
+    learnerProfile?.target_exam_date === null && (learnerProfile?.onboarding_step ?? 1) > 5,
+  );
+  const [days, setDays] = useState<number[]>(() => {
+    if (learnerProfile?.study_days_per_week) {
+      return Array.from({ length: learnerProfile.study_days_per_week }, (_, i) => i);
     }
-  }, [saveState]);
-
-  function moveTo(nextStep: number, fromReview = false) {
-    setEditingFromReview(fromReview);
-    setStep(nextStep);
-    requestAnimationFrame(() =>
-      document.getElementById("onboarding-step-title")?.focus(),
-    );
-  }
-
-  function moveBack(previousStep: number) {
-    moveTo(editingFromReview ? 8 : previousStep);
-  }
-
-  function toggleSkill(skill: string, checked: boolean) {
-    setValues((current) => ({
-      ...current,
-      prioritySkills: checked
-        ? [...current.prioritySkills, skill]
-        : current.prioritySkills.filter((item) => item !== skill),
-    }));
-  }
-
-  const errors = saveState.fieldErrors;
-  const message = step === 8 ? completeState : saveState;
-  const completedFormSteps = Math.max(0, step - 1);
-  const progress = Math.round((completedFormSteps / FORM_STEP_COUNT) * 100);
-  const weeklyStudyTime = formatWeeklyStudyTime(
-    values.dailyStudyMinutes,
-    values.studyDaysPerWeek,
+    return [0, 1, 2, 3, 4];
+  });
+  const [hrs, setHrs] = useState<number>(
+    learnerProfile?.daily_study_minutes ? learnerProfile.daily_study_minutes / 60 : 1.5,
   );
+  const [skills, setSkills] = useState<PrioritySkill[]>(
+    (learnerProfile?.priority_skills as PrioritySkill[]) ?? [],
+  );
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[] | undefined>>({});
+  const [returnToReview, setReturnToReview] = useState(false);
+
+  const [completeState, completeAction] = useActionState(completeOnboardingAction, {
+    status: "idle",
+  });
+
+  // Calculations for Live Plan Card
+  const weeksLeft = () => {
+    if (!date || noDate) return null;
+    const d = (new Date(date).getTime() - new Date().getTime()) / 864e5;
+    return d > 0 ? Math.max(1, Math.ceil(d / 7)) : 0;
+  };
+
+  const needHours = () => {
+    if (cur == null && !curSkip) return null;
+    if (tar == null) return null;
+    const base = cur != null ? cur : 0.0;
+    const diff = tar - base;
+    return Math.max(0, (diff / 0.5) * 100);
+  };
+
+  const haveWeek = () => days.length * hrs;
+
+  const w = weeksLeft();
+  const nh = needHours();
+  const hv = haveWeek();
+  const needPerWeek = nh != null && w != null && w > 0 ? nh / w : null;
+  const ratio = needPerWeek != null && needPerWeek > 0 ? Math.min(1, hv / needPerWeek) : 0;
+
+  function isValid(): boolean {
+    switch (step) {
+      case 2:
+        return !!exam;
+      case 3:
+        return cur != null || curSkip;
+      case 4:
+        return tar != null && (cur == null || tar > cur);
+      case 5:
+        return noDate || (!!date && (weeksLeft() ?? 0) >= 0);
+      case 6:
+        return days.length > 0;
+      case 7:
+        return skills.length > 0;
+      default:
+        return true;
+    }
+  }
+
+  async function handleNext() {
+    setIsSaving(true);
+    setSaveError(null);
+    setFieldErrors({});
+
+    try {
+      const formData = new FormData();
+      formData.append("step", String(step));
+      if (returnToReview) formData.append("returnToReview", "true");
+      if (exam) formData.append("testType", exam);
+      if (step === 3 || cur !== null || curSkip) {
+        formData.append("currentBand", curSkip || cur === null ? "unknown" : String(cur));
+      }
+      if (tar) {
+        formData.append("targetBand", String(tar));
+        formData.append("primaryGoal", exam === "general_training" ? "work" : "study_abroad");
+      }
+      if (step === 5 || date || noDate) {
+        formData.append("targetExamDate", noDate ? "" : date);
+      }
+      if (step === 6 || days.length > 0) {
+        formData.append("dailyStudyMinutes", String(Math.round(hrs * 60)));
+        formData.append("studyDaysPerWeek", String(days.length));
+      }
+      if (skills.length > 0) {
+        for (const s of skills) formData.append("prioritySkills", s);
+      }
+
+      if (step >= 2 && step <= 7) {
+        const res = await saveOnboardingStepAction({ status: "idle" }, formData);
+        if (res.status === "error") {
+          setSaveError(res.message || "Hãy kiểm tra lại thông tin ở bước này.");
+          if (res.fieldErrors) setFieldErrors(res.fieldErrors);
+          setIsSaving(false);
+          setTimeout(() => {
+            const el = document.querySelector<HTMLElement>(
+              "[aria-invalid=true], [name=testType], [type=radio]",
+            );
+            el?.focus();
+          }, 0);
+          return;
+        }
+      }
+
+      if (returnToReview) {
+        setReturnToReview(false);
+        setStep(8);
+      } else {
+        setStep((prev) => Math.min(8, prev + 1));
+      }
+      setIsSaving(false);
+      setTimeout(() => {
+        document.getElementById("onboarding-step-title")?.focus();
+      }, 0);
+    } catch (err: any) {
+      console.error("Save step error:", err);
+      setIsSaving(false);
+    }
+  }
+
+  function handleBack() {
+    setSaveError(null);
+    setFieldErrors({});
+    if (step > 1) {
+      setStep((prev) => prev - 1);
+      setTimeout(() => {
+        document.getElementById("onboarding-step-title")?.focus();
+      }, 0);
+    }
+  }
+
+  function jumpToStep(targetStep: number) {
+    setReturnToReview(true);
+    setStep(targetStep);
+  }
+
+  // Keyboard shortcut: Enter to continue
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Enter" && step < 8) {
+        const target = e.target as HTMLElement | null;
+        if (target && target.tagName === "BUTTON") return;
+        if (target && target.tagName === "INPUT" && (target as HTMLInputElement).type !== "date") return;
+        if (isValid()) {
+          e.preventDefault();
+          handleNext();
+        }
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [step, exam, cur, curSkip, tar, date, noDate, days, hrs, skills, returnToReview]);
+
+  const completedFormSteps = Math.max(0, step - 1);
+  const minExamDate = new Date(Date.now() + 864e5).toISOString().slice(0, 10);
+  const weeklyTimeLabel = formatWeeklyStudyTime(Math.round(hrs * 60), days.length);
 
   return (
-    <div className="mx-auto w-full max-w-xl lg:max-w-2xl">
-      {/* Header Stepper Component */}
-      <div className="mb-6 rounded-2xl border border-[var(--border)]/70 bg-[var(--surface)] p-4 shadow-sm backdrop-blur-sm sm:p-5">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-[var(--primary-subtle)] text-[var(--primary)] font-bold text-xs">
-              {step === 1 ? "✨" : `${step - 1}/${FORM_STEP_COUNT}`}
-            </span>
-            <div>
-              <p className="text-[11px] font-extrabold tracking-widest text-[var(--primary)] uppercase">
-                Hồ sơ học tập
-              </p>
-              <p className="text-xs font-semibold text-[var(--foreground)] truncate max-w-[200px] sm:max-w-none">
-                {step === 1
-                  ? "Sẵn sàng bắt đầu"
-                  : ONBOARDING_STEPS[step - 1]}
-              </p>
-            </div>
+    <div className="flex min-h-screen flex-col bg-[var(--ink)] text-[var(--text)]">
+      {/* HEADER */}
+      <header className="sticky top-0 z-40 flex items-center justify-between border-b border-[var(--line)] bg-[var(--ink)]/90 px-4 py-4 backdrop-blur-md sm:px-8">
+        <div className="flex items-center gap-3">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-[var(--indigo)] font-extrabold text-white">
+            IS
           </div>
-          <span className="rounded-full bg-[var(--primary-subtle)] px-3 py-1 text-xs font-extrabold text-[var(--primary)] border border-[var(--primary-soft)]/50">
-            {progress}%
+          <span className="font-head text-lg font-extrabold tracking-tight text-[var(--text)] sm:text-xl">
+            Indigo Scholar
           </span>
         </div>
 
-        {/* Visual Progress Bar */}
-        <div
-          className="mt-4 h-2.5 overflow-hidden rounded-full bg-[var(--muted)] p-0.5"
-          role="progressbar"
-          aria-label="Tiến độ thiết lập hồ sơ học tập"
-          aria-valuemin={0}
-          aria-valuemax={FORM_STEP_COUNT}
-          aria-valuenow={completedFormSteps}
-        >
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-[var(--primary)] to-[var(--accent)] transition-all duration-500 ease-out shadow-xs"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-
-        {/* Step Indicator Dots */}
-        <div className="mt-3 hidden sm:flex items-center justify-between px-1">
-          {ONBOARDING_STEPS.map((stepName, idx) => {
-            const stepNum = idx + 1;
-            const isDone = stepNum < step;
-            const isCurrent = stepNum === step;
-            return (
-              <div
-                key={stepName}
-                className={cn(
-                  "flex items-center gap-1 text-[11px] font-semibold transition-colors",
-                  isCurrent
-                    ? "text-[var(--primary)] font-extrabold"
-                    : isDone
-                      ? "text-[var(--foreground)]"
-                      : "text-[var(--muted-foreground)]/60",
-                )}
-              >
-                <span
-                  className={cn(
-                    "flex size-4 items-center justify-center rounded-full text-[9px]",
-                    isCurrent
-                      ? "bg-[var(--primary)] text-white ring-2 ring-[var(--primary-soft)]"
-                      : isDone
-                        ? "bg-[var(--primary-subtle)] text-[var(--primary)] font-bold"
-                        : "bg-[var(--muted)] text-[var(--muted-foreground)]",
-                  )}
-                >
-                  {isDone ? "✓" : stepNum}
-                </span>
-                <span className="hidden md:inline text-[10px]">{stepName}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Main Form Container Card */}
-      <section
-        aria-labelledby="onboarding-step-title"
-        className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 shadow-[0_20px_60px_rgba(var(--shadow-color)/0.08)] sm:p-9 transition-all duration-300"
-      >
-        {/* Accent Bar at top of card */}
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[var(--primary)] via-[var(--accent)] to-indigo-400" />
-
-        {/* STEP 1: WELCOME INTRO */}
-        {step === 1 ? (
-          <div className="flex flex-col justify-center py-4 text-center sm:py-6">
-            <div className="relative mx-auto mb-6 flex size-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-[var(--primary)] to-[var(--accent)] text-white shadow-lg shadow-[var(--primary)]/20 transition-transform duration-300 hover:scale-105">
-              <Sparkles aria-hidden="true" size={30} strokeWidth={1.8} />
-              <div className="absolute -inset-1 -z-10 rounded-2xl bg-[var(--primary)]/20 blur-md" />
-            </div>
-
-            <StepHeading
-              badgeText="Chào mừng bạn đến với IELTS Flow"
-              title={`Chào ${displayName || "bạn"}, hãy thiết lập hồ sơ học của bạn`}
-              description="Khoảng 2 phút để IELTS Flow hiểu loại bài thi, mục tiêu và quỹ thời gian của bạn. Mỗi bước được lưu riêng để bạn có thể tiếp tục sau."
-            />
-
-            {/* Feature Badges Grid */}
-            <div className="mt-8 grid gap-3 text-left sm:grid-cols-3">
-              <div className="rounded-2xl border border-[var(--border)]/70 bg-[var(--surface)] p-4 shadow-xs">
-                <div className="flex size-9 items-center justify-center rounded-xl bg-[var(--primary-subtle)] text-[var(--primary)] mb-2">
-                  <Zap size={18} />
-                </div>
-                <p className="text-xs font-bold text-[var(--foreground)]">⚡ Nhanh chóng</p>
-                <p className="mt-1 text-[11px] text-[var(--muted-foreground)]">Chỉ mất 2 phút thiết lập đơn giản</p>
-              </div>
-
-              <div className="rounded-2xl border border-[var(--border)]/70 bg-[var(--surface)] p-4 shadow-xs">
-                <div className="flex size-9 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 mb-2">
-                  <Compass size={18} />
-                </div>
-                <p className="text-xs font-bold text-[var(--foreground)]">🎯 Đúng mục tiêu</p>
-                <p className="mt-1 text-[11px] text-[var(--muted-foreground)]">Tự động chọn lộ trình bài học</p>
-              </div>
-
-              <div className="rounded-2xl border border-[var(--border)]/70 bg-[var(--surface)] p-4 shadow-xs">
-                <div className="flex size-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 mb-2">
-                  <ShieldCheck size={18} />
-                </div>
-                <p className="text-xs font-bold text-[var(--foreground)]">🔒 Lưu tự động</p>
-                <p className="mt-1 text-[11px] text-[var(--muted-foreground)]">Thay đổi bất kỳ lúc nào trong Hồ sơ</p>
-              </div>
-            </div>
-
-            <div className="mt-6 rounded-2xl border border-[var(--border)]/80 bg-[var(--primary-subtle)]/40 p-4 text-left text-xs leading-relaxed text-[var(--muted-foreground)] sm:text-sm">
-              💡 <strong>IELTS Flow</strong> dùng thông tin này để sắp xếp nội dung, nhịp học và kỹ năng cần ưu tiên. Bạn có thể thay đổi bất cứ lúc nào trong Hồ sơ.
-            </div>
-
-            <Button asChild size="lg" className="mt-8 w-full rounded-2xl bg-[var(--primary)] text-white shadow-lg transition-all hover:bg-[var(--primary-hover)] active:scale-[0.98]">
-              <Link
-                href="/onboarding?step=2"
-                onClick={(event) => {
-                  event.preventDefault();
-                  moveTo(2);
-                }}
-                className="flex items-center justify-center gap-2 text-base font-bold"
-              >
-                Bắt đầu thiết lập
-                <ChevronRight aria-hidden="true" size={20} />
-              </Link>
-            </Button>
-          </div>
-        ) : null}
-
-        {/* STEP 2: TEST TYPE */}
-        {step === 2 ? (
-          <form action={saveAction} noValidate>
-            <StepHeading
-              badgeText="Bước 1 / 6"
-              title="Bạn đang chuẩn bị cho loại bài thi nào?"
-              description="Academic và General Training có phần Reading, Writing khác nhau nên cần xác định ngay từ đầu."
-            />
-
-            <fieldset className="mt-7 grid gap-4 sm:grid-cols-2">
-              <legend className="sr-only">Loại bài thi IELTS</legend>
-              {Object.entries(TEST_TYPE_LABELS).map(([value, label]) => {
-                const isSelected = values.testType === value;
-                return (
-                  <label
-                    key={value}
-                    className={cn(
-                      "group relative flex cursor-pointer flex-col justify-between rounded-2xl border p-5 transition-all duration-200 focus-within:ring-2 focus-within:ring-[var(--ring)] focus-within:ring-offset-2",
-                      isSelected
-                        ? "border-[var(--primary)] bg-[var(--primary-subtle)]/70 shadow-md ring-2 ring-[var(--primary)]/30"
-                        : "border-[var(--border-strong)] bg-[var(--surface)] hover:border-[var(--primary)]/60 hover:shadow-xs",
-                    )}
-                  >
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <div
-                          className={cn(
-                            "flex size-11 items-center justify-center rounded-xl transition-colors",
-                            isSelected
-                              ? "bg-[var(--primary)] text-white"
-                              : "bg-[var(--muted)] text-[var(--muted-foreground)] group-hover:bg-[var(--primary-subtle)] group-hover:text-[var(--primary)]",
-                          )}
-                        >
-                          {value === "academic" ? (
-                            <GraduationCap size={22} />
-                          ) : (
-                            <Briefcase size={22} />
-                          )}
-                        </div>
-                        <input
-                          type="radio"
-                          name="testType"
-                          value={value}
-                          checked={isSelected}
-                          onChange={() =>
-                            setValues((current) => ({ ...current, testType: value }))
-                          }
-                          aria-describedby={
-                            errors?.testType?.[0] ? "testType-error" : undefined
-                          }
-                          className="size-5 accent-[var(--primary)]"
-                        />
-                      </div>
-                      <span className="block text-base font-extrabold text-[var(--foreground)]">
-                        {label}
-                      </span>
-                      <span className="mt-1.5 block text-xs leading-relaxed text-[var(--muted-foreground)]">
-                        {value === "academic"
-                          ? "Phù hợp mục tiêu đại học, sau đại học hoặc đăng ký nghề nghiệp."
-                          : "Phù hợp mục tiêu định cư hoặc đào tạo dưới bậc đại học."}
-                      </span>
-                    </div>
-
-                    <div className="mt-4 pt-3 border-t border-[var(--border)]/50">
-                      <span
-                        className={cn(
-                          "inline-block rounded-full px-2.5 py-0.5 text-[11px] font-bold",
-                          isSelected
-                            ? "bg-[var(--primary)] text-white"
-                            : "bg-[var(--muted)] text-[var(--muted-foreground)]",
-                        )}
-                      >
-                        {value === "academic" ? "Phổ biến nhất" : "Định cư / Đào tạo"}
-                      </span>
-                    </div>
-                  </label>
-                );
-              })}
-            </fieldset>
-
-            <FieldError id="testType-error" errors={errors?.testType} />
-            <FormFooter
-              step={2}
-              onBack={() => moveBack(1)}
-              returnToReview={editingFromReview}
-            />
-          </form>
-        ) : null}
-
-        {/* STEP 3: CURRENT BAND */}
-        {step === 3 ? (
-          <form action={saveAction} noValidate>
-            <StepHeading
-              badgeText="Bước 2 / 6"
-              title="Band hiện tại của bạn là bao nhiêu?"
-              description="Chọn kết quả gần nhất. Nếu chưa từng thi hoặc chưa làm bài đánh giá, bạn có thể chọn chưa xác định."
-            />
-
-            <div className="mt-7 space-y-6">
-              {/* Bound HTML Select for Form Action & Tests */}
-              <div>
-                <label htmlFor="currentBand" className="block text-sm font-bold text-[var(--foreground)]">
-                  Band hiện tại
-                </label>
-                <select
-                  id="currentBand"
-                  name="currentBand"
-                  value={values.currentBand}
-                  onChange={(event) =>
-                    setValues((current) => ({ ...current, currentBand: event.target.value }))
-                  }
-                  aria-invalid={Boolean(errors?.currentBand?.[0])}
-                  aria-describedby={errors?.currentBand?.[0] ? "currentBand-error" : undefined}
-                  className="mt-2 h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm font-semibold focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
-                >
-                  <option value="unknown">Chưa xác định</option>
-                  {BAND_SCORES.map((band) => (
-                    <option key={band} value={band}>
-                      {band.toFixed(1)}
-                    </option>
-                  ))}
-                </select>
-                <FieldError id="currentBand-error" errors={errors?.currentBand} />
-              </div>
-
-              {/* Interactive Visual Quick Picker Grid */}
-              <div>
-                <p className="text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider mb-2.5">
-                  Chọn nhanh trình độ
-                </p>
-                <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
-                  <button
-                    type="button"
-                    onClick={() => setValues((c) => ({ ...c, currentBand: "unknown" }))}
-                    className={cn(
-                      "col-span-2 sm:col-span-1 rounded-xl border py-2.5 px-3 text-xs font-bold transition-all",
-                      values.currentBand === "unknown"
-                        ? "border-[var(--primary)] bg-[var(--primary)] text-white shadow-xs"
-                        : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--foreground)] hover:border-[var(--primary)]/60",
-                    )}
-                  >
-                    Chưa xác định
-                  </button>
-                  {BAND_SCORES.map((band) => {
-                    const strVal = String(band);
-                    const isSelected = values.currentBand === strVal;
-                    return (
-                      <button
-                        key={band}
-                        type="button"
-                        onClick={() => setValues((c) => ({ ...c, currentBand: strVal }))}
-                        className={cn(
-                          "rounded-xl border py-2.5 text-center text-sm font-bold transition-all",
-                          isSelected
-                            ? "border-[var(--primary)] bg-[var(--primary)] text-white shadow-xs scale-[1.03]"
-                            : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--foreground)] hover:border-[var(--primary)]/60",
-                        )}
-                      >
-                        {band.toFixed(1)}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Dynamic Band Description Card */}
-              <div className="rounded-2xl border border-[var(--primary-soft)] bg-[var(--primary-subtle)] p-4">
-                <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-[var(--primary)]">
-                  <BookOpen size={16} />
-                  <span>Đánh giá trình độ</span>
-                </div>
-                <p className="mt-2 text-xs font-medium leading-relaxed text-[var(--foreground)] sm:text-sm">
-                  {getBandDescription(values.currentBand)}
-                </p>
-              </div>
-            </div>
-
-            <FormFooter
-              step={3}
-              onBack={() => moveBack(2)}
-              returnToReview={editingFromReview}
-            />
-          </form>
-        ) : null}
-
-        {/* STEP 4: TARGET BAND & PRIMARY GOAL */}
-        {step === 4 ? (
-          <form action={saveAction} noValidate>
-            <StepHeading
-              badgeText="Bước 3 / 6"
-              title="Bạn muốn đạt band nào và để làm gì?"
-              description="Mục tiêu rõ ràng giúp IELTS Flow định hướng đúng mức độ và kỹ năng cần tập trung."
-            />
-
-            <div className="mt-7 space-y-6">
-              <div className="grid gap-6 md:grid-cols-2">
-                <div>
-                  <label htmlFor="targetBand" className="block text-sm font-bold text-[var(--foreground)]">
-                    Band mục tiêu
-                  </label>
-                  <select
-                    id="targetBand"
-                    name="targetBand"
-                    value={values.targetBand}
-                    onChange={(event) =>
-                      setValues((current) => ({ ...current, targetBand: event.target.value }))
-                    }
-                    aria-invalid={Boolean(errors?.targetBand?.[0])}
-                    aria-describedby={errors?.targetBand?.[0] ? "targetBand-error" : undefined}
-                    className="mt-2 h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm font-semibold focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
-                  >
-                    <option value="">Chọn band mục tiêu</option>
-                    {BAND_SCORES.map((band) => (
-                      <option key={band} value={band}>
-                        {band.toFixed(1)}
-                      </option>
-                    ))}
-                  </select>
-                  <FieldError id="targetBand-error" errors={errors?.targetBand} />
-                </div>
-
-                <div>
-                  <label htmlFor="primaryGoal" className="block text-sm font-bold text-[var(--foreground)]">
-                    Mục tiêu chính
-                  </label>
-                  <select
-                    id="primaryGoal"
-                    name="primaryGoal"
-                    value={values.primaryGoal}
-                    onChange={(event) =>
-                      setValues((current) => ({ ...current, primaryGoal: event.target.value }))
-                    }
-                    aria-invalid={Boolean(errors?.primaryGoal?.[0])}
-                    aria-describedby={errors?.primaryGoal?.[0] ? "primaryGoal-error" : undefined}
-                    className="mt-2 h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm font-semibold focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
-                  >
-                    <option value="">Chọn mục tiêu</option>
-                    {PRIMARY_GOALS.map((goal) => (
-                      <option key={goal} value={goal}>
-                        {GOAL_LABELS[goal]}
-                      </option>
-                    ))}
-                  </select>
-                  <FieldError id="primaryGoal-error" errors={errors?.primaryGoal} />
-                </div>
-              </div>
-
-              {/* Visual Goal Choice Cards */}
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-2.5">
-                  Chọn nhanh mục tiêu học
-                </p>
-                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-                  {PRIMARY_GOALS.map((goal) => {
-                    const isSelected = values.primaryGoal === goal;
-                    const goalIcons: Record<string, React.ComponentType<{ className?: string }>> = {
-                      university: GraduationCap,
-                      graduation: Award,
-                      study_abroad: Globe,
-                      work: Briefcase,
-                      immigration: Compass,
-                      personal_development: Zap,
-                      other: Sparkles,
-                    };
-                    const GoalIcon = goalIcons[goal] || Award;
-
-                    return (
-                      <button
-                        key={goal}
-                        type="button"
-                        onClick={() => setValues((c) => ({ ...c, primaryGoal: goal }))}
-                        className={cn(
-                          "flex flex-col items-center justify-center rounded-2xl border p-3 text-center transition-all",
-                          isSelected
-                            ? "border-[var(--primary)] bg-[var(--primary-subtle)] text-[var(--primary)] font-bold shadow-xs ring-2 ring-[var(--primary)]/30"
-                            : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--foreground)] hover:border-[var(--primary)]/60",
-                        )}
-                      >
-                        <GoalIcon className={cn("size-5 mb-1.5", isSelected ? "text-[var(--primary)]" : "text-[var(--muted-foreground)]")} />
-                        <span className="text-xs font-bold leading-tight">{GOAL_LABELS[goal]}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <FormFooter
-              step={4}
-              onBack={() => moveBack(3)}
-              returnToReview={editingFromReview}
-            />
-          </form>
-        ) : null}
-
-        {/* STEP 5: TARGET EXAM DATE */}
-        {step === 5 ? (
-          <form action={saveAction} noValidate>
-            <StepHeading
-              badgeText="Bước 4 / 6"
-              title="Bạn dự kiến thi khi nào?"
-              description="Ngày thi là tùy chọn. Bạn có thể bổ sung hoặc thay đổi sau trong hồ sơ."
-            />
-
-            <div className="mt-7 max-w-md space-y-5">
-              {hasExamDate ? (
-                <div>
-                  <label
-                    htmlFor="targetExamDate"
-                    className="block text-sm font-bold text-[var(--foreground)]"
-                  >
-                    Ngày thi dự kiến
-                  </label>
-                  <div className="relative mt-2">
-                    <input
-                      id="targetExamDate"
-                      name="targetExamDate"
-                      type="date"
-                      value={values.targetExamDate}
-                      onChange={(event) =>
-                        setValues((current) => ({
-                          ...current,
-                          targetExamDate: event.target.value,
-                        }))
-                      }
-                      aria-invalid={Boolean(errors?.targetExamDate?.[0])}
-                      aria-describedby={
-                        errors?.targetExamDate?.[0]
-                          ? "targetExamDate-error"
-                          : undefined
-                      }
-                      className="h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-4 text-sm font-semibold focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
-                    />
-                  </div>
-                  <FieldError
-                    id="targetExamDate-error"
-                    errors={errors?.targetExamDate}
-                  />
-
-                  {/* Preset Shortcuts */}
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {[
-                      { label: "Trong 3 tháng", months: 3 },
-                      { label: "Trong 6 tháng", months: 6 },
-                      { label: "Trong 1 năm", months: 12 },
-                    ].map((preset) => (
-                      <button
-                        key={preset.label}
-                        type="button"
-                        onClick={() => {
-                          const date = new Date();
-                          date.setMonth(date.getMonth() + preset.months);
-                          const formatted = date.toISOString().split("T")[0];
-                          setValues((c) => ({ ...c, targetExamDate: formatted }));
-                        }}
-                        className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1 text-xs font-semibold text-[var(--muted-foreground)] hover:border-[var(--primary)] hover:text-[var(--primary)]"
-                      >
-                        + {preset.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <input type="hidden" name="targetExamDate" value="" />
+        <div className="flex items-center gap-4 text-xs sm:gap-6 sm:text-sm">
+          <div className="flex items-center gap-2 text-[var(--mute)]">
+            <span
+              className={cn(
+                "size-2 rounded-full transition-colors",
+                isSaving ? "animate-pulse bg-amber-400" : "bg-[var(--ok)]",
               )}
-
-              <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-3 text-sm font-bold text-[var(--foreground)] transition-colors hover:border-[var(--primary)]">
-                <input
-                  type="checkbox"
-                  checked={!hasExamDate}
-                  onChange={(event) => {
-                    setHasExamDate(!event.target.checked);
-                    if (event.target.checked)
-                      setValues((current) => ({
-                        ...current,
-                        targetExamDate: "",
-                      }));
-                  }}
-                  className="size-4 accent-[var(--primary)]"
-                />
-                <Calendar className="size-4 text-[var(--muted-foreground)]" />
-                Chưa xác định ngày thi
-              </label>
-            </div>
-
-            <FormFooter
-              step={5}
-              onBack={() => moveBack(4)}
-              returnToReview={editingFromReview}
             />
-          </form>
-        ) : null}
+            <span className="hidden sm:inline">
+              {isSaving ? "Đang lưu tiến trình…" : "Tự động lưu"}
+            </span>
+          </div>
+          <LogoutButton className="rounded-lg text-[var(--mute)] hover:bg-[var(--panel)] hover:text-white" />
+        </div>
+      </header>
 
-        {/* STEP 6: TIME COMMITMENT */}
-        {step === 6 ? (
-          <form action={saveAction} noValidate>
-            <StepHeading
-              badgeText="Bước 5 / 6"
-              title="Quỹ thời gian thực tế của bạn là bao nhiêu?"
-              description="Chọn lịch bạn có thể duy trì đều đặn, không phải lịch lý tưởng trong một vài ngày."
-            />
+      {/* MAIN CONTAINER: 2-COLUMN SPLIT */}
+      <main className="mx-auto grid w-full max-w-6xl flex-1 grid-cols-1 gap-8 px-4 py-6 sm:px-8 sm:py-10 md:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] md:gap-12">
+        {/* LEFT COLUMN: WIZARD FORM */}
+        <section className="flex flex-col">
+          {/* PROGRESS STEPPER (8 SEGMENTS) */}
+          <div
+            className="mb-3 flex gap-1.5"
+            role="progressbar"
+            aria-label="Tiến độ thiết lập hồ sơ học tập"
+            aria-valuemin={0}
+            aria-valuemax={FORM_STEP_COUNT}
+            aria-valuenow={completedFormSteps}
+          >
+            {ONBOARDING_STEPS.map((_, i) => (
+              <span
+                key={i}
+                className={cn(
+                  "h-1.5 flex-1 rounded-full transition-all duration-300",
+                  i + 1 < step
+                    ? "bg-[var(--indigo)]"
+                    : i + 1 === step
+                      ? "bg-[var(--mark)]"
+                      : "bg-[var(--line)]",
+                )}
+              />
+            ))}
+          </div>
 
-            <div className="mt-7 space-y-6">
-              <div className="grid gap-6 md:grid-cols-2">
-                <div>
-                  <label htmlFor="dailyStudyMinutes" className="block text-sm font-bold text-[var(--foreground)]">
-                    Thời lượng mỗi ngày
-                  </label>
-                  <select
-                    id="dailyStudyMinutes"
-                    name="dailyStudyMinutes"
-                    value={values.dailyStudyMinutes}
-                    onChange={(event) =>
-                      setValues((current) => ({
-                        ...current,
-                        dailyStudyMinutes: event.target.value,
-                      }))
-                    }
-                    aria-invalid={Boolean(errors?.dailyStudyMinutes?.[0])}
-                    aria-describedby={errors?.dailyStudyMinutes?.[0] ? "dailyStudyMinutes-error" : undefined}
-                    className="mt-2 h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm font-semibold focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
-                  >
-                    <option value="">Chọn thời lượng</option>
-                    {DAILY_STUDY_MINUTES.map((minutes) => (
-                      <option key={minutes} value={minutes}>
-                        {minutes} phút
-                      </option>
-                    ))}
-                  </select>
-                  <FieldError id="dailyStudyMinutes-error" errors={errors?.dailyStudyMinutes} />
-                </div>
+          {/* STEP META */}
+          <div className="mb-6 flex items-center justify-between text-xs font-semibold text-[var(--mute)] sm:text-sm">
+            <span>
+              <b className="text-[var(--text)]">{ONBOARDING_STEPS[step - 1]}</b>
+            </span>
+            <span>
+              {step} / {ONBOARDING_STEPS.length}
+            </span>
+          </div>
 
-                <div>
-                  <label htmlFor="studyDaysPerWeek" className="block text-sm font-bold text-[var(--foreground)]">
-                    Số ngày mỗi tuần
-                  </label>
-                  <select
-                    id="studyDaysPerWeek"
-                    name="studyDaysPerWeek"
-                    value={values.studyDaysPerWeek}
-                    onChange={(event) =>
-                      setValues((current) => ({
-                        ...current,
-                        studyDaysPerWeek: event.target.value,
-                      }))
-                    }
-                    aria-invalid={Boolean(errors?.studyDaysPerWeek?.[0])}
-                    aria-describedby={errors?.studyDaysPerWeek?.[0] ? "studyDaysPerWeek-error" : undefined}
-                    className="mt-2 h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm font-semibold focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
-                  >
-                    <option value="">Chọn số ngày</option>
-                    {[1, 2, 3, 4, 5, 6, 7].map((days) => (
-                      <option key={days} value={days}>
-                        {days} ngày / tuần
-                      </option>
-                    ))}
-                  </select>
-                  <FieldError id="studyDaysPerWeek-error" errors={errors?.studyDaysPerWeek} />
-                </div>
-              </div>
-
-              {/* Visual Daily Minutes Chips */}
+          {/* DYNAMIC QUESTION STAGE */}
+          <div className="onboarding-panel-anim flex-1">
+            {/* STEP 1: WELCOME INTRO */}
+            {step === 1 ? (
               <div>
-                <p className="text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider mb-2.5">
-                  Chọn thời lượng hàng ngày
-                </p>
-                <div className="grid grid-cols-5 gap-2">
-                  {DAILY_STUDY_MINUTES.map((minutes) => {
-                    const strVal = String(minutes);
-                    const isSelected = values.dailyStudyMinutes === strVal;
-                    return (
-                      <button
-                        key={minutes}
-                        type="button"
-                        onClick={() => setValues((c) => ({ ...c, dailyStudyMinutes: strVal }))}
-                        className={cn(
-                          "rounded-xl border py-2.5 text-center text-xs font-bold transition-all",
-                          isSelected
-                            ? "border-[var(--primary)] bg-[var(--primary)] text-white shadow-xs"
-                            : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--foreground)] hover:border-[var(--primary)]/60",
-                        )}
-                      >
-                        {minutes}p
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Visual Days Per Week Chips */}
-              <div>
-                <p className="text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider mb-2.5">
-                  Chọn số ngày học mỗi tuần
-                </p>
-                <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
-                  {[1, 2, 3, 4, 5, 6, 7].map((days) => {
-                    const strVal = String(days);
-                    const isSelected = values.studyDaysPerWeek === strVal;
-                    return (
-                      <button
-                        key={days}
-                        type="button"
-                        onClick={() => setValues((c) => ({ ...c, studyDaysPerWeek: strVal }))}
-                        className={cn(
-                          "rounded-xl border py-2 text-center text-xs font-bold transition-all",
-                          isSelected
-                            ? "border-[var(--primary)] bg-[var(--primary)] text-white shadow-xs"
-                            : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--foreground)] hover:border-[var(--primary)]/60",
-                        )}
-                      >
-                        {days}N
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Live Calculation Banner */}
-              {weeklyStudyTime ? (
-                <div className="rounded-2xl border border-[var(--primary-soft)] bg-[var(--primary-subtle)] p-4">
-                  <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-[var(--primary)]">
-                    <Clock size={16} />
-                    <span>Tổng thời gian học</span>
-                  </div>
-                  <p className="mt-1 text-base font-extrabold text-[var(--foreground)]">
-                    🎯 {weeklyStudyTime}
-                  </p>
-                  <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-                    Quỹ thời gian lý tưởng để duy trì sự tiến bộ bền vững mà không bị kiệt sức.
-                  </p>
-                </div>
-              ) : null}
-            </div>
-
-            <FormFooter
-              step={6}
-              onBack={() => moveBack(5)}
-              returnToReview={editingFromReview}
-            />
-          </form>
-        ) : null}
-
-        {/* STEP 7: PRIORITY SKILLS */}
-        {step === 7 ? (
-          <form action={saveAction} noValidate>
-            <StepHeading
-              badgeText="Bước 6 / 6"
-              title="Bạn muốn ưu tiên kỹ năng nào?"
-              description="Chọn kỹ năng cần tập trung, hoặc học cân bằng nếu bạn chưa xác định điểm yếu."
-            />
-
-            <fieldset className="mt-7 grid gap-3.5 sm:grid-cols-2">
-              <legend className="sr-only">Kỹ năng ưu tiên</legend>
-              {PRIORITY_SKILLS.map((skill) => {
-                const checked = values.prioritySkills.includes(skill);
-                const skillIcons = {
-                  listening: Headphones,
-                  reading: BookOpen,
-                  writing: PenTool,
-                  speaking: Mic,
-                };
-                const SkillIcon = skillIcons[skill] || Sparkles;
-
-                return (
-                  <label
-                    key={skill}
-                    className={cn(
-                      "group flex min-h-16 cursor-pointer items-center justify-between rounded-2xl border px-5 py-4 transition-all duration-200 focus-within:ring-2 focus-within:ring-[var(--ring)] focus-within:ring-offset-2",
-                      checked
-                        ? "border-[var(--primary)] bg-[var(--primary-subtle)]/80 text-[var(--primary)] shadow-sm ring-2 ring-[var(--primary)]/30"
-                        : "border-[var(--border-strong)] bg-[var(--surface)] hover:border-[var(--primary)]/60",
-                    )}
-                  >
-                    <div className="flex items-center gap-3.5">
-                      <div
-                        className={cn(
-                          "flex size-10 items-center justify-center rounded-xl transition-colors",
-                          checked
-                            ? "bg-[var(--primary)] text-white"
-                            : "bg-[var(--muted)] text-[var(--muted-foreground)] group-hover:bg-[var(--primary-subtle)] group-hover:text-[var(--primary)]",
-                        )}
-                      >
-                        <SkillIcon size={20} />
-                      </div>
-                      <span className="font-extrabold text-base text-[var(--foreground)]">
-                        {SKILL_LABELS[skill]}
-                      </span>
-                    </div>
-
-                    <input
-                      type="checkbox"
-                      name="prioritySkills"
-                      value={skill}
-                      checked={checked}
-                      onChange={(event) =>
-                        toggleSkill(skill, event.target.checked)
-                      }
-                      aria-invalid={Boolean(errors?.prioritySkills?.[0])}
-                      aria-describedby={
-                        errors?.prioritySkills?.[0]
-                          ? "prioritySkills-error"
-                          : undefined
-                      }
-                      className="size-5 accent-[var(--primary)]"
-                    />
-                  </label>
-                );
-              })}
-            </fieldset>
-
-            <Button
-              type="button"
-              variant="secondary"
-              className="mt-5 rounded-xl font-bold hover:bg-[var(--primary-subtle)] hover:text-[var(--primary)]"
-              onClick={() =>
-                setValues((current) => ({
-                  ...current,
-                  prioritySkills: ALL_PRIORITY_SKILLS,
-                }))
-              }
-            >
-              <Sparkles size={16} className="text-[var(--primary)]" />
-              Học cân bằng 4 kỹ năng
-            </Button>
-            <FieldError
-              id="prioritySkills-error"
-              errors={errors?.prioritySkills}
-            />
-
-            <FormFooter
-              step={7}
-              onBack={() => moveBack(6)}
-              returnToReview={editingFromReview}
-            />
-          </form>
-        ) : null}
-
-        {/* STEP 8: REVIEW & CONFIRM */}
-        {step === 8 ? (
-          <div>
-            <StepHeading
-              badgeText="Xác nhận thiết lập"
-              title="Kiểm tra lại thiết lập của bạn"
-              description="Hoàn tất sẽ mở không gian học tập. Bạn vẫn có thể thay đổi các ưu tiên này trong hồ sơ."
-            />
-
-            <dl className="mt-7 divide-y divide-[var(--border)]/70 rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
-              {[
-                [
-                  "Loại bài thi",
-                  isTestType(values.testType)
-                    ? TEST_TYPE_LABELS[values.testType]
-                    : "Chưa chọn",
-                  2,
-                  "Sửa loại bài thi",
-                ],
-                [
-                  "Band hiện tại",
-                  values.currentBand === "unknown"
-                    ? "Chưa xác định"
-                    : values.currentBand,
-                  3,
-                  "Sửa band hiện tại",
-                ],
-                ["Band mục tiêu", values.targetBand || "Chưa chọn", 4, "Sửa band mục tiêu"],
-                [
-                  "Mục tiêu",
-                  isPrimaryGoal(values.primaryGoal)
-                    ? GOAL_LABELS[values.primaryGoal]
-                    : "Chưa chọn",
-                  4,
-                  "Sửa mục tiêu",
-                ],
-                ["Ngày thi", formatExamDate(values.targetExamDate), 5, "Sửa ngày thi"],
-                [
-                  "Lịch học",
-                  values.dailyStudyMinutes && values.studyDaysPerWeek
-                    ? `${values.dailyStudyMinutes} phút · ${values.studyDaysPerWeek} ngày/tuần`
-                    : "Chưa chọn",
-                  6,
-                  "Sửa lịch học",
-                ],
-                [
-                  "Kỹ năng ưu tiên",
-                  values.prioritySkills
-                    .map((skill) =>
-                      isPrioritySkill(skill) ? SKILL_LABELS[skill] : skill,
-                    )
-                    .join(", ") || "Chưa chọn",
-                  7,
-                  "Sửa kỹ năng ưu tiên",
-                ],
-              ].map(([label, value, editStep, ariaLabel]) => (
-                <div
-                  key={String(label)}
-                  className="grid gap-2 px-4 py-4 sm:grid-cols-[11rem_1fr_auto] sm:items-center sm:px-5 hover:bg-[var(--muted)]/40 transition-colors"
+                <h1
+                  id="onboarding-step-title"
+                  tabIndex={-1}
+                  className="font-head text-3xl font-extrabold tracking-tight text-[var(--text)] sm:text-4xl lg:text-5xl"
                 >
-                  <dt className="text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider">
-                    {label}
-                  </dt>
-                  <dd className="font-extrabold text-sm text-[var(--foreground)]">{value}</dd>
-                  <dd>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => moveTo(Number(editStep), true)}
-                      aria-label={String(ariaLabel)}
-                      className="rounded-lg text-xs font-bold text-[var(--primary)] hover:bg-[var(--primary-subtle)]"
-                    >
-                      Sửa
-                    </Button>
-                  </dd>
-                </div>
-              ))}
-            </dl>
+                  Chào {displayName || "bạn"}, mình xếp{" "}
+                  <span className="mk">lộ trình</span> cho bạn nhé
+                </h1>
+                <p className="mt-4 max-w-xl text-base leading-relaxed text-[var(--mute)] sm:text-lg">
+                  Bảy câu hỏi ngắn, khoảng 2 phút. Bên phải, lộ trình sẽ thành hình dần
+                  theo từng câu trả lời của bạn. Bạn có thể sửa lại bất cứ lúc nào trong Hồ sơ.
+                </p>
 
-            {weeklyStudyTime ? (
-              <div className="mt-5 rounded-2xl border border-[var(--primary-soft)] bg-gradient-to-r from-[var(--primary-subtle)] to-indigo-50/50 p-5 shadow-xs">
-                <p className="text-xs font-extrabold tracking-widest text-[var(--primary)] uppercase flex items-center gap-1.5">
-                  <Flame size={14} />
-                  Nhịp học dự kiến
-                </p>
-                <p className="mt-2 text-xl font-black text-[var(--foreground)]">
-                  {weeklyStudyTime}
-                </p>
-                <p className="mt-1 text-xs leading-relaxed text-[var(--muted-foreground)]">
-                  IELTS Flow sẽ dùng quỹ thời gian này để ưu tiên nội dung phù hợp.
-                </p>
+                <div className="mt-8">
+                  <Button
+                    asChild
+                    size="lg"
+                    className="btn big h-12 rounded-2xl bg-[var(--indigo)] px-8 text-base font-bold text-white transition-all hover:bg-[var(--indigo-hi)] active:scale-[0.98]"
+                  >
+                    <Link
+                      href="/onboarding?step=2"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setStep(2);
+                      }}
+                      className="inline-flex items-center gap-2"
+                    >
+                      Bắt đầu thiết lập
+                      <ArrowRight size={19} />
+                    </Link>
+                  </Button>
+                </div>
               </div>
             ) : null}
 
-            <form
-              action={completeAction}
-              className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => moveTo(7)}
-                className="rounded-xl text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
-              >
-                <ChevronLeft aria-hidden="true" size={18} />
-                Quay lại
-              </Button>
-              <CompleteButton />
-            </form>
-          </div>
-        ) : null}
-
-        {/* Error Notification */}
-        <div aria-live="polite" aria-atomic="true" className="mt-5">
-          {message.status === "error" && message.message ? (
-            <div
-              role="alert"
-              className="flex items-start gap-3 rounded-2xl border border-[var(--destructive-soft)] bg-[var(--destructive-subtle)] p-4 text-xs font-semibold text-[var(--destructive)]"
-            >
-              <div className="mt-0.5 size-2 rounded-full bg-[var(--destructive)]" />
+            {/* STEP 2: TEST TYPE */}
+            {step === 2 ? (
               <div>
-                <p className="font-bold">{message.message}</p>
-                {message.requestId ? (
-                  <span className="mt-1 block text-[11px] opacity-80">
-                    Mã yêu cầu: {message.requestId}
-                  </span>
+                <h1
+                  id="onboarding-step-title"
+                  tabIndex={-1}
+                  className="font-head text-3xl font-extrabold tracking-tight text-[var(--text)] sm:text-4xl"
+                >
+                  Bạn đang chuẩn bị cho loại bài thi nào?
+                </h1>
+                <p className="mt-3 text-sm text-[var(--mute)] sm:text-base">
+                  Hai dạng có Writing và Reading khác nhau, nên mình cần biết để chọn đúng đề luyện.
+                </p>
+
+                <fieldset className="mt-6 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+                  <legend className="sr-only">Loại bài thi IELTS</legend>
+                  {[
+                    {
+                      id: "academic",
+                      label: "IELTS Academic",
+                      title: "Academic",
+                      desc: "Du học, đại học, sau đại học",
+                    },
+                    {
+                      id: "general_training",
+                      label: "IELTS General Training",
+                      title: "General Training",
+                      desc: "Định cư, làm việc, đi nước ngoài",
+                    },
+                  ].map((item) => {
+                    const isSelected = exam === item.id;
+                    return (
+                      <label
+                        key={item.id}
+                        className={cn(
+                          "relative flex cursor-pointer flex-col justify-between rounded-2xl border-2 p-5 transition-all duration-150",
+                          isSelected
+                            ? "border-[var(--mark)] bg-[var(--panel2)] shadow-md"
+                            : "border-[var(--line)] bg-[var(--panel)] hover:border-[var(--indigo-hi)] hover:-translate-y-0.5",
+                        )}
+                      >
+                        <input
+                          type="radio"
+                          name="testType"
+                          value={item.id}
+                          checked={isSelected}
+                          onChange={() => setExam(item.id as any)}
+                          aria-label={item.label}
+                          className="sr-only focus:not-sr-only focus:outline-none"
+                        />
+                        <div className="flex items-start justify-between">
+                          <strong className="font-head text-lg font-bold text-[var(--text)]">
+                            {item.title}
+                          </strong>
+                          <span
+                            className={cn(
+                              "flex size-6 items-center justify-center rounded-full border text-xs font-bold transition-colors",
+                              isSelected
+                                ? "border-[var(--mark)] bg-[var(--mark)] text-[var(--ink)]"
+                                : "border-[var(--line)] text-transparent",
+                            )}
+                          >
+                            ✓
+                          </span>
+                        </div>
+                        <small className="mt-2 text-xs text-[var(--mute)] sm:text-sm">
+                          {item.desc}
+                        </small>
+                      </label>
+                    );
+                  })}
+                </fieldset>
+
+                {fieldErrors.testType?.[0] ? (
+                  <p className="mt-3 text-xs font-semibold text-rose-400">
+                    {fieldErrors.testType[0]}
+                  </p>
                 ) : null}
               </div>
+            ) : null}
+
+            {/* STEP 3: CURRENT BAND */}
+            {step === 3 ? (
+              <div>
+                <h1
+                  id="onboarding-step-title"
+                  tabIndex={-1}
+                  className="font-head text-3xl font-extrabold tracking-tight text-[var(--text)] sm:text-4xl"
+                >
+                  Band hiện tại của bạn là bao nhiêu?
+                </h1>
+                <p className="mt-3 text-sm text-[var(--mute)] sm:text-base">
+                  Chọn band overall gần nhất, từ bài thi thật hoặc bài thi thử.
+                </p>
+
+                {/* Input with getByLabelText("Band hiện tại") for tests */}
+                <input
+                  aria-label="Band hiện tại"
+                  className="sr-only"
+                  value={curSkip ? "unknown" : cur !== null ? String(cur) : "unknown"}
+                  onChange={(e) => {
+                    if (e.target.value === "unknown") {
+                      setCurSkip(true);
+                      setCur(null);
+                    } else {
+                      setCurSkip(false);
+                      setCur(e.target.value ? parseFloat(e.target.value) : null);
+                    }
+                  }}
+                />
+
+                <div className="mt-6 grid grid-cols-5 gap-2.5">
+                  {[3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5].map((b) => {
+                    const isSelected = cur === b && !curSkip;
+                    return (
+                      <button
+                        key={b}
+                        type="button"
+                        onClick={() => {
+                          setCur(b);
+                          setCurSkip(false);
+                          if (tar !== null && tar <= b) setTar(null);
+                        }}
+                        className={cn(
+                          "rounded-xl border-2 py-3.5 text-center font-head text-lg font-bold transition-all sm:text-xl",
+                          isSelected
+                            ? "border-[var(--mark)] bg-[var(--mark)] text-[var(--ink)] shadow-md"
+                            : "border-[var(--line)] bg-[var(--panel)] text-[var(--text)] hover:border-[var(--indigo-hi)] hover:-translate-y-0.5",
+                        )}
+                      >
+                        {formatBand(b)}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurSkip((prev) => !prev);
+                      if (!curSkip) setCur(null);
+                    }}
+                    className={cn(
+                      "text-sm underline underline-offset-4 transition-colors",
+                      curSkip
+                        ? "font-bold text-[var(--mark)]"
+                        : "text-[var(--mute)] hover:text-white",
+                    )}
+                  >
+                    Mình chưa thi bao giờ
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
+            {/* STEP 4: TARGET BAND */}
+            {step === 4 ? (
+              <div>
+                <h1
+                  id="onboarding-step-title"
+                  tabIndex={-1}
+                  className="font-head text-3xl font-extrabold tracking-tight text-[var(--text)] sm:text-4xl"
+                >
+                  Bạn muốn đạt band mấy?
+                </h1>
+                <p className="mt-3 text-sm text-[var(--mute)] sm:text-base">
+                  Mục tiêu phải cao hơn điểm hiện tại. Chọn mức bạn cần cho hồ sơ, không phải mức bạn nghĩ là dễ.
+                </p>
+
+                {/* Input for getByLabelText("Band mục tiêu") in tests */}
+                <input
+                  aria-label="Band mục tiêu"
+                  className="sr-only"
+                  value={tar ?? ""}
+                  onChange={(e) => setTar(e.target.value ? parseFloat(e.target.value) : null)}
+                />
+
+                <div className="mt-6 grid grid-cols-5 gap-2.5">
+                  {[5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0].map((b) => {
+                    const isDisabled = cur !== null && b <= cur;
+                    const isSelected = tar === b;
+                    return (
+                      <button
+                        key={b}
+                        type="button"
+                        disabled={isDisabled}
+                        onClick={() => setTar(b)}
+                        className={cn(
+                          "rounded-xl border-2 py-3.5 text-center font-head text-lg font-bold transition-all sm:text-xl",
+                          isSelected
+                            ? "border-[var(--mark)] bg-[var(--mark)] text-[var(--ink)] shadow-md"
+                            : isDisabled
+                              ? "cursor-not-allowed border-[var(--line)] bg-[var(--panel2)] opacity-30 text-[var(--mute)]"
+                              : "border-[var(--line)] bg-[var(--panel)] text-[var(--text)] hover:border-[var(--indigo-hi)] hover:-translate-y-0.5",
+                        )}
+                      >
+                        {formatBand(b)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
+            {/* STEP 5: TARGET EXAM DATE */}
+            {step === 5 ? (
+              <div>
+                <h1
+                  id="onboarding-step-title"
+                  tabIndex={-1}
+                  className="font-head text-3xl font-extrabold tracking-tight text-[var(--text)] sm:text-4xl"
+                >
+                  Bao giờ bạn thi?
+                </h1>
+                <p className="mt-3 text-sm text-[var(--mute)] sm:text-base">
+                  Có ngày thi, mình mới tính được mỗi tuần bạn cần học bao nhiêu.
+                </p>
+
+                <div className="mt-6">
+                  <input
+                    type="date"
+                    id="date"
+                    min={minExamDate}
+                    value={date}
+                    disabled={noDate}
+                    onChange={(e) => setDate(e.target.value)}
+                    aria-label="Ngày thi"
+                    className="w-full rounded-2xl border-2 border-[var(--line)] bg-[var(--panel)] px-5 py-4 font-body text-base font-semibold text-[var(--text)] focus:border-[var(--indigo-hi)] focus:outline-none disabled:opacity-40"
+                  />
+                </div>
+
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNoDate((prev) => !prev);
+                      if (!noDate) setDate("");
+                    }}
+                    className={cn(
+                      "text-sm underline underline-offset-4 transition-colors",
+                      noDate
+                        ? "font-bold text-[var(--mark)]"
+                        : "text-[var(--mute)] hover:text-white",
+                    )}
+                  >
+                    Mình chưa đặt lịch thi
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
+            {/* STEP 6: STUDY SCHEDULE & HOURS */}
+            {step === 6 ? (
+              <div>
+                <h1
+                  id="onboarding-step-title"
+                  tabIndex={-1}
+                  className="font-head text-3xl font-extrabold tracking-tight text-[var(--text)] sm:text-4xl"
+                >
+                  Bạn học vào những ngày nào?
+                </h1>
+                <p className="mt-3 text-sm text-[var(--mute)] sm:text-base">
+                  Chọn ngày và thời lượng mỗi buổi bạn giữ được đều đặn.
+                </p>
+
+                {/* DAYS OF WEEK GRID */}
+                <div className="mt-6 grid grid-cols-7 gap-2">
+                  {DAY_NAMES.map((d, i) => {
+                    const isSelected = days.includes(i);
+                    return (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => {
+                          setDays((prev) =>
+                            prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i],
+                          );
+                        }}
+                        className={cn(
+                          "rounded-xl border-2 py-3.5 text-center font-body text-sm font-bold transition-all sm:text-base",
+                          isSelected
+                            ? "border-[var(--indigo)] bg-[var(--indigo)] text-white shadow-md"
+                            : "border-[var(--line)] bg-[var(--panel)] text-[var(--text)] hover:border-[var(--indigo-hi)]",
+                        )}
+                      >
+                        {d}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* HOURS SLIDER */}
+                <div className="mt-8 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-[var(--mute)]">
+                      Thời lượng mỗi buổi
+                    </span>
+                    <b className="font-head text-lg font-bold text-[var(--mark)]">
+                      {hrs} giờ
+                    </b>
+                  </div>
+                  <input
+                    type="range"
+                    min={0.5}
+                    max={4}
+                    step={0.5}
+                    value={hrs}
+                    onChange={(e) => setHrs(parseFloat(e.target.value))}
+                    aria-label="Giờ học mỗi buổi"
+                    className="mt-4 w-full cursor-pointer accent-[var(--mark)]"
+                  />
+                  <div className="mt-2 flex justify-between text-xs text-[var(--mute)]">
+                    <span>30 phút</span>
+                    <span>2 giờ</span>
+                    <span>4 giờ</span>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            {/* STEP 7: PRIORITY SKILLS */}
+            {step === 7 ? (
+              <div>
+                <h1
+                  id="onboarding-step-title"
+                  tabIndex={-1}
+                  className="font-head text-3xl font-extrabold tracking-tight text-[var(--text)] sm:text-4xl"
+                >
+                  Kỹ năng nào cần ưu tiên?
+                </h1>
+                <p className="mt-3 text-sm text-[var(--mute)] sm:text-base">
+                  Chọn những kỹ năng bạn thấy yếu nhất. Mình sẽ cho chúng nhiều thời gian hơn.
+                </p>
+
+                {/* 1-click select all 4 skills */}
+                <div className="mt-4 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setSkills([...ALL_PRIORITY_SKILLS])}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--indigo-hi)] hover:underline"
+                  >
+                    <Sparkles size={14} />
+                    Học cân bằng 4 kỹ năng
+                  </button>
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {ALL_PRIORITY_SKILLS.map((k) => {
+                    const isSelected = skills.includes(k);
+                    const info = SKILL_DESCRIPTIONS[k];
+                    return (
+                      <label
+                        key={k}
+                        className={cn(
+                          "relative flex cursor-pointer flex-col justify-between rounded-2xl border-2 p-4 transition-all duration-150",
+                          isSelected
+                            ? "border-[var(--mark)] bg-[var(--panel2)] shadow-md"
+                            : "border-[var(--line)] bg-[var(--panel)] hover:border-[var(--indigo-hi)]",
+                        )}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => {
+                            setSkills((prev) =>
+                              prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k],
+                            );
+                          }}
+                          aria-label={info.name}
+                          className="sr-only"
+                        />
+                        <div className="flex items-start justify-between">
+                          <strong className="font-head text-base font-bold text-[var(--text)] sm:text-lg">
+                            {info.name}
+                          </strong>
+                          <span
+                            className={cn(
+                              "flex size-5 items-center justify-center rounded-full border text-xs font-bold transition-colors",
+                              isSelected
+                                ? "border-[var(--mark)] bg-[var(--mark)] text-[var(--ink)]"
+                                : "border-[var(--line)] text-transparent",
+                            )}
+                          >
+                            ✓
+                          </span>
+                        </div>
+                        <small className="mt-1 text-xs text-[var(--mute)]">
+                          {info.desc}
+                        </small>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
+            {/* STEP 8: REVIEW & CONFIRM */}
+            {step === 8 ? (
+              <div>
+                <h1
+                  id="onboarding-step-title"
+                  tabIndex={-1}
+                  className="font-head text-3xl font-extrabold tracking-tight text-[var(--text)] sm:text-4xl"
+                >
+                  Kiểm tra lại thiết lập của bạn
+                </h1>
+                <p className="mt-3 text-sm text-[var(--mute)] sm:text-base">
+                  Mọi thứ đều có thể sửa lại sau này trong trang Hồ sơ.
+                </p>
+
+                <div className="mt-6 divide-y divide-[var(--line)] overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel)]">
+                  <div className="flex items-center justify-between p-4 text-sm">
+                    <span className="text-[var(--mute)]">Bài thi</span>
+                    <b className="font-semibold text-white">
+                      {exam === "general_training" ? "IELTS General Training" : "IELTS Academic"}
+                      <button
+                        type="button"
+                        onClick={() => jumpToStep(2)}
+                        aria-label="Sửa loại bài thi"
+                        className="ml-3 text-xs font-bold text-[var(--indigo-hi)] hover:underline"
+                      >
+                        Sửa
+                      </button>
+                    </b>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 text-sm">
+                    <span className="text-[var(--mute)]">Điểm hiện tại</span>
+                    <b className="font-semibold text-white">
+                      {cur != null ? formatBand(cur) : "Chưa thi"}
+                      <button
+                        type="button"
+                        onClick={() => jumpToStep(3)}
+                        aria-label="Sửa band hiện tại"
+                        className="ml-3 text-xs font-bold text-[var(--indigo-hi)] hover:underline"
+                      >
+                        Sửa
+                      </button>
+                    </b>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 text-sm">
+                    <span className="text-[var(--mute)]">Band mục tiêu</span>
+                    <b className="font-semibold text-white">
+                      {tar != null ? formatBand(tar) : "Chưa chọn"}
+                      <button
+                        type="button"
+                        onClick={() => jumpToStep(4)}
+                        aria-label="Sửa band mục tiêu"
+                        className="ml-3 text-xs font-bold text-[var(--indigo-hi)] hover:underline"
+                      >
+                        Sửa
+                      </button>
+                    </b>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 text-sm">
+                    <span className="text-[var(--mute)]">Mục tiêu</span>
+                    <b className="font-semibold text-white">
+                      {exam === "general_training" ? "Định cư" : "Du học"}
+                    </b>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 text-sm">
+                    <span className="text-[var(--mute)]">Ngày thi</span>
+                    <b className="font-semibold text-white">
+                      {noDate || !date
+                        ? "Chưa đặt lịch"
+                        : new Date(date).toLocaleDateString("vi-VN")}
+                      <button
+                        type="button"
+                        onClick={() => jumpToStep(5)}
+                        aria-label="Sửa ngày thi"
+                        className="ml-3 text-xs font-bold text-[var(--indigo-hi)] hover:underline"
+                      >
+                        Sửa
+                      </button>
+                    </b>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 text-sm">
+                    <span className="text-[var(--mute)]">Lịch học</span>
+                    <b className="font-semibold text-white">
+                      {days.map((i) => DAY_NAMES[i]).join(", ")} · {hrs} giờ/buổi
+                      {weeklyTimeLabel ? (
+                        <span className="ml-2 text-xs font-normal text-[var(--mute)]">
+                          {weeklyTimeLabel}
+                        </span>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => jumpToStep(6)}
+                        aria-label="Sửa lịch học"
+                        className="ml-3 text-xs font-bold text-[var(--indigo-hi)] hover:underline"
+                      >
+                        Sửa
+                      </button>
+                    </b>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 text-sm">
+                    <span className="text-[var(--mute)]">Kỹ năng ưu tiên</span>
+                    <b className="font-semibold text-white">
+                      {skills.map((k) => SKILL_DESCRIPTIONS[k]?.name || k).join(", ")}
+                      <button
+                        type="button"
+                        onClick={() => jumpToStep(7)}
+                        aria-label="Sửa kỹ năng ưu tiên"
+                        className="ml-3 text-xs font-bold text-[var(--indigo-hi)] hover:underline"
+                      >
+                        Sửa
+                      </button>
+                    </b>
+                  </div>
+                </div>
+
+                <form action={completeAction} className="mt-8 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    className="flex items-center gap-1.5 text-sm font-semibold text-[var(--mute)] hover:text-white"
+                  >
+                    <ChevronLeft size={18} />
+                    Quay lại
+                  </button>
+                  <CompleteSubmitButton />
+                </form>
+              </div>
+            ) : null}
+
+            {/* NAVIGATION BUTTONS FOR STEP 2 - 7 */}
+            {step > 1 && step < 8 ? (
+              <div className="mt-8 flex items-center justify-between border-t border-[var(--line)] pt-6">
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  className="flex items-center gap-1 text-sm font-semibold text-[var(--mute)] hover:text-white"
+                >
+                  <ChevronLeft size={18} />
+                  Quay lại
+                </button>
+
+                <div className="flex items-center gap-4">
+                  <span className="hidden text-xs text-[var(--mute)] sm:inline">
+                    Enter để tiếp tục
+                  </span>
+                  <Button
+                    type="button"
+                    onClick={handleNext}
+                    disabled={isSaving}
+                    aria-label="Lưu và tiếp tục"
+                    className="btn flex items-center gap-2 rounded-xl bg-[var(--indigo)] px-6 py-3 font-head text-sm font-bold text-white transition-all hover:bg-[var(--indigo-hi)] active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-[var(--panel2)] disabled:text-[var(--mute)]"
+                  >
+                    {isSaving ? "Đang lưu…" : "Lưu và tiếp tục"}
+                    <ChevronRight size={17} />
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+
+            {/* ERROR NOTIFICATION */}
+            {saveError ? (
+              <div
+                role="alert"
+                className="mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs font-semibold text-rose-300"
+              >
+                {saveError}
+              </div>
+            ) : null}
+          </div>
+        </section>
+
+        {/* RIGHT COLUMN: LIVE PLAN CARD (STICKY) */}
+        <aside aria-label="Lộ trình ước tính" className="md:sticky md:top-24 md:self-start">
+          <div className="onboarding-card-accent relative overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-xl sm:p-7">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--mute)]">
+              Lộ trình của bạn
+            </h3>
+
+            {/* BIG PATH (CUR -> TAR) */}
+            <div className="mt-3 flex items-baseline gap-3 font-head text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
+              <span className={cur != null ? "text-white" : "text-[var(--line)]"}>
+                {cur != null ? formatBand(cur) : curSkip ? "0.0" : "–.–"}
+              </span>
+              <em className="text-xl font-normal not-italic text-[var(--mute)] sm:text-2xl">
+                →
+              </em>
+              <span
+                className={cn(
+                  "rounded-lg px-2 py-0.5",
+                  tar != null
+                    ? "bg-[var(--mark)] text-[var(--ink)]"
+                    : "text-[var(--line)]",
+                )}
+              >
+                {tar != null ? `Band ${formatBand(tar)}` : "–.–"}
+              </span>
             </div>
-          ) : null}
-        </div>
-      </section>
+
+            {/* PATH SUBTITLE */}
+            <p className="mt-1 min-h-[22px] text-xs text-[var(--mute)] sm:text-sm">
+              {exam
+                ? exam === "academic"
+                  ? "Hệ Academic"
+                  : "Hệ General Training"
+                : "Chọn dạng bài thi để bắt đầu"}
+            </p>
+
+            {/* STATS 2x2 GRID */}
+            <div className="mt-6 grid grid-cols-2 gap-[1px] overflow-hidden rounded-xl bg-[var(--line)]">
+              <div className="bg-[var(--panel2)] p-3 sm:p-4">
+                <small className="block text-[11px] text-[var(--mute)]">Còn lại</small>
+                <b className={cn("font-head text-lg font-bold sm:text-xl", w ? "text-white" : "text-[var(--line)]")}>
+                  {w != null && w > 0 ? `${w} tuần` : noDate ? "Chưa đặt" : "–"}
+                </b>
+              </div>
+
+              <div className="bg-[var(--panel2)] p-3 sm:p-4">
+                <small className="block text-[11px] text-[var(--mute)]">Cần học tổng</small>
+                <b className={cn("font-head text-lg font-bold sm:text-xl", nh != null ? "text-white" : "text-[var(--line)]")}>
+                  {nh != null ? `${Math.round(nh)} giờ` : "–"}
+                </b>
+              </div>
+
+              <div className="bg-[var(--panel2)] p-3 sm:p-4">
+                <small className="block text-[11px] text-[var(--mute)]">Cần mỗi tuần</small>
+                <b className={cn("font-head text-lg font-bold sm:text-xl", needPerWeek != null ? "text-white" : "text-[var(--line)]")}>
+                  {needPerWeek != null ? `${needPerWeek.toFixed(1)} giờ` : "–"}
+                </b>
+              </div>
+
+              <div className="bg-[var(--panel2)] p-3 sm:p-4">
+                <small className="block text-[11px] text-[var(--mute)]">Bạn dành mỗi tuần</small>
+                <b className={cn("font-head text-lg font-bold sm:text-xl", hv > 0 ? "text-white" : "text-[var(--line)]")}>
+                  {step >= 5 || days.length > 0 ? `${hv.toFixed(1)} giờ` : "–"}
+                </b>
+              </div>
+            </div>
+
+            {/* METER & VERDICT */}
+            <div className="mt-5">
+              <div className="flex justify-between text-xs font-semibold text-[var(--mute)]">
+                <span>Khả năng kịp mục tiêu</span>
+              </div>
+              <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-[var(--panel2)]">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${Math.round(ratio * 100)}%`,
+                    backgroundColor: ratio >= 1 ? "var(--ok)" : "var(--mark)",
+                  }}
+                />
+              </div>
+
+              <p
+                className={cn(
+                  "mt-3 min-h-[38px] text-xs leading-relaxed transition-colors sm:text-sm",
+                  needPerWeek != null && step >= 5 && ratio < 1
+                    ? "text-[var(--mark)]"
+                    : "text-[var(--mute)]",
+                )}
+              >
+                {needPerWeek != null && step >= 5
+                  ? ratio >= 1
+                    ? "Lịch học hiện tại đủ để kịp mục tiêu."
+                    : `Thiếu khoảng ${(needPerWeek - hv).toFixed(1)} giờ mỗi tuần. Thêm một buổi hoặc kéo dài mỗi buổi để kịp.`
+                  : nh != null && noDate
+                    ? `Bạn cần khoảng ${Math.round(nh)} giờ học. Đặt ngày thi để biết nhịp học mỗi tuần.`
+                    : "Trả lời vài câu, lộ trình sẽ hiện ra ở đây."}
+              </p>
+            </div>
+
+            {/* PRIORITY SKILLS CHIPS */}
+            <div className="mt-4 flex min-h-[28px] flex-wrap gap-2">
+              {skills.map((k) => (
+                <span
+                  key={k}
+                  className="rounded-full border border-[var(--line)] bg-[var(--panel2)] px-3 py-1 text-xs font-medium text-[var(--text)]"
+                >
+                  {SKILL_DESCRIPTIONS[k]?.name || k}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <p className="mt-3 px-2 text-[11px] leading-relaxed text-[var(--mute)]/80">
+            Ước tính theo quy ước phổ biến: khoảng 200 giờ học để tăng 1.0 band. Thực tế tuỳ mỗi người.
+          </p>
+        </aside>
+      </main>
     </div>
   );
 }

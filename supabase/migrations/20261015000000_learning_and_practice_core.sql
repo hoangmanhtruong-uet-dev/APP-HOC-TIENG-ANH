@@ -1,5 +1,5 @@
 -- 1. Bảng lưu trữ bài học lý thuyết
-CREATE TABLE public.lessons (
+CREATE TABLE IF NOT EXISTS public.lessons (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     course_id UUID NOT NULL,
     title VARCHAR(255) NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE public.lessons (
 );
 
 -- 2. Bảng theo dõi tiến độ bài học (Lesson Progress)
-CREATE TABLE public.user_lesson_progress (
+CREATE TABLE IF NOT EXISTS public.user_lesson_progress (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     lesson_id UUID NOT NULL REFERENCES public.lessons(id) ON DELETE CASCADE,
@@ -26,7 +26,7 @@ CREATE TABLE public.user_lesson_progress (
 );
 
 -- 3. Bảng bài tập thực hành (Practice Exercises)
-CREATE TABLE public.practice_exercises (
+CREATE TABLE IF NOT EXISTS public.practice_exercises (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     lesson_id UUID REFERENCES public.lessons(id) ON DELETE SET NULL,
     title VARCHAR(255) NOT NULL,
@@ -39,7 +39,7 @@ CREATE TABLE public.practice_exercises (
 );
 
 -- 4. Bảng câu hỏi hiển thị cho Client (Public / RLS - Không chứa đáp án đúng)
-CREATE TABLE public.exercise_questions (
+CREATE TABLE IF NOT EXISTS public.practice_questions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     exercise_id UUID NOT NULL REFERENCES public.practice_exercises(id) ON DELETE CASCADE,
     order_index INT NOT NULL,
@@ -55,15 +55,15 @@ CREATE TABLE public.exercise_questions (
 CREATE SCHEMA IF NOT EXISTS private;
 REVOKE ALL ON SCHEMA private FROM authenticated, anon, public;
 
-CREATE TABLE private.exercise_answer_keys (
-    question_id UUID PRIMARY KEY REFERENCES public.exercise_questions(id) ON DELETE CASCADE,
+CREATE TABLE IF NOT EXISTS private.exercise_answer_keys (
+    question_id UUID PRIMARY KEY REFERENCES public.practice_questions(id) ON DELETE CASCADE,
     correct_answers JSONB NOT NULL, -- Giá trị đúng: ["A"], ["answer1", "answer2"]
     accepted_synonyms JSONB DEFAULT '[]'::jsonb, -- Từ đồng nghĩa chấp nhận được
     case_sensitive BOOLEAN NOT NULL DEFAULT false
 );
 
 -- 6. Bảng lưu lượt làm bài tập (Practice Attempts & Drafts)
-CREATE TABLE public.exercise_attempts (
+CREATE TABLE IF NOT EXISTS public.exercise_attempts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     exercise_id UUID NOT NULL REFERENCES public.practice_exercises(id) ON DELETE CASCADE,
@@ -80,26 +80,31 @@ CREATE TABLE public.exercise_attempts (
 );
 
 -- Chỉ mục hiệu năng tối ưu hóa tra cứu (Fix Gap Audit)
-CREATE INDEX idx_user_lesson_progress_lookup ON public.user_lesson_progress(user_id, status);
-CREATE INDEX idx_exercise_attempts_user_status ON public.exercise_attempts(user_id, status);
-CREATE INDEX idx_exercise_attempts_exercise_created ON public.exercise_attempts(exercise_id, created_at DESC);
-CREATE INDEX idx_exercise_questions_exercise_order ON public.exercise_questions(exercise_id, order_index);
+CREATE INDEX IF NOT EXISTS idx_user_lesson_progress_lookup ON public.user_lesson_progress(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_exercise_attempts_user_status ON public.exercise_attempts(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_exercise_attempts_exercise_created ON public.exercise_attempts(exercise_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_practice_questions_exercise_order ON public.practice_questions(exercise_id, order_index);
 
 -- Kích hoạt RLS
 ALTER TABLE public.lessons ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_lesson_progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.practice_exercises ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.exercise_questions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.practice_questions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.exercise_attempts ENABLE ROW LEVEL SECURITY;
 
 -- Policies cơ bản
+DROP POLICY IF EXISTS "Public read lessons" ON public.lessons;
 CREATE POLICY "Public read lessons" ON public.lessons FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "Public read exercises" ON public.practice_exercises;
 CREATE POLICY "Public read exercises" ON public.practice_exercises FOR SELECT TO authenticated USING (is_published = true);
-CREATE POLICY "Public read questions" ON public.exercise_questions FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "Public read questions" ON public.practice_questions;
+CREATE POLICY "Public read questions" ON public.practice_questions FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Users own lesson progress" ON public.user_lesson_progress;
 CREATE POLICY "Users own lesson progress" ON public.user_lesson_progress 
     FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users own attempts" ON public.exercise_attempts;
 CREATE POLICY "Users own attempts" ON public.exercise_attempts 
     FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
@@ -153,10 +158,10 @@ BEGIN
 
     -- 2. Đánh giá kết quả từ Private Schema
     FOR v_q IN 
-        SELECT eq.id, eq.question_type, eq.explanation, ak.correct_answers, ak.accepted_synonyms, ak.case_sensitive
-        FROM public.exercise_questions eq
-        JOIN private.exercise_answer_keys ak ON eq.id = ak.question_id
-        WHERE eq.exercise_id = v_exercise_id
+        SELECT pq.id, pq.question_type, pq.explanation, ak.correct_answers, ak.accepted_synonyms, ak.case_sensitive
+        FROM public.practice_questions pq
+        JOIN private.exercise_answer_keys ak ON pq.id = ak.question_id
+        WHERE pq.exercise_id = v_exercise_id
     LOOP
         v_is_correct := false;
         
@@ -185,7 +190,7 @@ BEGIN
         );
     END LOOP;
 
-    SELECT COUNT(*) INTO v_total_questions FROM public.exercise_questions WHERE exercise_id = v_exercise_id;
+    SELECT COUNT(*) INTO v_total_questions FROM public.practice_questions WHERE exercise_id = v_exercise_id;
 
     -- 3. Cập nhật kết quả bài làm
     UPDATE public.exercise_attempts

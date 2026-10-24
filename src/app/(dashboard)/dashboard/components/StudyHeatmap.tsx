@@ -1,108 +1,79 @@
 "use client";
 
-import React, { memo, useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
+import React, { useMemo } from "react";
 
 interface StudyHeatmapProps {
-  /** 35 values, index 0 = oldest day */
-  data: number[];
+  activeDays?: number;
+  totalTime?: string;
+  data?: number[];
 }
 
-const DAY_LABELS = ["M", "", "W", "", "F", "", "S"];
-
-function intensity(mins: number): 0 | 1 | 2 | 3 | 4 {
-  if (mins === 0) return 0;
-  if (mins < 10) return 1;
-  if (mins < 20) return 2;
-  if (mins < 35) return 3;
-  return 4;
-}
-
-const LEVEL_CLASSES = [
-  "bg-[var(--muted)]",
-  "bg-[var(--primary-soft)] opacity-50",
-  "bg-[var(--primary-soft)]",
-  "bg-[var(--primary)] opacity-50",
-  "bg-[var(--primary)]",
-];
-
-export const StudyHeatmap = memo(function StudyHeatmap({
+export function StudyHeatmap({
+  activeDays = 32,
+  totalTime = "13h 0m",
   data,
 }: StudyHeatmapProps) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 150);
-    return () => clearTimeout(t);
-  }, []);
-
-  const cells = data.slice(0, 35);
-  const weeks = Array.from({ length: 5 }, (_, w) =>
-    cells.slice(w * 7, w * 7 + 7)
-  );
-
-  const totalMins = cells.reduce((a, b) => a + b, 0);
-  const activeDays = cells.filter((m) => m > 0).length;
+  // 18 weeks * 7 days = 126 cells
+  const cells = useMemo(() => {
+    if (data && data.length >= 126) {
+      return data.slice(0, 126);
+    }
+    // Deterministic pseudo-random generation matching prototype (32 active days)
+    let s = 7;
+    const r = () => {
+      s = (s * 9301 + 49297) % 233280;
+      return s / 233280;
+    };
+    const N = 126;
+    const result = Array<number>(N).fill(0);
+    let n = 0;
+    while (n < activeDays) {
+      const i = Math.floor(r() * N);
+      const bias = i > N * 0.35 || r() > 0.6;
+      if (!result[i] && bias) {
+        result[i] = 1 + Math.floor(r() * 4);
+        n++;
+      }
+    }
+    return result;
+  }, [data, activeDays]);
 
   return (
-    <div>
-      {/* Stats row */}
-      <div className="mb-3 flex items-center gap-4 text-xs font-semibold text-[var(--muted-foreground)]">
-        <span>
-          <span className="font-black text-[var(--foreground)]">{activeDays}</span>{" "}
-          active days
-        </span>
-        <span>
-          <span className="font-black text-[var(--foreground)]">
-            {Math.floor(totalMins / 60)}h {totalMins % 60}m
-          </span>{" "}
-          total
-        </span>
-      </div>
-
-      {/* Grid */}
-      <div className="flex gap-[5px]">
-        {/* Day labels column */}
-        <div className="flex flex-col gap-[5px] pr-1">
-          {DAY_LABELS.map((d, i) => (
-            <span
-              key={i}
-              className="flex h-3 w-4 items-center text-[9px] font-medium text-[var(--muted-foreground)]"
-            >
-              {d}
-            </span>
-          ))}
+    <div className="box">
+      <div className="heat-top">
+        <div>
+          <b>{activeDays}</b>
+          <small>active days</small>
         </div>
+        <div>
+          <b>{totalTime}</b>
+          <small>total</small>
+        </div>
+      </div>
 
-        {/* Cells */}
-        {weeks.map((week, w) => (
-          <div key={w} className="flex flex-col gap-[5px]">
-            {week.map((mins, d) => {
-              const lvl = intensity(mins);
-              const delay = (w * 7 + d) * 14;
-              return (
-                <div
-                  key={d}
-                  title={`${mins} min`}
-                  className={cn(
-                    "h-3 w-3 rounded-[2px] transition-all duration-500",
-                    mounted ? LEVEL_CLASSES[lvl] : "bg-[var(--muted)]"
-                  )}
-                  style={{ transitionDelay: `${delay}ms` }}
-                />
-              );
-            })}
-          </div>
+      <div
+        className="heat"
+        style={{ gridTemplateColumns: "repeat(18, 1fr)" }}
+        aria-label="Study activity over the last 18 weeks"
+      >
+        {cells.map((level, i) => (
+          <i
+            key={i}
+            className={level > 0 ? `l${level}` : undefined}
+            title={level > 0 ? `Activity level: ${level}` : "No activity"}
+          />
         ))}
       </div>
 
-      {/* Legend */}
-      <div className="mt-3 flex items-center gap-1.5 text-[9px] font-medium text-[var(--muted-foreground)]">
+      <div className="legend">
         <span>Less</span>
-        {LEVEL_CLASSES.map((cls, i) => (
-          <div key={i} className={cn("h-3 w-3 rounded-[2px]", cls)} />
-        ))}
+        <i style={{ background: "var(--panel2)" }} />
+        <i style={{ background: "#2C3170" }} />
+        <i style={{ background: "#4045B5" }} />
+        <i style={{ background: "var(--indigo-hi)" }} />
+        <i style={{ background: "var(--mark)" }} />
         <span>More</span>
       </div>
     </div>
   );
-});
+}

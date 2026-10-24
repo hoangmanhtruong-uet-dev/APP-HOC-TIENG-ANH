@@ -4,7 +4,8 @@ import { useCallback, useTransition } from "react";
 import { Flag, Type, Highlighter, Moon, BookOpenText } from "lucide-react";
 
 import { LessonMarkdown } from "@/features/learning/components/lesson-markdown";
-import { GenericPracticeEngine } from "@/features/core-practice";
+import { VocabHighlightPopover } from "@/features/learning/components/vocab-highlight-popover";
+import { GenericPracticeEngine, DynamicQuestionRenderer } from "@/features/core-practice";
 import { submitMockTestSectionAction } from "@/features/mock-tests/actions";
 import type { MockRunnerContext } from "@/features/mock-tests/model";
 import {
@@ -166,10 +167,12 @@ function ActiveReadingRunner({
   );
 
   return (
-    <GenericPracticeEngine
-      title={data.exercise.title}
-      domain="reading"
-      categoryLabel="Reading Practice"
+    <>
+      <VocabHighlightPopover />
+      <GenericPracticeEngine
+        title={data.exercise.title}
+        domain="reading"
+        categoryLabel="Reading Practice"
       serverNow={attempt.serverNow}
       expiresAt={attempt.expiresAt}
       questions={data.questions}
@@ -215,6 +218,7 @@ function ActiveReadingRunner({
         );
       }}
     />
+    </>
   );
 }
 
@@ -266,75 +270,12 @@ function QuestionCard({
         <LessonMarkdown>{question.promptMarkdown}</LessonMarkdown>
       </div>
 
-      {question.type === "summary_completion" ? (
-        <div className="mt-4">
-          <label
-            htmlFor={`reading-answer-${question.id}`}
-            className="mb-2 block text-sm font-bold text-slate-600"
-          >
-            Your Answer
-          </label>
-          <input
-            id={`reading-answer-${question.id}`}
-            value={draft.answerText}
-            onChange={(event) =>
-              onChange({ ...draft, answerText: event.target.value })
-            }
-            maxLength={2000}
-            autoComplete="off"
-            placeholder="Type your answer here..."
-            className="min-h-14 w-full rounded-xl border border-slate-300 bg-slate-50 px-5 text-base focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:border-transparent transition-all outline-none"
-          />
-          {maxAnswerWords ? (
-            <p className="mt-2 text-[11px] font-bold text-slate-400 uppercase tracking-wide">
-              Max {maxAnswerWords} words allowed
-            </p>
-          ) : null}
-        </div>
-      ) : (
-        <div className="mt-4 space-y-3">
-          {question.options.map((option) => {
-            const checked = draft.selectedOptionIds.includes(option.id);
-            const multiple = question.type === "multiple_choice";
-            return (
-              <label
-                key={option.id}
-                className={`flex min-h-14 cursor-pointer items-center gap-4 rounded-xl border px-5 py-3 transition-all duration-200 ${
-                  checked
-                    ? "border-emerald-600 bg-emerald-50 shadow-sm"
-                    : "border-slate-200 bg-white hover:border-emerald-300 hover:bg-slate-50"
-                }`}
-              >
-                <input
-                  type={multiple ? "checkbox" : "radio"}
-                  name={`reading-question-${question.id}`}
-                  checked={checked}
-                  onChange={() =>
-                    onChange({
-                      ...draft,
-                      selectedOptionIds: multiple
-                        ? checked
-                          ? draft.selectedOptionIds.filter(
-                              (id) => id !== option.id,
-                            )
-                          : [...draft.selectedOptionIds, option.id]
-                        : [option.id],
-                    })
-                  }
-                  className="size-5 shrink-0 accent-emerald-600 cursor-pointer"
-                />
-                <span
-                  className={`min-w-0 leading-relaxed break-words font-medium ${
-                    checked ? "text-emerald-900" : "text-slate-700"
-                  }`}
-                >
-                  {option.label}
-                </span>
-              </label>
-            );
-          })}
-        </div>
-      )}
+      <DynamicQuestionRenderer
+        question={question}
+        draft={draft}
+        maxAnswerWords={maxAnswerWords}
+        onChange={onChange}
+      />
     </fieldset>
   );
 }

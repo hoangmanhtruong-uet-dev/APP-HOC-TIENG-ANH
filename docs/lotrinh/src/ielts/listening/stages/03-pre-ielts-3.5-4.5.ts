@@ -1,0 +1,327 @@
+import type { IELTSLesson } from "../../types/lesson";
+export const LISTENING_3_LESSONS: IELTSLesson[] = [
+  {
+    id: "listening-pre-ielts-3.5-4.5-1", skill: "listening", levelId: "pre-ielts-3.5-4.5", targetBand: 4.5, order: 1,
+    title: "Map & directions",
+    learningObjectives: [
+      "Nắm chắc sound recognition ở mức trung cấp.",
+      "Áp dụng prediction vào dạng form/note completion.",
+      "Hoàn thành bài luyện có giới hạn thời gian và tự ghi lỗi vào error log.",
+    ],
+    teachingPoints: [
+      "Khái niệm trọng tâm: sound recognition; giáo viên minh họa bằng ví dụ đúng/sai.",
+      "Chiến lược xử lý: xác định yêu cầu → dự đoán → thực hiện → kiểm tra.",
+      "Nhận diện paraphrase/cấu trúc thường xuất hiện trong form/note completion.",
+      "Quy tắc tự sửa: phân loại lỗi kiến thức, chiến lược, tốc độ hoặc bất cẩn.",
+      "Đọc trước và dự đoán loại từ/số trước khi audio chạy.",
+      "Sau khi nghe sai, đối chiếu transcript để tìm chính xác âm hoặc paraphrase gây mất điểm.",
+    ],
+    teacherFlow: [
+      "5–10': warm-up và diagnostic nhanh.",
+      "15–20': dạy chiến lược bằng think-aloud.",
+      "20–25': guided practice, dừng ở từng bước để giải thích evidence.",
+      "20–30': timed independent practice.",
+      "10–15': chữa bài theo error categories và chốt homework.",
+    ],
+    guidedPractice: [
+      { id: "l-3-1-g1", title: "Guided drill — form/note completion", instruction: "Làm 6–10 mục form/note completion; sau mỗi câu ghi từ khóa và dấu hiệu dẫn đến đáp án.", expectedOutput: "Bảng đáp án + evidence/justification", estimatedMinutes: 18, difficulty: "medium" },
+      { id: "l-3-1-g2", title: "Paraphrase/evidence map", instruction: "Tạo hai cột: ngôn ngữ trong đề và cách diễn đạt tương đương trong input; tối thiểu 8 cặp.", expectedOutput: "8+ cặp paraphrase có ngữ cảnh", estimatedMinutes: 15, difficulty: "medium" },
+    ],
+    independentPractice: [
+      { id: "l-3-1-i1", title: "Timed set", instruction: "Hoàn thành một set form/note completion không dừng đồng hồ; đánh dấu câu không chắc thay vì mắc kẹt.", expectedOutput: "Điểm thô + thời gian + confidence", estimatedMinutes: 25, difficulty: "medium" },
+      { id: "l-3-1-i2", title: "Error-log repair", instruction: "Chọn tối thiểu 5 lỗi gần nhất, ghi nguyên nhân, evidence đúng và một quy tắc phòng lỗi lần sau.", expectedOutput: "5 dòng error log chất lượng", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    homework: [
+      { id: "l-3-1-h1", title: "Deliberate practice", instruction: "Làm thêm 20–30 phút bài cùng dạng form/note completion; mục tiêu ưu tiên accuracy trước speed.", expectedOutput: "Bài làm + tự chấm", estimatedMinutes: 30, difficulty: "medium" },
+      { id: "l-3-1-h2", title: "Review cycle", instruction: "Sau 24 giờ làm lại các câu sai mà không xem đáp án, rồi cập nhật error log.", expectedOutput: "Retest score + note cải thiện", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    masteryChecks: [
+      "Accuracy đạt ngưỡng mục tiêu của level 4.5 trong 2 lần luyện liên tiếp.",
+      "Giải thích được tại sao đáp án/cách diễn đạt đúng thay vì chỉ nhớ đáp án.",
+      "Lỗi cũ không lặp lại quá 2 lần trong cùng một tuần.",
+    ],
+    commonErrors: [
+      "Mất điểm do spelling/plural",
+      "Không đọc trước câu hỏi",
+      "Bị distractor kéo đi",
+      "Chờ nghe đúng từ trong đề thay vì paraphrase",
+    ],
+    remediation: [
+      "Giảm độ dài set và làm chậm từng bước.",
+      "Quay lại bài paraphrase/grammar/vocabulary nền tảng liên quan.",
+      "Làm lại sau 24–48 giờ đến khi giải thích được lỗi.",
+    ],
+    estimatedMinutes: 100,
+    tags: ["Map & directions", "band-4.5"],
+  },
+  {
+    id: "listening-pre-ielts-3.5-4.5-2", skill: "listening", levelId: "pre-ielts-3.5-4.5", targetBand: 4.5, order: 2,
+    title: "Matching người–ý",
+    learningObjectives: [
+      "Nắm chắc prediction ở mức trung cấp.",
+      "Áp dụng signposting vào dạng multiple choice.",
+      "Hoàn thành bài luyện có giới hạn thời gian và tự ghi lỗi vào error log.",
+    ],
+    teachingPoints: [
+      "Khái niệm trọng tâm: prediction; giáo viên minh họa bằng ví dụ đúng/sai.",
+      "Chiến lược xử lý: xác định yêu cầu → dự đoán → thực hiện → kiểm tra.",
+      "Nhận diện paraphrase/cấu trúc thường xuất hiện trong multiple choice.",
+      "Quy tắc tự sửa: phân loại lỗi kiến thức, chiến lược, tốc độ hoặc bất cẩn.",
+      "Đọc trước và dự đoán loại từ/số trước khi audio chạy.",
+      "Sau khi nghe sai, đối chiếu transcript để tìm chính xác âm hoặc paraphrase gây mất điểm.",
+    ],
+    teacherFlow: [
+      "5–10': warm-up và diagnostic nhanh.",
+      "15–20': dạy chiến lược bằng think-aloud.",
+      "20–25': guided practice, dừng ở từng bước để giải thích evidence.",
+      "20–30': timed independent practice.",
+      "10–15': chữa bài theo error categories và chốt homework.",
+    ],
+    guidedPractice: [
+      { id: "l-3-2-g1", title: "Guided drill — multiple choice", instruction: "Làm 6–10 mục multiple choice; sau mỗi câu ghi từ khóa và dấu hiệu dẫn đến đáp án.", expectedOutput: "Bảng đáp án + evidence/justification", estimatedMinutes: 18, difficulty: "medium" },
+      { id: "l-3-2-g2", title: "Paraphrase/evidence map", instruction: "Tạo hai cột: ngôn ngữ trong đề và cách diễn đạt tương đương trong input; tối thiểu 8 cặp.", expectedOutput: "8+ cặp paraphrase có ngữ cảnh", estimatedMinutes: 15, difficulty: "medium" },
+    ],
+    independentPractice: [
+      { id: "l-3-2-i1", title: "Timed set", instruction: "Hoàn thành một set multiple choice không dừng đồng hồ; đánh dấu câu không chắc thay vì mắc kẹt.", expectedOutput: "Điểm thô + thời gian + confidence", estimatedMinutes: 25, difficulty: "medium" },
+      { id: "l-3-2-i2", title: "Error-log repair", instruction: "Chọn tối thiểu 5 lỗi gần nhất, ghi nguyên nhân, evidence đúng và một quy tắc phòng lỗi lần sau.", expectedOutput: "5 dòng error log chất lượng", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    homework: [
+      { id: "l-3-2-h1", title: "Deliberate practice", instruction: "Làm thêm 20–30 phút bài cùng dạng multiple choice; mục tiêu ưu tiên accuracy trước speed.", expectedOutput: "Bài làm + tự chấm", estimatedMinutes: 30, difficulty: "medium" },
+      { id: "l-3-2-h2", title: "Review cycle", instruction: "Sau 24 giờ làm lại các câu sai mà không xem đáp án, rồi cập nhật error log.", expectedOutput: "Retest score + note cải thiện", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    masteryChecks: [
+      "Accuracy đạt ngưỡng mục tiêu của level 4.5 trong 2 lần luyện liên tiếp.",
+      "Giải thích được tại sao đáp án/cách diễn đạt đúng thay vì chỉ nhớ đáp án.",
+      "Lỗi cũ không lặp lại quá 2 lần trong cùng một tuần.",
+    ],
+    commonErrors: [
+      "Mất điểm do spelling/plural",
+      "Không đọc trước câu hỏi",
+      "Bị distractor kéo đi",
+      "Chờ nghe đúng từ trong đề thay vì paraphrase",
+    ],
+    remediation: [
+      "Giảm độ dài set và làm chậm từng bước.",
+      "Quay lại bài paraphrase/grammar/vocabulary nền tảng liên quan.",
+      "Làm lại sau 24–48 giờ đến khi giải thích được lỗi.",
+    ],
+    estimatedMinutes: 100,
+    tags: ["Matching người–ý", "band-4.5"],
+  },
+  {
+    id: "listening-pre-ielts-3.5-4.5-3", skill: "listening", levelId: "pre-ielts-3.5-4.5", targetBand: 4.5, order: 3,
+    title: "Multiple choice 1 đáp án",
+    learningObjectives: [
+      "Nắm chắc signposting ở mức trung cấp.",
+      "Áp dụng paraphrase vào dạng matching.",
+      "Hoàn thành bài luyện có giới hạn thời gian và tự ghi lỗi vào error log.",
+    ],
+    teachingPoints: [
+      "Khái niệm trọng tâm: signposting; giáo viên minh họa bằng ví dụ đúng/sai.",
+      "Chiến lược xử lý: xác định yêu cầu → dự đoán → thực hiện → kiểm tra.",
+      "Nhận diện paraphrase/cấu trúc thường xuất hiện trong matching.",
+      "Quy tắc tự sửa: phân loại lỗi kiến thức, chiến lược, tốc độ hoặc bất cẩn.",
+      "Đọc trước và dự đoán loại từ/số trước khi audio chạy.",
+      "Sau khi nghe sai, đối chiếu transcript để tìm chính xác âm hoặc paraphrase gây mất điểm.",
+    ],
+    teacherFlow: [
+      "5–10': warm-up và diagnostic nhanh.",
+      "15–20': dạy chiến lược bằng think-aloud.",
+      "20–25': guided practice, dừng ở từng bước để giải thích evidence.",
+      "20–30': timed independent practice.",
+      "10–15': chữa bài theo error categories và chốt homework.",
+    ],
+    guidedPractice: [
+      { id: "l-3-3-g1", title: "Guided drill — matching", instruction: "Làm 6–10 mục matching; sau mỗi câu ghi từ khóa và dấu hiệu dẫn đến đáp án.", expectedOutput: "Bảng đáp án + evidence/justification", estimatedMinutes: 18, difficulty: "medium" },
+      { id: "l-3-3-g2", title: "Paraphrase/evidence map", instruction: "Tạo hai cột: ngôn ngữ trong đề và cách diễn đạt tương đương trong input; tối thiểu 8 cặp.", expectedOutput: "8+ cặp paraphrase có ngữ cảnh", estimatedMinutes: 15, difficulty: "medium" },
+    ],
+    independentPractice: [
+      { id: "l-3-3-i1", title: "Timed set", instruction: "Hoàn thành một set matching không dừng đồng hồ; đánh dấu câu không chắc thay vì mắc kẹt.", expectedOutput: "Điểm thô + thời gian + confidence", estimatedMinutes: 25, difficulty: "medium" },
+      { id: "l-3-3-i2", title: "Error-log repair", instruction: "Chọn tối thiểu 5 lỗi gần nhất, ghi nguyên nhân, evidence đúng và một quy tắc phòng lỗi lần sau.", expectedOutput: "5 dòng error log chất lượng", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    homework: [
+      { id: "l-3-3-h1", title: "Deliberate practice", instruction: "Làm thêm 20–30 phút bài cùng dạng matching; mục tiêu ưu tiên accuracy trước speed.", expectedOutput: "Bài làm + tự chấm", estimatedMinutes: 30, difficulty: "medium" },
+      { id: "l-3-3-h2", title: "Review cycle", instruction: "Sau 24 giờ làm lại các câu sai mà không xem đáp án, rồi cập nhật error log.", expectedOutput: "Retest score + note cải thiện", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    masteryChecks: [
+      "Accuracy đạt ngưỡng mục tiêu của level 4.5 trong 2 lần luyện liên tiếp.",
+      "Giải thích được tại sao đáp án/cách diễn đạt đúng thay vì chỉ nhớ đáp án.",
+      "Lỗi cũ không lặp lại quá 2 lần trong cùng một tuần.",
+    ],
+    commonErrors: [
+      "Mất điểm do spelling/plural",
+      "Không đọc trước câu hỏi",
+      "Bị distractor kéo đi",
+      "Chờ nghe đúng từ trong đề thay vì paraphrase",
+    ],
+    remediation: [
+      "Giảm độ dài set và làm chậm từng bước.",
+      "Quay lại bài paraphrase/grammar/vocabulary nền tảng liên quan.",
+      "Làm lại sau 24–48 giờ đến khi giải thích được lỗi.",
+    ],
+    estimatedMinutes: 100,
+    tags: ["Multiple choice 1 đáp án", "band-4.5"],
+  },
+  {
+    id: "listening-pre-ielts-3.5-4.5-4", skill: "listening", levelId: "pre-ielts-3.5-4.5", targetBand: 4.5, order: 4,
+    title: "Part 2 monologue",
+    learningObjectives: [
+      "Nắm chắc paraphrase ở mức trung cấp.",
+      "Áp dụng detail tracking vào dạng map/plan labelling.",
+      "Hoàn thành bài luyện có giới hạn thời gian và tự ghi lỗi vào error log.",
+    ],
+    teachingPoints: [
+      "Khái niệm trọng tâm: paraphrase; giáo viên minh họa bằng ví dụ đúng/sai.",
+      "Chiến lược xử lý: xác định yêu cầu → dự đoán → thực hiện → kiểm tra.",
+      "Nhận diện paraphrase/cấu trúc thường xuất hiện trong map/plan labelling.",
+      "Quy tắc tự sửa: phân loại lỗi kiến thức, chiến lược, tốc độ hoặc bất cẩn.",
+      "Đọc trước và dự đoán loại từ/số trước khi audio chạy.",
+      "Sau khi nghe sai, đối chiếu transcript để tìm chính xác âm hoặc paraphrase gây mất điểm.",
+    ],
+    teacherFlow: [
+      "5–10': warm-up và diagnostic nhanh.",
+      "15–20': dạy chiến lược bằng think-aloud.",
+      "20–25': guided practice, dừng ở từng bước để giải thích evidence.",
+      "20–30': timed independent practice.",
+      "10–15': chữa bài theo error categories và chốt homework.",
+    ],
+    guidedPractice: [
+      { id: "l-3-4-g1", title: "Guided drill — map/plan labelling", instruction: "Làm 6–10 mục map/plan labelling; sau mỗi câu ghi từ khóa và dấu hiệu dẫn đến đáp án.", expectedOutput: "Bảng đáp án + evidence/justification", estimatedMinutes: 18, difficulty: "medium" },
+      { id: "l-3-4-g2", title: "Paraphrase/evidence map", instruction: "Tạo hai cột: ngôn ngữ trong đề và cách diễn đạt tương đương trong input; tối thiểu 8 cặp.", expectedOutput: "8+ cặp paraphrase có ngữ cảnh", estimatedMinutes: 15, difficulty: "medium" },
+    ],
+    independentPractice: [
+      { id: "l-3-4-i1", title: "Timed set", instruction: "Hoàn thành một set map/plan labelling không dừng đồng hồ; đánh dấu câu không chắc thay vì mắc kẹt.", expectedOutput: "Điểm thô + thời gian + confidence", estimatedMinutes: 25, difficulty: "medium" },
+      { id: "l-3-4-i2", title: "Error-log repair", instruction: "Chọn tối thiểu 5 lỗi gần nhất, ghi nguyên nhân, evidence đúng và một quy tắc phòng lỗi lần sau.", expectedOutput: "5 dòng error log chất lượng", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    homework: [
+      { id: "l-3-4-h1", title: "Deliberate practice", instruction: "Làm thêm 20–30 phút bài cùng dạng map/plan labelling; mục tiêu ưu tiên accuracy trước speed.", expectedOutput: "Bài làm + tự chấm", estimatedMinutes: 30, difficulty: "medium" },
+      { id: "l-3-4-h2", title: "Review cycle", instruction: "Sau 24 giờ làm lại các câu sai mà không xem đáp án, rồi cập nhật error log.", expectedOutput: "Retest score + note cải thiện", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    masteryChecks: [
+      "Accuracy đạt ngưỡng mục tiêu của level 4.5 trong 2 lần luyện liên tiếp.",
+      "Giải thích được tại sao đáp án/cách diễn đạt đúng thay vì chỉ nhớ đáp án.",
+      "Lỗi cũ không lặp lại quá 2 lần trong cùng một tuần.",
+    ],
+    commonErrors: [
+      "Mất điểm do spelling/plural",
+      "Không đọc trước câu hỏi",
+      "Bị distractor kéo đi",
+      "Chờ nghe đúng từ trong đề thay vì paraphrase",
+    ],
+    remediation: [
+      "Giảm độ dài set và làm chậm từng bước.",
+      "Quay lại bài paraphrase/grammar/vocabulary nền tảng liên quan.",
+      "Làm lại sau 24–48 giờ đến khi giải thích được lỗi.",
+    ],
+    estimatedMinutes: 100,
+    tags: ["Part 2 monologue", "band-4.5"],
+  },
+  {
+    id: "listening-pre-ielts-3.5-4.5-5", skill: "listening", levelId: "pre-ielts-3.5-4.5", targetBand: 4.5, order: 5,
+    title: "Paraphrase thông dụng",
+    learningObjectives: [
+      "Nắm chắc detail tracking ở mức trung cấp.",
+      "Áp dụng speaker attitude vào dạng sentence completion.",
+      "Hoàn thành bài luyện có giới hạn thời gian và tự ghi lỗi vào error log.",
+    ],
+    teachingPoints: [
+      "Khái niệm trọng tâm: detail tracking; giáo viên minh họa bằng ví dụ đúng/sai.",
+      "Chiến lược xử lý: xác định yêu cầu → dự đoán → thực hiện → kiểm tra.",
+      "Nhận diện paraphrase/cấu trúc thường xuất hiện trong sentence completion.",
+      "Quy tắc tự sửa: phân loại lỗi kiến thức, chiến lược, tốc độ hoặc bất cẩn.",
+      "Đọc trước và dự đoán loại từ/số trước khi audio chạy.",
+      "Sau khi nghe sai, đối chiếu transcript để tìm chính xác âm hoặc paraphrase gây mất điểm.",
+    ],
+    teacherFlow: [
+      "5–10': warm-up và diagnostic nhanh.",
+      "15–20': dạy chiến lược bằng think-aloud.",
+      "20–25': guided practice, dừng ở từng bước để giải thích evidence.",
+      "20–30': timed independent practice.",
+      "10–15': chữa bài theo error categories và chốt homework.",
+    ],
+    guidedPractice: [
+      { id: "l-3-5-g1", title: "Guided drill — sentence completion", instruction: "Làm 6–10 mục sentence completion; sau mỗi câu ghi từ khóa và dấu hiệu dẫn đến đáp án.", expectedOutput: "Bảng đáp án + evidence/justification", estimatedMinutes: 18, difficulty: "medium" },
+      { id: "l-3-5-g2", title: "Paraphrase/evidence map", instruction: "Tạo hai cột: ngôn ngữ trong đề và cách diễn đạt tương đương trong input; tối thiểu 8 cặp.", expectedOutput: "8+ cặp paraphrase có ngữ cảnh", estimatedMinutes: 15, difficulty: "medium" },
+    ],
+    independentPractice: [
+      { id: "l-3-5-i1", title: "Timed set", instruction: "Hoàn thành một set sentence completion không dừng đồng hồ; đánh dấu câu không chắc thay vì mắc kẹt.", expectedOutput: "Điểm thô + thời gian + confidence", estimatedMinutes: 25, difficulty: "medium" },
+      { id: "l-3-5-i2", title: "Error-log repair", instruction: "Chọn tối thiểu 5 lỗi gần nhất, ghi nguyên nhân, evidence đúng và một quy tắc phòng lỗi lần sau.", expectedOutput: "5 dòng error log chất lượng", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    homework: [
+      { id: "l-3-5-h1", title: "Deliberate practice", instruction: "Làm thêm 20–30 phút bài cùng dạng sentence completion; mục tiêu ưu tiên accuracy trước speed.", expectedOutput: "Bài làm + tự chấm", estimatedMinutes: 30, difficulty: "medium" },
+      { id: "l-3-5-h2", title: "Review cycle", instruction: "Sau 24 giờ làm lại các câu sai mà không xem đáp án, rồi cập nhật error log.", expectedOutput: "Retest score + note cải thiện", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    masteryChecks: [
+      "Accuracy đạt ngưỡng mục tiêu của level 4.5 trong 2 lần luyện liên tiếp.",
+      "Giải thích được tại sao đáp án/cách diễn đạt đúng thay vì chỉ nhớ đáp án.",
+      "Lỗi cũ không lặp lại quá 2 lần trong cùng một tuần.",
+    ],
+    commonErrors: [
+      "Mất điểm do spelling/plural",
+      "Không đọc trước câu hỏi",
+      "Bị distractor kéo đi",
+      "Chờ nghe đúng từ trong đề thay vì paraphrase",
+    ],
+    remediation: [
+      "Giảm độ dài set và làm chậm từng bước.",
+      "Quay lại bài paraphrase/grammar/vocabulary nền tảng liên quan.",
+      "Làm lại sau 24–48 giờ đến khi giải thích được lỗi.",
+    ],
+    estimatedMinutes: 100,
+    tags: ["Paraphrase thông dụng", "band-4.5"],
+  },
+  {
+    id: "listening-pre-ielts-3.5-4.5-6", skill: "listening", levelId: "pre-ielts-3.5-4.5", targetBand: 4.5, order: 6,
+    title: "Checkpoint 4.5",
+    learningObjectives: [
+      "Nắm chắc speaker attitude ở mức trung cấp.",
+      "Áp dụng sound recognition vào dạng summary completion.",
+      "Hoàn thành bài luyện có giới hạn thời gian và tự ghi lỗi vào error log.",
+    ],
+    teachingPoints: [
+      "Khái niệm trọng tâm: speaker attitude; giáo viên minh họa bằng ví dụ đúng/sai.",
+      "Chiến lược xử lý: xác định yêu cầu → dự đoán → thực hiện → kiểm tra.",
+      "Nhận diện paraphrase/cấu trúc thường xuất hiện trong summary completion.",
+      "Quy tắc tự sửa: phân loại lỗi kiến thức, chiến lược, tốc độ hoặc bất cẩn.",
+      "Đọc trước và dự đoán loại từ/số trước khi audio chạy.",
+      "Sau khi nghe sai, đối chiếu transcript để tìm chính xác âm hoặc paraphrase gây mất điểm.",
+    ],
+    teacherFlow: [
+      "5–10': warm-up và diagnostic nhanh.",
+      "15–20': dạy chiến lược bằng think-aloud.",
+      "20–25': guided practice, dừng ở từng bước để giải thích evidence.",
+      "20–30': timed independent practice.",
+      "10–15': chữa bài theo error categories và chốt homework.",
+    ],
+    guidedPractice: [
+      { id: "l-3-6-g1", title: "Guided drill — summary completion", instruction: "Làm 6–10 mục summary completion; sau mỗi câu ghi từ khóa và dấu hiệu dẫn đến đáp án.", expectedOutput: "Bảng đáp án + evidence/justification", estimatedMinutes: 18, difficulty: "medium" },
+      { id: "l-3-6-g2", title: "Paraphrase/evidence map", instruction: "Tạo hai cột: ngôn ngữ trong đề và cách diễn đạt tương đương trong input; tối thiểu 8 cặp.", expectedOutput: "8+ cặp paraphrase có ngữ cảnh", estimatedMinutes: 15, difficulty: "medium" },
+    ],
+    independentPractice: [
+      { id: "l-3-6-i1", title: "Timed set", instruction: "Hoàn thành một set summary completion không dừng đồng hồ; đánh dấu câu không chắc thay vì mắc kẹt.", expectedOutput: "Điểm thô + thời gian + confidence", estimatedMinutes: 25, difficulty: "medium" },
+      { id: "l-3-6-i2", title: "Error-log repair", instruction: "Chọn tối thiểu 5 lỗi gần nhất, ghi nguyên nhân, evidence đúng và một quy tắc phòng lỗi lần sau.", expectedOutput: "5 dòng error log chất lượng", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    homework: [
+      { id: "l-3-6-h1", title: "Deliberate practice", instruction: "Làm thêm 20–30 phút bài cùng dạng summary completion; mục tiêu ưu tiên accuracy trước speed.", expectedOutput: "Bài làm + tự chấm", estimatedMinutes: 30, difficulty: "medium" },
+      { id: "l-3-6-h2", title: "Review cycle", instruction: "Sau 24 giờ làm lại các câu sai mà không xem đáp án, rồi cập nhật error log.", expectedOutput: "Retest score + note cải thiện", estimatedMinutes: 20, difficulty: "medium" },
+    ],
+    masteryChecks: [
+      "Accuracy đạt ngưỡng mục tiêu của level 4.5 trong 2 lần luyện liên tiếp.",
+      "Giải thích được tại sao đáp án/cách diễn đạt đúng thay vì chỉ nhớ đáp án.",
+      "Lỗi cũ không lặp lại quá 2 lần trong cùng một tuần.",
+    ],
+    commonErrors: [
+      "Mất điểm do spelling/plural",
+      "Không đọc trước câu hỏi",
+      "Bị distractor kéo đi",
+      "Chờ nghe đúng từ trong đề thay vì paraphrase",
+    ],
+    remediation: [
+      "Giảm độ dài set và làm chậm từng bước.",
+      "Quay lại bài paraphrase/grammar/vocabulary nền tảng liên quan.",
+      "Làm lại sau 24–48 giờ đến khi giải thích được lỗi.",
+    ],
+    estimatedMinutes: 100,
+    tags: ["Checkpoint 4.5", "band-4.5"],
+  }
+];

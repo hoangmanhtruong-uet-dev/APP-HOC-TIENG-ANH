@@ -4,7 +4,7 @@ import { useCallback, useState, useTransition } from "react";
 import { Headphones, Flag } from "lucide-react";
 
 import { LessonMarkdown } from "@/features/learning/components/lesson-markdown";
-import { GenericPracticeEngine } from "@/features/core-practice";
+import { GenericPracticeEngine, DynamicQuestionRenderer } from "@/features/core-practice";
 import { submitMockTestSectionAction } from "@/features/mock-tests/actions";
 import type { MockRunnerContext } from "@/features/mock-tests/model";
 import {
@@ -227,71 +227,11 @@ function QuestionCard({
         <LessonMarkdown>{question.promptMarkdown}</LessonMarkdown>
       </div>
 
-      {question.type === "short_text" ? (
-        <div className="mt-4">
-          <label
-            htmlFor={`listening-answer-${question.id}`}
-            className="mb-2 block text-xs font-bold uppercase tracking-widest text-zinc-500"
-          >
-            Your Answer
-          </label>
-          <input
-            id={`listening-answer-${question.id}`}
-            name={`listening-answer-${question.id}`}
-            value={draft.answerText}
-            onChange={(event) =>
-              onChange({ ...draft, answerText: event.target.value })
-            }
-            maxLength={2000}
-            autoComplete="off"
-            placeholder="Type your answer here..."
-            className="min-h-[56px] w-full rounded-2xl border border-zinc-300 bg-zinc-50 px-5 text-base focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-transparent transition-all outline-none"
-          />
-        </div>
-      ) : (
-        <div className="mt-4 space-y-3">
-          {question.options.map((option) => {
-            const checked = draft.selectedOptionIds.includes(option.id);
-            const multiple = question.type === "multiple_choice";
-            return (
-              <label
-                key={option.id}
-                className={`group flex min-h-[56px] cursor-pointer items-center gap-4 rounded-2xl border px-5 py-3 transition-all duration-300 ${
-                  checked
-                    ? "border-indigo-600 bg-indigo-50/50 shadow-sm"
-                    : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50"
-                }`}
-              >
-                <input
-                  type={multiple ? "checkbox" : "radio"}
-                  name={`listening-question-${question.id}`}
-                  checked={checked}
-                  onChange={() =>
-                    onChange({
-                      ...draft,
-                      selectedOptionIds: multiple
-                        ? checked
-                          ? draft.selectedOptionIds.filter(
-                              (id) => id !== option.id,
-                            )
-                          : [...draft.selectedOptionIds, option.id]
-                        : [option.id],
-                    })
-                  }
-                  className="size-5 shrink-0 accent-indigo-600 cursor-pointer"
-                />
-                <span
-                  className={`min-w-0 leading-relaxed break-words font-medium transition-colors ${
-                    checked ? "text-indigo-950" : "text-zinc-700 group-hover:text-zinc-900"
-                  }`}
-                >
-                  {option.label}
-                </span>
-              </label>
-            );
-          })}
-        </div>
-      )}
+      <DynamicQuestionRenderer
+        question={question}
+        draft={draft}
+        onChange={onChange}
+      />
     </fieldset>
   );
 }

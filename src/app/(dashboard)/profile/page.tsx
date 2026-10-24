@@ -96,24 +96,24 @@ export default async function ProfilePage() {
         </section>
 
         {/* 2-Column Layout */}
-        <div className="mt-6 grid gap-6 lg:grid-cols-12 lg:items-start">
+        <div className="mt-6 grid gap-6 lg:grid-cols-12">
           
           {/* Sidebar Menu (3/12) */}
           <aside className="lg:col-span-3">
-             <nav className="flex flex-col gap-1 sticky top-24">
-                <Link href="#" className="flex items-center gap-3 rounded-xl bg-[#4338CA] px-4 py-3 text-sm font-bold text-white shadow-sm">
+             <nav className="flex gap-2 overflow-x-auto pb-2 lg:flex-col lg:gap-1 lg:overflow-visible lg:pb-0 sticky top-24">
+                <Link href="#" className="flex shrink-0 items-center gap-3 whitespace-nowrap rounded-xl bg-[#4338CA] px-4 py-3 text-sm font-bold text-white shadow-sm">
                    <Target size={18} /> Mục tiêu & Kế hoạch học
                 </Link>
-                <Link href="#" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[var(--muted-foreground)] hover:bg-white hover:text-[var(--foreground)]">
+                <Link href="#" className="flex shrink-0 items-center gap-3 whitespace-nowrap rounded-xl px-4 py-3 text-sm font-semibold text-[var(--muted-foreground)] hover:bg-white hover:text-[var(--foreground)]">
                    <UserRound size={18} /> Hồ sơ cá nhân
                 </Link>
-                <Link href="#" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[var(--muted-foreground)] hover:bg-white hover:text-[var(--foreground)]">
+                <Link href="#" className="flex shrink-0 items-center gap-3 whitespace-nowrap rounded-xl px-4 py-3 text-sm font-semibold text-[var(--muted-foreground)] hover:bg-white hover:text-[var(--foreground)]">
                    <Bell size={18} /> Thông báo & Nhắc học
                 </Link>
-                <Link href="#" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[var(--muted-foreground)] hover:bg-white hover:text-[var(--foreground)]">
+                <Link href="#" className="flex shrink-0 items-center gap-3 whitespace-nowrap rounded-xl px-4 py-3 text-sm font-semibold text-[var(--muted-foreground)] hover:bg-white hover:text-[var(--foreground)]">
                    <AwardIcon size={18} /> Gói cước & Quản trị VIP
                 </Link>
-                <Link href="#" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[var(--muted-foreground)] hover:bg-white hover:text-[var(--foreground)]">
+                <Link href="#" className="flex shrink-0 items-center gap-3 whitespace-nowrap rounded-xl px-4 py-3 text-sm font-semibold text-[var(--muted-foreground)] hover:bg-white hover:text-[var(--foreground)]">
                    <ShieldCheck size={18} /> Bảo mật & Tài khoản
                 </Link>
              </nav>

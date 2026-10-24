@@ -71,9 +71,51 @@ export async function saveVocabAction(input: { term: string }) {
   });
 
   if (error) {
+    // If unique violation (already saved), treat as success
+    if (error.code === "23505") {
+      return { success: true, alreadyExists: true };
+    }
     console.error("Failed to save vocabulary:", error);
     return { success: false, error: "Failed to save vocabulary" };
   }
 
   return { success: true };
+}
+
+export async function checkWordInVaultAction(term: string) {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, inVault: false };
+
+    const { data } = await supabase
+      .from("vocabulary_vault")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("term", term.trim())
+      .maybeSingle();
+
+    return { success: true, inVault: !!data };
+  } catch {
+    return { success: false, inVault: false };
+  }
+}
+
+export async function getSavedVaultTermsAction() {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: true, terms: [] };
+
+    const { data } = await supabase
+      .from("vocabulary_vault")
+      .select("term")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(30);
+
+    return { success: true, terms: data ? data.map(r => r.term) : [] };
+  } catch {
+    return { success: false, terms: [] };
+  }
 }

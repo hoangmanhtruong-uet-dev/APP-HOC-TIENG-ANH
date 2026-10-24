@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo cáo & Tiến độ học tập 3D - Indigo Scholar</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js r128 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        indigoBg: '#0d0e15',
+                        indigoCard: '#141621',
+                        indigoCardInner: '#191c2a',
+                        indigoBorder: '#232637',
+                        indigoPrimary: '#5850ec',
+                        indigoAccent: '#6366f1',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            background-color: #0d0e15;
+            color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0d0e15;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #26293a;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6366f1;
+        }
+
+        /* KPI Card Subtle Corner Radial Glow */
+        .kpi-card {
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        .kpi-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(99, 102, 241, 0.45);
+            box-shadow: 0 14px 30px -10px rgba(99, 102, 241, 0.22);
+        }
+        .kpi-corner-circle {
+            position: absolute;
+            right: -18px;
+            bottom: -24px;
+            width: 96px;
+            height: 96px;
+            border-radius: 9999px;
+            pointer-events: none;
+            transition: transform 0.35s ease;
+        }
+        .kpi-card:hover .kpi-corner-circle {
+            transform: scale(1.25);
+        }
+
+        /* Floating 3D HTML Labels inside Three.js containers */
+        .label-3d {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            pointer-events: auto;
+            cursor: pointer;
+            transition: transform 0.18s ease, opacity 0.18s ease;
+            will-change: left, top;
+        }
+        .label-3d:hover {
+            transform: translate(-50%, -58%) scale(1.08);
+            z-index: 30;
+        }
+
+        /* 3D Isometric Heatmap Perspective Toggle */
+        .heatmap-grid-3d {
+            transform: perspective(600px) rotateX(28deg) rotateZ(-8deg) scale(0.95);
+            transform-style: preserve-3d;
+        }
+        .heatmap-cell {
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .heatmap-grid-3d .heatmap-cell[data-level="3"] {
+            transform: translateZ(10px);
+            box-shadow: -3px 6px 0px #312e81, 0 0 12px rgba(99, 102, 241, 0.6);
+        }
+        .heatmap-grid-3d .heatmap-cell[data-level="2"] {
+            transform: translateZ(6px);
+            box-shadow: -2px 4px 0px #1e1b4b;
+        }
+        .heatmap-grid-3d .heatmap-cell[data-level="1"] {
+            transform: translateZ(3px);
+        }
+
+        /* Glassmorphic Panel */
+        .glass-panel {
+            background: rgba(20, 22, 33, 0.86);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-indigoBg text-gray-100">
+
+    <!-- ================================================================= -->
+    <!-- TOP NAVIGATION BAR (Matches Screenshots)                          -->
+    <!-- ================================================================= -->
+    <header class="sticky top-0 z-50 h-16 bg-[#11131c]/95 backdrop-blur-md border-b border-indigoBorder px-4 lg:px-10 flex items-center justify-between">
+        <div class="flex items-center gap-8">
+            <!-- Brand -->
+            <a href="#progress" class="flex items-center gap-3 group">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center font-extrabold text-sm text-white shadow-lg shadow-indigo-600/30 group-hover:scale-105 transition">
+                    IS
+                </div>
+                <span class="font-bold text-lg tracking-tight text-white">Indigo Scholar</span>
+            </a>
+
+            <!-- Navigation Links -->
+            <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-gray-400">
+                <a href="#home" class="hover:text-white transition">Home</a>
+                <a href="#learn" class="hover:text-white transition">Learn</a>
+                <a href="#dictation" class="hover:text-white transition">Dictation</a>
+                <a href="#plans" class="hover:text-white transition">Plans</a>
+                <a href="#roadmap" class="hover:text-white transition">Roadmap</a>
+                <a href="#progress" class="text-white font-semibold relative py-5">
+                    Progress
+                    <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 rounded-full shadow-[0_0_8px_#6366f1]"></span>
+                </a>
+                <a href="#pricing" class="hover:text-white transition">Pricing</a>
+                <a href="#settings" class="hover:text-white transition">Profile & Settings</a>
+            </nav>
+        </div>
+
+        <!-- Right Status & User Avatar -->
+        <div class="flex items-center gap-4">
+            <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigoCard border border-indigoBorder text-xs text-gray-300">
+                <span class="w-2 h-2 rounded-full bg-indigo-400 animate-ping"></span>
+                <span>Three.js Analytics Engine</span>
+            </div>
+            <button class="w-9 h-9 rounded-full bg-indigo-600 border-2 border-indigo-300/80 flex items-center justify-center font-bold text-sm text-white shadow-md hover:scale-105 transition">
+                H
+            </button>
+        </div>
+    </header>
+
+    <!-- ================================================================= -->
+    <!-- MAIN CONTENT CONTAINER                                            -->
+    <!-- ================================================================= -->
+    <main class="flex-1 max-w-[1380px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-7 space-y-6">
+
+        <!-- 1. HEADER & FILTER CONTROLS -->
+        <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+            <div>
+                <div class="flex flex-wrap items-center gap-2.5 mb-2">
+                    <span class="px-2.5 py-0.5 rounded-md bg-[#1e1b4b] border border-indigo-500/40 text-[11px] font-extrabold uppercase tracking-wider text-indigo-300">
+                        ANALYTICS HUB
+                    </span>
+                    <span class="text-gray-400 text-xs font-medium">• Cập nhật lần cuối: <strong class="text-gray-300">Hôm nay, 08:30</strong></span>
+                </div>
+                <h1 class="text-2xl sm:text-3xl lg:text-[32px] font-black tracking-tight text-white">
+                    Báo cáo & Tiến độ học tập
+                </h1>
+            </div>
+
+            <!-- Right Time Switcher & PDF Export -->
+            <div class="flex flex-wrap items-center gap-3 self-start lg:self-auto">
+                <div class="inline-flex items-center p-1 rounded-xl bg-indigoCard border border-indigoBorder">
+                    <button id="range-7d" onclick="switchTimeRange('7d')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all bg-[#252347] text-indigo-300 border border-indigo-500/40 shadow-sm">
+                        7 ngày qua
+                    </button>
+                    <button id="range-30d" onclick="switchTimeRange('30d')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-gray-200 transition-all border border-transparent">
+                        Tháng này
+                    </button>
+                    <button id="range-all" onclick="switchTimeRange('all')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-gray-200 transition-all border border-transparent">
+                        Toàn thời gian
+                    </button>
+                </div>
+
+                <button onclick="openExportModal()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-indigo-600/30 transition active:scale-95">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span>Xuất báo cáo PDF</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. FOUR TOP KPI CARDS (Exact Match + Animated Values) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            <!-- KPI 1: Tổng giờ học -->
+            <div onclick="pulseAll3DCharts()" class="kpi-card rounded-2xl bg-indigoCard border border-indigoBorder p-5 cursor-pointer">
+                <div class="kpi-corner-circle bg-indigo-500/10"></div>
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs font-medium text-gray-400">Tổng giờ học</span>
+                    <div class="w-8 h-8 rounded-full bg-[#1c1e2f] border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                        <i data-lucide="clock" class="w-4 h-4"></i>
+                    </div>
+                </div>
+                <div id="kpi-hours" class="text-3xl font-black text-white font-display tracking-tight mb-2">
+                    24h 45m
+                </div>
+                <div class="flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
+                    <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
+                    <span id="kpi-hours-sub">+12% so với tuần trước</span>
+                </div>
+            </div>
+
+            <!-- KPI 2: Bài học đã xong -->
+            <div onclick="pulseAll3DCharts()" class="kpi-card rounded-2xl bg-indigoCard border border-indigoBorder p-5 cursor-pointer">
+                <div class="kpi-corner-circle bg-indigo-500/10"></div>
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs font-medium text-gray-400">Bài học đã xong</span>
+                    <div class="w-8 h-8 rounded-full bg-[#1c1e2f] border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                        <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-1.5 mb-2.5">
+                    <span id="kpi-lessons" class="text-3xl font-black text-white font-display tracking-tight">38</span>
+                    <span class="text-base font-bold text-gray-400">/ 120 bài</span>
+                </div>
+                <div class="w-full h-1.5 rounded-full bg-[#232637] overflow-hidden mb-2">
+                    <div id="kpi-lessons-bar" class="h-full bg-indigo-600 rounded-full transition-all duration-500" style="width: 31%"></div>
+                </div>
+                <p id="kpi-lessons-sub" class="text-[11px] text-gray-400">Hoàn thành 31% lộ trình</p>
+            </div>
+
+            <!-- KPI 3: Band dự phóng -->
+            <div onclick="pulseAll3DCharts()" class="kpi-card rounded-2xl bg-indigoCard border border-indigoBorder p-5 cursor-pointer">
+                <div class="kpi-corner-circle bg-indigo-500/10"></div>
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs font-medium text-gray-400">Band dự phóng</span>
+                    <div class="w-8 h-8 rounded-full bg-[#1c1e2f] border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                        <i data-lucide="award" class="w-4 h-4"></i>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2.5 mb-2">
+                    <span id="kpi-band" class="text-3xl font-black text-white font-display tracking-tight">7.0</span>
+                    <span id="kpi-band-badge" class="px-2 py-0.5 rounded-md bg-emerald-950/90 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold">
+                        +0.5 tăng
+                    </span>
+                </div>
+                <p class="text-xs font-medium text-indigo-400">Độ tin cậy mô hình: <strong id="kpi-confidence">75%</strong></p>
+            </div>
+
+            <!-- KPI 4: Chuỗi liên tục (Streak) -->
+            <div onclick="pulseAll3DCharts()" class="kpi-card rounded-2xl bg-indigoCard border border-indigoBorder p-5 cursor-pointer">
+                <div class="kpi-corner-circle bg-amber-500/10"></div>
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs font-medium text-gray-400">Chuỗi liên tục (Streak)</span>
+                    <div class="w-8 h-8 rounded-full bg-[#27201c] border border-amber-500/20 flex items-center justify-center text-amber-400">
+                        <i data-lucide="flame" class="w-4 h-4"></i>
+                    </div>
+                </div>
+                <div id="kpi-streak" class="text-3xl font-black text-white font-display tracking-tight mb-2">
+                    12 Ngày
+                </div>
+                <div class="flex items-center gap-1.5 text-xs font-semibold text-amber-400">
+                    <i data-lucide="medal" class="w-3.5 h-3.5"></i>
+                    <span>Đang giữ kỷ lục cá nhân!</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. AI SMART INSIGHT BANNER -->
+        <div class="rounded-2xl bg-gradient-to-r from-[#171829] via-[#181a2c] to-[#151724] border border-indigo-500/30 p-4 sm:p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 shadow-lg">
+            <div class="flex items-start sm:items-center gap-4">
+                <div class="w-11 h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center text-white shadow-lg shadow-indigo-600/40 flex-shrink-0">
+                    <i data-lucide="lightbulb" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <div class="flex flex-wrap items-center gap-2 mb-1">
+                        <span class="text-[11px] font-extrabold uppercase tracking-wider text-indigo-400">AI SMART INSIGHT</span>
+                        <span class="text-xs text-gray-400">• Phát hiện điểm yếu cần tối ưu ngay</span>
+                    </div>
+                    <p class="text-sm sm:text-base font-bold text-white">
+                        Bạn đang gặp khó khăn nhỏ với cấu trúc phát âm nguyên âm đôi trong phần Speaking Part 2.
+                    </p>
+                </div>
+            </div>
+
+            <button onclick="openPronunciationModal()" class="w-full lg:w-auto px-4 py-2.5 rounded-xl bg-[#11131d] hover:bg-[#1d2032] text-gray-100 border border-indigoBorder hover:border-indigo-500/50 text-xs font-bold flex items-center justify-center gap-2 transition shrink-0 shadow">
+                <i data-lucide="play-circle" class="w-4 h-4 text-indigo-400"></i>
+                <span>Khắc phục ngay: Luyện phát âm nguyên âm đôi (15 phút)</span>
+            </button>
+        </div>
+
+        <!-- 4. MAIN 12-COLUMN ANALYTICS GRID -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+            <!-- ========================================================= -->
+            <!-- LEFT COLUMN (8 COLS): SCORE TRAJECTORY 3D & 6 SKILLS      -->
+            <!-- ========================================================= -->
+            <div class="lg:col-span-8 space-y-6">
+
+                <!-- CARD A: XU HƯỚNG ĐIỂM SỐ QUA CÁC TUẦN (THREE.JS 3D HOLOGRAPHIC CHART) -->
+                <div class="rounded-2xl bg-indigoCard border border-indigoBorder p-5 sm:p-6 shadow-xl">
+                    <!-- Header & Legend -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                        <div>
+                            <h2 class="text-base sm:text-lg font-extrabold text-white">Xu hướng điểm số qua các tuần</h2>
+                            <p class="text-xs text-gray-400">Mô phỏng sự tăng trưởng Band điểm tổng kết (Kéo chuột để xoay góc nhìn 3D)</p>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-4">
+                            <div class="flex items-center gap-2 text-xs font-semibold text-gray-200">
+                                <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_8px_#6366f1]"></span>
+                                <span>Band Dự phóng</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs font-semibold text-gray-400">
+                                <span class="w-2.5 h-2.5 rounded-full bg-gray-500"></span>
+                                <span>Mục tiêu (7.5)</span>
+                            </div>
+                            <!-- Toggle 3D / 2D Camera Angle -->
+                            <button onclick="toggleTrajectoryCameraView()" id="btn-traj-angle" class="px-2.5 py-1 rounded-lg bg-[#1d2030] hover:bg-indigo-600/30 border border-indigo-500/30 text-[11px] font-bold text-indigo-300 flex items-center gap-1.5 transition">
+                                <i data-lucide="box" class="w-3.5 h-3.5"></i>
+                                <span>Góc nhìn: 3D</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- THREE.JS 3D SCORE TRAJECTORY STAGE -->
+                    <div class="relative w-full h-[330px] sm:h-[360px] rounded-xl bg-[#0e1018] border border-[#1f2233] overflow-hidden">
+                        <!-- Dashed Target 7.5 Reference Overlay Line (Matches Screenshot) -->
+                        <div class="absolute top-12 left-8 right-8 border-t-2 border-dashed border-gray-500/45 pointer-events-none z-10 flex justify-end">
+                            <span class=" -mt-5 px-2 py-0.5 rounded bg-[#141621]/90 text-[10px] font-bold text-gray-400 border border-white/10">
+                                Target Band 7.5
+                            </span>
+                        </div>
+
+                        <!-- Three.js WebGL Mount -->
+                        <div id="trajectory-3d-container" class="w-full h-full cursor-grab active:cursor-grabbing"></div>
+
+                        <!-- 3D Floating Week Labels Layer -->
+                        <div id="trajectory-labels-layer" class="absolute inset-0 pointer-events-none overflow-hidden z-20"></div>
+
+                        <!-- Selected Week Mini HUD Pill -->
+                        <div id="trajectory-hud" class="absolute top-3 left-3 z-20 glass-panel px-3.5 py-2 rounded-xl flex items-center gap-3 pointer-events-none">
+                            <div class="w-2.5 h-8 rounded-full bg-indigo-500"></div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span id="traj-hud-week" class="text-xs font-extrabold text-white">Hiện tại (Tuần 6)</span>
+                                    <span id="traj-hud-band" class="px-2 py-0.5 rounded bg-indigo-600 text-[11px] font-black text-white">Band 7.0</span>
+                                </div>
+                                <p id="traj-hud-detail" class="text-[11px] text-gray-300">Cách mục tiêu 7.5 chỉ còn 0.5 band • Tăng +1.5 từ Tuần 1</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Week Selector Footer Bar (Matches X-Axis in Screenshot) -->
+                    <div class="grid grid-cols-6 gap-2 mt-3 pt-2 border-t border-indigoBorder/60 text-center" id="week-footer-bar">
+                        <!-- Dynamically populated week buttons -->
+                    </div>
+                </div>
+
+                <!-- CARD B: CHI TIẾT 6 KỸ NĂNG CỐT LÕI -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-base sm:text-lg font-extrabold text-white">Chi tiết 6 Kỹ năng cốt lõi</h2>
+                        <span class="text-xs text-gray-400 font-medium">Đánh giá chuẩn IELTS Format • Click để soi trên Radar 3D</span>
+                    </div>
+
+                    <div id="skills-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Populated dynamically from SKILLS_DATA -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- RIGHT COLUMN (4 COLS): 3D RADAR, VOCAB VAULT, HEATMAP     -->
+            <!-- ========================================================= -->
+            <div class="lg:col-span-4 space-y-6">
+
+                <!-- CARD 1: CÂN BẰNG KỸ NĂNG (THREE.JS 3D HEXAGONAL RADAR CRYSTAL) -->
+                <div class="rounded-2xl bg-indigoCard border border-indigoBorder p-5 shadow-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-base font-extrabold text-white">Cân bằng kỹ năng</h3>
+                        <span class="text-[11px] text-gray-400">Radar phân bổ năng lực 3D</span>
+                    </div>
+
+                    <!-- THREE.JS 3D RADAR STAGE -->
+                    <div class="relative w-full h-[270px] rounded-xl bg-[#0e1018] border border-[#1f2233] overflow-hidden mb-4">
+                        <div id="radar-3d-container" class="w-full h-full cursor-grab active:cursor-grabbing"></div>
+                        <div id="radar-labels-layer" class="absolute inset-0 pointer-events-none overflow-hidden z-20"></div>
+
+                        <button onclick="simulateSkillBoost()" class="absolute bottom-2.5 right-2.5 z-30 px-2.5 py-1 rounded-lg bg-indigo-600/25 hover:bg-indigo-600/40 border border-indigo-500/40 text-[10px] font-bold text-indigo-300 flex items-center gap-1 transition" title="Mô phỏng cải thiện kỹ năng yếu">
+                            <i data-lucide="sparkles" class="w-3 h-3"></i>
+                            <span>Mô phỏng tối ưu Band</span>
+                        </button>
+                    </div>
+
+                    <!-- 6 Skill Pills Grid (Exact Match to Screenshot) -->
+                    <div id="radar-skill-pills" class="grid grid-cols-2 gap-2.5">
+                        <!-- Dynamically rendered -->
+                    </div>
+                </div>
+
+                <!-- CARD 2: VOCABULARY VAULT -->
+                <div class="rounded-2xl bg-indigoCard border border-indigoBorder p-5 shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-base font-extrabold text-white">Vocabulary Vault</h3>
+                        <i data-lucide="book-open" class="w-4 h-4 text-indigo-400"></i>
+                    </div>
+
+                    <div class="rounded-xl bg-indigoCardInner border border-indigoBorder p-4 flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-[11px] text-gray-400 mb-1">Tổng từ đã lưu</p>
+                            <p class="text-2xl font-black text-white font-display leading-tight">1,240</p>
+                            <p class="text-lg font-extrabold text-white leading-tight">từ</p>
+                        </div>
+
+                        <div class="pl-3 border-l border-indigoBorder">
+                            <p class="text-[11px] text-gray-400 mb-1">Cần ôn tập ngay</p>
+                            <p id="vocab-due-count" class="text-2xl font-black text-amber-500 font-display leading-tight">35</p>
+                            <p class="text-lg font-extrabold text-amber-500 leading-tight">từ</p>
+                        </div>
+
+                        <button onclick="openVocabModal()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 transition active:scale-95 shrink-0">
+                            Ôn tập
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CARD 3: BẢN ĐỒ HOẠT ĐỘNG (365 NGÀY HỌC TẬP + 3D ELEVATION TOGGLE) -->
+                <div class="rounded-2xl bg-indigoCard border border-indigoBorder p-5 shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-base font-extrabold text-white">Bản đồ hoạt động</h3>
+                            <p class="text-[11px] text-gray-400">365 ngày học tập</p>
+                        </div>
+                        <button onclick="toggleHeatmap3D()" id="btn-heatmap-3d" class="px-2.5 py-1 rounded-lg bg-[#1d2030] hover:bg-indigo-600/30 border border-indigo-500/30 text-[10px] font-bold text-indigo-300 transition">
+                            Khối nổi 3D: Tắt
+                        </button>
+                    </div>
+
+                    <!-- Heatmap Matrix (12 cols x 4 rows matching screenshot) -->
+                    <div id="heatmap-matrix" class="grid grid-cols-12 gap-1.5 py-2 transition-transform duration-500">
+                        <!-- Populated via JS -->
+                    </div>
+
+                    <div class="flex items-center justify-between text-[11px] text-gray-400 mt-4 pt-2 border-t border-indigoBorder/60">
+                        <span>Ít hoạt động</span>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#1e2235]"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#312e81]"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#4f46e5]"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#6366f1] shadow-[0_0_6px_#6366f1]"></span>
+                        </div>
+                        <span>Cực kỳ chăm chỉ</span>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ================================================================= -->
+    <!-- INTERACTIVE MODAL: AI PRONUNCIATION DIPHTHONG TRAINER             -->
+    <!-- ================================================================= -->
+    <div id="pronunciation-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+        <div class="glass-panel rounded-2xl max-w-lg w-full p-6 border border-indigo-500/40 shadow-2xl space-y-5">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
+                        <i data-lucide="mic" class="w-4 h-4"></i>
+                    </span>
+                    <div>
+                        <h3 class="text-base font-extrabold text-white">AI Speaking Part 2 • Luyện Nguyên Âm Đôi</h3>
+                        <p class="text-xs text-indigo-300">Khắc phục lỗi âm /eɪ/, /aɪ/, /əʊ/ trong bài nói mô tả</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('pronunciation-modal')" class="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <div class="rounded-xl bg-[#0e1018] border border-indigoBorder p-4 text-center space-y-3">
+                <span class="px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[11px] font-bold">Từ mục tiêu 1 / 5</span>
+                <div class="text-3xl font-black text-white tracking-wide">unforgettable</div>
+                <div class="text-sm font-mono text-emerald-400">/ˌʌn.fəˈɡet.ə.bəl/ — Chú ý âm chuyển tiếp</div>
+                <!-- Animated SVG Soundwave -->
+                <div class="h-14 flex items-center justify-center gap-1.5 pt-2" id="voice-wave-bars">
+                    <span class="w-1.5 h-5 bg-indigo-500 rounded-full animate-pulse"></span>
+                    <span class="w-1.5 h-10 bg-indigo-400 rounded-full animate-pulse"></span>
+                    <span class="w-1.5 h-7 bg-emerald-400 rounded-full animate-pulse"></span>
+                    <span class="w-1.5 h-12 bg-indigo-500 rounded-full animate-pulse"></span>
+                    <span class="w-1.5 h-6 bg-indigo-400 rounded-full animate-pulse"></span>
+                    <span class="w-1.5 h-9 bg-emerald-400 rounded-full animate-pulse"></span>
+                    <span class="w-1.5 h-4 bg-indigo-500 rounded-full animate-pulse"></span>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3">
+                <button onclick="closeModal('pronunciation-modal')" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-gray-300">
+                    Để sau
+                </button>
+                <button onclick="completePronunciationDrill()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white shadow-lg shadow-indigo-600/30">
+                    Hoàn thành bài tập (+0.2 Speaking)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST BANNER -->
+    <div id="toast-banner" class="fixed bottom-6 right-6 z-50 pointer-events-none opacity-0 translate-y-4 transition-all duration-300 glass-panel px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 max-w-sm">
+        <div class="w-8 h-8 rounded-lg bg-indigo-600/30 border border-indigo-400/40 flex items-center justify-center text-indigo-300 shrink-0">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+        </div>
+        <div>
+            <p id="toast-title" class="text-xs font-bold text-white">Analytics 3D Engine</p>
+            <p id="toast-desc" class="text-[11px] text-gray-300">Đã cập nhật dữ liệu trực quan hóa.</p>
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- THREE.JS 3D ANALYTICS ENGINE & INTERACTIVE LOGIC                  -->
+    <!-- ================================================================= -->
+    <script>
+        lucide.createIcons();
+
+        // -----------------------------------------------------------------
+        // 1. ANALYTICS DATA MODELS (Exact Match to Screenshots)
+        // -----------------------------------------------------------------
+        const TIME_RANGES = {
+            '7d': {
+                hours: '24h 45m',
+                hoursSub: '+12% so với tuần trước',
+                lessons: 38,
+                lessonsPct: 31,
+                band: '7.0',
+                bandBadge: '+0.5 tăng',
+                confidence: '75%',
+                streak: '12 Ngày',
+                weeks: [
+                    { id: 0, label: 'Tuần 1', band: 5.5, hours: '14h', note: 'Khởi đầu lộ trình A2-B1' },
+                    { id: 1, label: 'Tuần 2', band: 5.8, hours: '16h', note: 'Chuẩn hóa IPA & Vocab' },
+                    { id: 2, label: 'Tuần 3', band: 6.0, hours: '19h', note: 'Vượt qua Milestone Test 1' },
+                    { id: 3, label: 'Tuần 4', band: 6.5, hours: '21h', note: 'Bứt phá Reading 7.5' },
+                    { id: 4, label: 'Tuần 5', band: 6.8, hours: '22h', note: 'Tăng tốc Listening Part 2-3' },
+                    { id: 5, label: 'Hiện tại', band: 7.0, hours: '24h 45m', note: 'Cách mục tiêu 7.5 chỉ 0.5 band!' }
+                ]
+            },
+            '30d': {
+                hours: '92h 15m',
+                hoursSub: '+24% so với tháng trước',
+                lessons: 38,
+                lessonsPct: 31,
+                band: '7.0',
+                bandBadge: '+1.0 tăng',
+                confidence: '82%',
+                streak: '12 Ngày',
+                weeks: [
+                    { id: 0, label: 'Tuần 1', band: 5.2, hours: '12h', note: 'Diagnostic Test đầu vào' },
+                    { id: 1, label: 'Tuần 2', band: 5.6, hours: '15h', note: 'Hoàn thành 500 từ vựng' },
+                    { id: 2, label: 'Tuần 3', band: 6.1, hours: '18h', note: 'Luyện nghe Map & Form' },
+                    { id: 3, label: 'Tuần 4', band: 6.4, hours: '20h', note: 'Viết luận Task 2 PEEL' },
+                    { id: 4, label: 'Tuần 5', band: 6.8, hours: '23h', note: 'Mock Test Speaking AI' },
+                    { id: 5, label: 'Hiện tại', band: 7.0, hours: '24h 45m', note: 'Đạt ngưỡng Band 7.0 ổn định' }
+                ]
+            },
+            'all': {
+                hours: '148h 30m',
+                hoursSub: 'Tổng thời gian tích lũy',
+                lessons: 38,
+                lessonsPct: 31,
+                band: '7.0',
+                bandBadge: '+1.5 từ đầu khóa',
+                confidence: '88%',
+                streak: '12 Ngày',
+                weeks: [
+                    { id: 0, label: 'Tuần 1', band: 5.0, hours: '10h', note: 'Điểm xuất phát' },
+                    { id: 1, label: 'Tuần 2', band: 5.5, hours: '14h', note: 'Nền tảng ngữ pháp' },
+                    { id: 2, label: 'Tuần 3', band: 6.0, hours: '19h', note: 'Pre-IELTS Chiến thuật' },
+                    { id: 3, label: 'Tuần 4', band: 6.5, hours: '21h', note: 'Reading & Listening bứt phá' },
+                    { id: 4, label: 'Tuần 5', band: 6.8, hours: '23h', note: 'Tối ưu từ vựng học thuật' },
+                    { id: 5, label: 'Hiện tại', band: 7.0, hours: '24h 45m', note: 'Sẵn sàng tiến tới 7.5' }
+                ]
+            }
+        };
+
+        const SKILLS_DATA = [
+            {
+                id: 'reading',
+                name: 'Reading',
+                band: 7.5,
+                progress: 85,
+                status: 'Điểm mạnh',
+                theme: 'emerald',
+                barColor: 'bg-emerald-500',
+                badgeClass: 'bg-emerald-950/90 text-emerald-400 border-emerald-500/30',
+                statusClass: 'text-emerald-400',
+                colorHex: 0x10b981
+            },
+            {
+                id: 'listening',
+                name: 'Listening',
+                band: 7.0,
+                progress: 75,
+                status: 'Ổn định',
+                theme: 'emerald',
+                barColor: 'bg-emerald-500',
+                badgeClass: 'bg-emerald-950/90 text-emerald-400 border-emerald-500/30',
+                statusClass: 'text-emerald-400',
+                colorHex: 0x10b981
+            },
+            {
+                id: 'speaking',
+                name: 'Speaking',
+                band: 6.5,
+                progress: 65,
+                status: 'Cần chú ý',
+                theme: 'amber',
+                barColor: 'bg-amber-500',
+                badgeClass: 'bg-amber-950/90 text-amber-400 border-amber-500/30',
+                statusClass: 'text-amber-500',
+                colorHex: 0xf59e0b
+            },
+            {
+                id: 'writing',
+                name: 'Writing',
+                band: 6.0,
+                progress: 60,
+                status: 'Cần chú ý',
+                theme: 'amber',
+                barColor: 'bg-amber-500',
+                badgeClass: 'bg-amber-950/90 text-amber-400 border-amber-500/30',
+                statusClass: 'text-amber-500',
+                colorHex: 0xf59e0b
+            },
+            {
+                id: 'vocab',
+                name: 'Vocabulary',
+                scrollLabel: 'Vocab',
+                band: 7.0,
+                progress: 80,
+                status: 'Điểm mạnh',
+                theme: 'indigo',
+                barColor: 'bg-indigo-500',
+                badgeClass: 'bg-indigo-950/90 text-indigo-300 border-indigo-500/40',
+                statusClass: 'text-indigo-400',
+                colorHex: 0x6366f1
+            },
+            {
+                id: 'grammar',
+                name: 'Grammar',
+                band: 6.5,
+                progress: 70,
+                status: 'Khá tốt',
+                theme: 'indigo',
+                barColor: 'bg-indigo-500',
+                badgeClass: 'bg-indigo-950/90 text-indigo-300 border-indigo-500/40',
+                statusClass: 'text-indigo-400',
+                colorHex: 0x6366f1
+            }
+        ];
+
+        let currentRangeKey = '7d';
+        let selectedWeekIndex = 5; // Default 'Hiện tại'
+        let selectedSkillId = 'reading';
+
+        // -----------------------------------------------------------------
+        // 2. RENDER 6 CORE SKILLS CARDS & RADAR PILLS + HEATMAP
+        // -----------------------------------------------------------------
+        function renderSkillsUI() {
+            const grid = document.getElementById('skills-cards-grid');
+            const pills = document.getElementById('radar-skill-pills');
+
+            grid.innerHTML = SKILLS_DATA.map((s, idx) => {
+                const isSelected = s.id === selectedSkillId;
+                return `
+                    <div onclick="focusSkillOnRadar('${s.id}', ${idx})" class="rounded-2xl bg-indigoCard hover:bg-[#191c2b] border ${isSelected ? 'border-indigo-500 ring-1 ring-indigo-500/40' : 'border-indigoBorder'} p-5 cursor-pointer transition group">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-base font-extrabold text-white group-hover:text-indigo-300 transition">${s.name}</h3>
+                            <span class="px-2.5 py-0.5 rounded-md border text-[11px] font-bold ${s.badgeClass}">
+                                Band ${s.band.toFixed(1)}
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs mb-2">
+                            <span class="text-gray-400 font-medium">Tiến độ: <strong class="text-gray-200">${s.progress}%</strong></span>
+                            <span class="font-bold ${s.statusClass}">${s.status}</span>
+                        </div>
+                        <div class="w-full h-1.5 rounded-full bg-[#232637] overflow-hidden">
+                            <div class="h-full ${s.barColor} rounded-full transition-all duration-500" style="width: ${s.progress}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Order matching screenshot pills: Reading, Listening, Writing, Speaking, Vocab, Grammar
+            const pillOrder = ['reading', 'listening', 'writing', 'speaking', 'vocab', 'grammar'];
+            pills.innerHTML = pillOrder.map(id => {
+                const s = SKILLS_DATA.find(item => item.id === id);
+                const label = s.scrollLabel || s.name;
+                const active = s.id === selectedSkillId;
+                return `
+                    <div onclick="focusSkillOnRadar('${s.id}')" class="px-3.5 py-2.5 rounded-xl bg-indigoCardInner hover:bg-[#22263a] border ${active ? 'border-indigo-500' : 'border-indigoBorder'} flex items-center justify-between cursor-pointer transition">
+                        <span class="text-xs text-gray-400 font-medium">${label}:</span>
+                        <span class="text-xs font-extrabold text-white">${s.band.toFixed(1)}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderHeatmapGrid() {
+            const matrix = document.getElementById('heatmap-matrix');
+            // 48 cells (12 columns x 4 rows) matching the visual density in screenshot 3
+            const levels = [
+                0, 1, 2, 1, 3, 2, 1, 3, 2, 1, 0, 1,
+                1, 3, 2, 1, 2, 1, 3, 2, 1, 1, 2, 0,
+                0, 1, 2, 2, 3, 1, 2, 3, 1, 2, 1, 1,
+                1, 0, 1, 1, 2, 1, 2, 1, 0, 1, 1, 2
+            ];
+            const colorMap = {
+                0: 'bg-[#1c1f2e]',
+                1: 'bg-[#2a2956]',
+                2: 'bg-[#4338ca]',
+                3: 'bg-[#6366f1]'
+            };
+
+            matrix.innerHTML = levels.map((lvl, idx) => {
+                const mins = lvl === 0 ? 0 : lvl * 25 + 10;
+                return `
+                    <div data-level="${lvl}"
+                         onclick="showToast('Ngày học #${idx + 1}', '${mins > 0 ? `Đã học ${mins} phút • Hoàn thành mục tiêu ngày` : 'Ngày nghỉ ngơi'}')"
+                         title="${mins} phút học"
+                         class="heatmap-cell aspect-square rounded-[4px] ${colorMap[lvl]} hover:ring-2 hover:ring-indigo-300 cursor-pointer">
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleHeatmap3D() {
+            const matrix = document.getElementById('heatmap-matrix');
+            const btn = document.getElementById('btn-heatmap-3d');
+            const is3D = matrix.classList.toggle('heatmap-grid-3d');
+            btn.textContent = is3D ? 'Khối nổi 3D: Bật' : 'Khối nổi 3D: Tắt';
+        }
+
+        // -----------------------------------------------------------------
+        // 3. THREE.JS SCENE 1: 3D HOLOGRAPHIC SCORE TRAJECTORY CHART
+        // -----------------------------------------------------------------
+        let trajScene, trajCamera, trajRenderer, trajRaycaster, trajMouse;
+        let trajOrbs = [];
+        let trajPillars = [];
+        let trajSplineMesh = null;
+        let trajParticles = [];
+        let trajCurve = null;
+        let trajIs2DView = false;
+
+        const trajCamState = {
+            target: new THREE.Vector3(0, 1.2, 0),
+            theta: 0.18,
+            desiredTheta: 0.18,
+            phi: 1.18,
+            desiredPhi: 1.18,
+            radius: 17.5,
+            desiredRadius: 17.5,
+            isDragging: false,
+            prevMouse: { x: 0, y: 0 },
+            downMouse: { x: 0, y: 0 }
+        };
+
+        function initTrajectory3D() {
+            const container = document.getElementById('trajectory-3d-container');
+            const w = container.clientWidth || 700;
+            const h = container.clientHeight || 350;
+
+            trajScene = new THREE.Scene();
+
+            trajCamera = new THREE.PerspectiveCamera(40, w / h, 0.1, 100);
+            trajRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            trajRenderer.setSize(w, h);
+            trajRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.innerHTML = '';
+            container.appendChild(trajRenderer.domElement);
+
+            trajRaycaster = new THREE.Raycaster();
+            trajMouse = new THREE.Vector2();
+
+            // Lighting
+            trajScene.add(new THREE.AmbientLight(0x94a3b8, 0.9));
+            const dirLight = new THREE.DirectionalLight(0x818cf8, 1.6);
+            dirLight.position.set(8, 16, 12);
+            trajScene.add(dirLight);
+
+            const pointLight = new THREE.PointLight(0x6366f1, 2.5, 25);
+            pointLight.position.set(4, 5, 4);
+            trajScene.add(pointLight);
+
+            // Floor Grid
+            const grid = new THREE.GridHelper(24, 24, 0x2e3250, 0x171929);
+            grid.position.y = -2.2;
+            trajScene.add(grid);
+
+            // Build Data Objects
+            buildTrajectoryMeshes();
+
+            // Pointer Interactions
+            container.addEventListener('pointerdown', (e) => {
+                trajCamState.isDragging = true;
+                trajCamState.prevMouse = { x: e.clientX, y: e.clientY };
+                trajCamState.downMouse = { x: e.clientX, y: e.clientY };
+            });
+
+            window.addEventListener('pointermove', (e) => {
+                if (!trajCamState.isDragging) return;
+                const dx = e.clientX - trajCamState.prevMouse.x;
+                const dy = e.clientY - trajCamState.prevMouse.y;
+                trajCamState.prevMouse = { x: e.clientX, y: e.clientY };
+
+                trajCamState.desiredTheta -= dx * 0.007;
+                trajCamState.desiredPhi = Math.max(0.65, Math.min(1.48, trajCamState.desiredPhi - dy * 0.006));
+            });
+
+            window.addEventListener('pointerup', (e) => {
+                if (!trajCamState.isDragging) return;
+                trajCamState.isDragging = false;
+                const dist = Math.hypot(e.clientX - trajCamState.downMouse.x, e.clientY - trajCamState.downMouse.y);
+                if (dist < 6) {
+                    const rect = container.getBoundingClientRect();
+                    trajMouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                    trajMouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+                    trajRaycaster.setFromCamera(trajMouse, trajCamera);
+                    const hits = trajRaycaster.intersectObjects(trajOrbs, false);
+                    if (hits.length > 0) {
+                        selectTrajectoryWeek(hits[0].object.userData.weekIndex);
+                    }
+                }
+            });
+        }
+
+        function buildTrajectoryMeshes() {
+            // Clear existing dynamic meshes
+            trajOrbs.forEach(m => trajScene.remove(m));
+            trajPillars.forEach(m => trajScene.remove(m));
+            trajParticles.forEach(p => trajScene.remove(p.mesh));
+            if (trajSplineMesh) trajScene.remove(trajSplineMesh);
+
+            trajOrbs = [];
+            trajPillars = [];
+            trajParticles = [];
+
+            const weeks = TIME_RANGES[currentRangeKey].weeks;
+            const xSpacing = 2.6;
+            const startX = -((weeks.length - 1) * xSpacing) / 2;
+
+            const curvePoints = [];
+            const labelsLayer = document.getElementById('trajectory-labels-layer');
+            labelsLayer.innerHTML = '';
+
+            weeks.forEach((w, idx) => {
+                const x = startX + idx * xSpacing;
+                // Map band 4.5..7.5 to Y -1.5..3.8
+                const y = (w.band - 5.0) * 2.1 - 0.8;
+                const z = 0;
+
+                const pt = new THREE.Vector3(x, y, z);
+                curvePoints.push(pt);
+
+                // Glowing Sphere Node (Matches the Indigo Dots in Screenshot 2)
+                const isCurrent = idx === weeks.length - 1;
+                const orbGeo = new THREE.SphereGeometry(isCurrent ? 0.42 : 0.32, 24, 24);
+                const orbMat = new THREE.MeshStandardMaterial({
+                    color: isCurrent ? 0x818cf8 : 0x5850ec,
+                    emissive: 0x4f46e5,
+                    emissiveIntensity: isCurrent ? 1.1 : 0.75,
+                    roughness: 0.15,
+                    metalness: 0.5
+                });
+                const orb = new THREE.Mesh(orbGeo, orbMat);
+                orb.position.copy(pt);
+                orb.userData = { weekIndex: idx, basePos: pt.clone() };
+                trajScene.add(orb);
+                trajOrbs.push(orb);
+
+                // Translucent Vertical Energy Pillar beneath each dot
+                const pillarHeight = Math.max(0.2, y + 2.2);
+                const pillarGeo = new THREE.CylinderGeometry(0.12, 0.12, pillarHeight, 16);
+                const pillarMat = new THREE.MeshBasicMaterial({
+                    color: isCurrent ? 0x6366f1 : 0x312e81,
+                    transparent: true,
+                    opacity: idx === selectedWeekIndex ? 0.65 : 0.28
+                });
+                const pillar = new THREE.Mesh(pillarGeo, pillarMat);
+                pillar.position.set(x, -2.2 + pillarHeight / 2, z);
+                trajScene.add(pillar);
+                trajPillars.push(pillar);
+
+                // Create Floating HTML Score Pill above each 3D dot
+                const tag = document.createElement('div');
+                tag.className = 'label-3d select-none';
+                tag.onclick = () => selectTrajectoryWeek(idx);
+                tag.innerHTML = `
+                    <div class="px-2 py-0.5 rounded-md text-[10px] font-extrabold border transition ${
+                        idx === selectedWeekIndex
+                            ? 'bg-indigo-600 text-white border-indigo-300 shadow-lg shadow-indigo-500/50 scale-110'
+                            : 'bg-[#151828]/90 text-indigo-200 border-indigo-500/30'
+                    }">
+                        ${w.band.toFixed(1)}
+                    </div>
+                `;
+                labelsLayer.appendChild(tag);
+                orb.userData.labelEl = tag;
+            });
+
+            // Smooth 3D Holographic Tube connecting the weekly dots
+            trajCurve = new THREE.CatmullRomCurve3(curvePoints);
+            const tubeGeo = new THREE.TubeGeometry(trajCurve, 72, 0.07, 12, false);
+            const tubeMat = new THREE.MeshBasicMaterial({
+                color: 0x6366f1,
+                transparent: true,
+                opacity: 0.55
+            });
+            trajSplineMesh = new THREE.Mesh(tubeGeo, tubeMat);
+            trajScene.add(trajSplineMesh);
+
+            // Flowing Data Particles along the trajectory curve
+            const pGeo = new THREE.SphereGeometry(0.13, 8, 8);
+            for (let i = 0; i < 10; i++) {
+                const pMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+                const pMesh = new THREE.Mesh(pGeo, pMat);
+                trajScene.add(pMesh);
+                trajParticles.push({ mesh: pMesh, t: i / 10 });
+            }
+
+            renderWeekFooterButtons();
+            updateTrajectoryHUD();
+        }
+
+        function renderWeekFooterButtons() {
+            const weeks = TIME_RANGES[currentRangeKey].weeks;
+            const bar = document.getElementById('week-footer-bar');
+            bar.innerHTML = weeks.map((w, idx) => {
+                const active = idx === selectedWeekIndex;
+                return `
+                    <button onclick="selectTrajectoryWeek(${idx})" class="py-1.5 px-1 rounded-lg text-xs font-semibold transition ${
+                        active ? 'bg-indigo-600/25 text-indigo-300 border border-indigo-500/40 font-bold' : 'text-gray-400 hover:text-white'
+                    }">
+                        ${w.label}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function selectTrajectoryWeek(idx) {
+            selectedWeekIndex = idx;
+            buildTrajectoryMeshes();
+        }
+
+        function updateTrajectoryHUD() {
+            const w = TIME_RANGES[currentRangeKey].weeks[selectedWeekIndex];
+            if (!w) return;
+            document.getElementById('traj-hud-week').textContent = `${w.label} • ${w.hours} học`;
+            document.getElementById('traj-hud-band').textContent = `Band ${w.band.toFixed(1)}`;
+            document.getElementById('traj-hud-detail').textContent = w.note;
+        }
+
+        function toggleTrajectoryCameraView() {
+            trajIs2DView = !trajIs2DView;
+            const btn = document.getElementById('btn-traj-angle');
+            if (trajIs2DView) {
+                trajCamState.desiredTheta = 0;
+                trajCamState.desiredPhi = Math.PI / 2;
+                btn.innerHTML = `<i data-lucide="layers" class="w-3.5 h-3.5"></i><span>Góc nhìn: Phẳng 2D</span>`;
+            } else {
+                trajCamState.desiredTheta = 0.25;
+                trajCamState.desiredPhi = 1.12;
+                btn.innerHTML = `<i data-lucide="box" class="w-3.5 h-3.5"></i><span>Góc nhìn: 3D</span>`;
+            }
+            lucide.createIcons();
+        }
+
+        // -----------------------------------------------------------------
+        // 4. THREE.JS SCENE 2: 3D HEXAGONAL SKILL RADAR CRYSTAL
+        // -----------------------------------------------------------------
+        let radarScene, radarCamera, radarRenderer;
+        let radarCrystalGroup, radarPolygonMesh, radarVertexSpheres = [];
+        let radarAutoRotate = true;
+
+        const radarCamState = {
+            theta: 0,
+            phi: 0.92,
+            radius: 9.2,
+            isDragging: false,
+            prevMouse: { x: 0, y: 0 }
+        };
+
+        function initRadar3D() {
+            const container = document.getElementById('radar-3d-container');
+            const w = container.clientWidth || 340;
+            const h = container.clientHeight || 270;
+
+            radarScene = new THREE.Scene();
+            radarCamera = new THREE.PerspectiveCamera(42, w / h, 0.1, 100);
+
+            radarRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            radarRenderer.setSize(w, h);
+            radarRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.innerHTML = '';
+            container.appendChild(radarRenderer.domElement);
+
+            radarScene.add(new THREE.AmbientLight(0xffffff, 0.95));
+            const pLight = new THREE.PointLight(0x6366f1, 2.5, 20);
+            pLight.position.set(0, 5, 5);
+            radarScene.add(pLight);
+
+            radarCrystalGroup = new THREE.Group();
+            radarScene.add(radarCrystalGroup);
+
+            buildRadarCrystalMeshes();
+
+            container.addEventListener('pointerdown', (e) => {
+                radarCamState.isDragging = true;
+                radarAutoRotate = false;
+                radarCamState.prevMouse = { x: e.clientX, y: e.clientY };
+            });
+
+            window.addEventListener('pointermove', (e) => {
+                if (!radarCamState.isDragging) return;
+                const dx = e.clientX - radarCamState.prevMouse.x;
+                const dy = e.clientY - radarCamState.prevMouse.y;
+                radarCamState.prevMouse = { x: e.clientX, y: e.clientY };
+                radarCrystalGroup.rotation.y += dx * 0.01;
+                radarCrystalGroup.rotation.x = Math.max(-0.5, Math.min(0.6, radarCrystalGroup.rotation.x + dy * 0.008));
+            });
+
+            window.addEventListener('pointerup', () => {
+                radarCamState.isDragging = false;
+            });
+        }
+
+        function buildRadarCrystalMeshes() {
+            while (radarCrystalGroup.children.length > 0) {
+                radarCrystalGroup.remove(radarCrystalGroup.children[0]);
+            }
+            radarVertexSpheres = [];
+
+            const maxRadius = 3.2;
+
+            // 1. Concentric Hexagonal Web Rings (Matches the white/gray hexagon rings in Screenshot 2)
+            [0.35, 0.68, 1.0].forEach((scale, rIdx) => {
+                const ringPts = [];
+                for (let i = 0; i <= 6; i++) {
+                    const angle = (i % 6) * (Math.PI / 3) - Math.PI / 2;
+                    ringPts.push(new THREE.Vector3(
+                        Math.cos(angle) * maxRadius * scale,
+                        Math.sin(angle) * maxRadius * scale,
+                        0
+                    ));
+                }
+                const ringGeo = new THREE.BufferGeometry().setFromPoints(ringPts);
+                const ringMat = new THREE.LineBasicMaterial({
+                    color: rIdx === 2 ? 0xcbd5e1 : 0x475569,
+                    transparent: true,
+                    opacity: rIdx === 2 ? 0.85 : 0.45
+                });
+                radarCrystalGroup.add(new THREE.Line(ringGeo, ringMat));
+            });
+
+            // 2. Spokes from center to 6 corners
+            for (let i = 0; i < 6; i++) {
+                const angle = i * (Math.PI / 3) - Math.PI / 2;
+                const spokePts = [
+                    new THREE.Vector3(0, 0, 0),
+                    new THREE.Vector3(Math.cos(angle) * maxRadius, Math.sin(angle) * maxRadius, 0)
+                ];
+                const spokeGeo = new THREE.BufferGeometry().setFromPoints(spokePts);
+                const spokeMat = new THREE.LineBasicMaterial({ color: 0x64748b, transparent: true, opacity: 0.45 });
+                radarCrystalGroup.add(new THREE.Line(spokeGeo, spokeMat));
+            }
+
+            // 3. 3D Extruded / Pyramid Skill Energy Crystal based on the 6 skill bands (out of 9.0)
+            const skillVerts = [];
+            const labelsLayer = document.getElementById('radar-labels-layer');
+            labelsLayer.innerHTML = '';
+
+            SKILLS_DATA.forEach((s, i) => {
+                const angle = i * (Math.PI / 3) - Math.PI / 2;
+                const norm = Math.min(1.0, Math.max(0.3, s.band / 9.0));
+                const vx = Math.cos(angle) * maxRadius * norm;
+                const vy = Math.sin(angle) * maxRadius * norm;
+                const vPos = new THREE.Vector3(vx, vy, 0.15);
+                skillVerts.push(vPos);
+
+                // Glowing Vertex Sphere
+                const isSelected = s.id === selectedSkillId;
+                const vGeo = new THREE.SphereGeometry(isSelected ? 0.22 : 0.15, 16, 16);
+                const vMat = new THREE.MeshBasicMaterial({
+                    color: isSelected ? 0x38bdf8 : 0x6366f1
+                });
+                const vMesh = new THREE.Mesh(vGeo, vMat);
+                vMesh.position.copy(vPos);
+
+                // Store outer label anchor
+                const labelAnchor = new THREE.Vector3(
+                    Math.cos(angle) * (maxRadius + 0.55),
+                    Math.sin(angle) * (maxRadius + 0.55),
+                    0
+                );
+                vMesh.userData = { skill: s, labelAnchor };
+                radarCrystalGroup.add(vMesh);
+                radarVertexSpheres.push(vMesh);
+
+                // Floating HTML Label for each Hexagon Corner
+                const lbl = document.createElement('div');
+                lbl.className = 'label-3d';
+                lbl.onclick = () => focusSkillOnRadar(s.id);
+                lbl.innerHTML = `
+                    <span class="px-1.5 py-0.5 rounded bg-[#141621]/90 border ${
+                        isSelected ? 'border-indigo-400 text-white font-extrabold' : 'border-white/10 text-gray-300 font-semibold'
+                    } text-[10px] shadow">
+                        ${s.scrollLabel || s.name} ${s.band.toFixed(1)}
+                    </span>
+                `;
+                labelsLayer.appendChild(lbl);
+                vMesh.userData.labelEl = lbl;
+            });
+
+            // Build 3D Double-Sided Crystal Fan Geometry
+            const crystalGeo = new THREE.BufferGeometry();
+            const positions = [];
+            const frontApex = new THREE.Vector3(0, 0, 0.55);
+            const backApex = new THREE.Vector3(0, 0, -0.55);
+
+            for (let i = 0; i < 6; i++) {
+                const curr = skillVerts[i];
+                const next = skillVerts[(i + 1) % 6];
+
+                // Front face triangle
+                positions.push(frontApex.x, frontApex.y, frontApex.z);
+                positions.push(curr.x, curr.y, curr.z);
+                positions.push(next.x, next.y, next.z);
+
+                // Back face triangle
+                positions.push(backApex.x, backApex.y, backApex.z);
+                positions.push(next.x, next.y, next.z);
+                positions.push(curr.x, curr.y, curr.z);
+            }
+
+            crystalGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            crystalGeo.computeVertexNormals();
+
+            const crystalMat = new THREE.MeshStandardMaterial({
+                color: 0x4f46e5,
+                emissive: 0x312e81,
+                emissiveIntensity: 0.65,
+                transparent: true,
+                opacity: 0.62,
+                side: THREE.DoubleSide,
+                roughness: 0.2,
+                metalness: 0.4
+            });
+            radarPolygonMesh = new THREE.Mesh(crystalGeo, crystalMat);
+            radarCrystalGroup.add(radarPolygonMesh);
+
+            // Bright Indigo Perimeter Line connecting the 6 skill vertices
+            const borderPts = [...skillVerts, skillVerts[0]];
+            const borderGeo = new THREE.BufferGeometry().setFromPoints(borderPts);
+            const borderMat = new THREE.LineBasicMaterial({ color: 0x6366f1, linewidth: 2 });
+            radarCrystalGroup.add(new THREE.Line(borderGeo, borderMat));
+        }
+
+        function focusSkillOnRadar(skillId) {
+            selectedSkillId = skillId;
+            renderSkillsUI();
+            buildRadarCrystalMeshes();
+
+            const s = SKILLS_DATA.find(item => item.id === skillId);
+            if (s) {
+                showToast(`Đang phân tích: ${s.name} (Band ${s.band.toFixed(1)})`, `Tiến độ đạt ${s.progress}% • Đánh giá: ${s.status}`);
+            }
+        }
+
+        function simulateSkillBoost() {
+            const writing = SKILLS_DATA.find(s => s.id === 'writing');
+            const speaking = SKILLS_DATA.find(s => s.id === 'speaking');
+            if (writing.band < 7.5) {
+                writing.band = Math.min(7.5, +(writing.band + 0.5).toFixed(1));
+                writing.progress = Math.min(95, writing.progress + 10);
+                writing.status = 'Đã cải thiện!';
+                speaking.band = Math.min(7.5, +(speaking.band + 0.5).toFixed(1));
+                speaking.progress = Math.min(95, speaking.progress + 10);
+            } else {
+                writing.band = 6.0;
+                writing.progress = 60;
+                writing.status = 'Cần chú ý';
+                speaking.band = 6.5;
+                speaking.progress = 65;
+            }
+            renderSkillsUI();
+            buildRadarCrystalMeshes();
+            showToast('✨ Đã mô phỏng tối ưu hóa kỹ năng!', 'Tinh thể Radar 3D đã cập nhật hình thái cân bằng mới.');
+        }
+
+        // -----------------------------------------------------------------
+        // 5. UNIFIED ANIMATION LOOP FOR BOTH THREE.JS SCENES
+        // -----------------------------------------------------------------
+        const clock = new THREE.Clock();
+
+        function animateAnalytics3D() {
+            requestAnimationFrame(animateAnalytics3D);
+            const elapsed = clock.getElapsedTime();
+
+            // --- Update Scene 1: Score Trajectory ---
+            if (trajScene && trajCamera && trajRenderer) {
+                trajCamState.theta += (trajCamState.desiredTheta - trajCamState.theta) * 0.08;
+                trajCamState.phi += (trajCamState.desiredPhi - trajCamState.phi) * 0.08;
+                trajCamState.radius += (trajCamState.desiredRadius - trajCamState.radius) * 0.08;
+
+                trajCamera.position.x = trajCamState.target.x + trajCamState.radius * Math.sin(trajCamState.phi) * Math.sin(trajCamState.theta);
+                trajCamera.position.y = trajCamState.target.y + trajCamState.radius * Math.cos(trajCamState.phi);
+                trajCamera.position.z = trajCamState.target.z + trajCamState.radius * Math.sin(trajCamState.phi) * Math.cos(trajCamState.theta);
+                trajCamera.lookAt(trajCamState.target);
+
+                // Hover bobbing for weekly orbs
+                const container = document.getElementById('trajectory-3d-container');
+                const cw = container ? container.clientWidth : 1;
+                const ch = container ? container.clientHeight : 1;
+
+                trajOrbs.forEach((orb, idx) => {
+                    const baseY = orb.userData.basePos.y;
+                    orb.position.y = baseY + Math.sin(elapsed * 2.5 + idx) * 0.08;
+
+                    if (orb.userData.labelEl) {
+                        const proj = orb.position.clone();
+                        proj.y += 0.62;
+                        proj.project(trajCamera);
+                        const x = (proj.x * 0.5 + 0.5) * cw;
+                        const y = (-(proj.y * 0.5) + 0.5) * ch;
+                        orb.userData.labelEl.style.left = `${x}px`;
+                        orb.userData.labelEl.style.top = `${y}px`;
+                    }
+                });
+
+                // Move particles along the growth spline
+                if (trajCurve) {
+                    trajParticles.forEach(p => {
+                        p.t += 0.0022;
+                        if (p.t > 1) p.t = 0;
+                        p.mesh.position.copy(trajCurve.getPointAt(p.t));
+                    });
+                }
+
+                trajRenderer.render(trajScene, trajCamera);
+            }
+
+            // --- Update Scene 2: 3D Skill Radar Crystal ---
+            if (radarScene && radarCamera && radarRenderer) {
+                radarCamera.position.set(0, 0, radarCamState.radius);
+                radarCamera.lookAt(0, 0, 0);
+
+                if (radarAutoRotate && radarCrystalGroup) {
+                    radarCrystalGroup.rotation.z = Math.sin(elapsed * 0.5) * 0.06;
+                    radarCrystalGroup.rotation.y = Math.sin(elapsed * 0.7) * 0.28;
+                    radarCrystalGroup.rotation.x = -0.18 + Math.cos(elapsed * 0.6) * 0.08;
+                }
+
+                const rContainer = document.getElementById('radar-3d-container');
+                const rw = rContainer ? rContainer.clientWidth : 1;
+                const rh = rContainer ? rContainer.clientHeight : 1;
+
+                radarVertexSpheres.forEach(vMesh => {
+                    if (vMesh.userData.labelEl && vMesh.userData.labelAnchor) {
+                        const worldPt = vMesh.userData.labelAnchor.clone();
+                        worldPt.applyMatrix4(radarCrystalGroup.matrixWorld);
+                        worldPt.project(radarCamera);
+                        const x = (worldPt.x * 0.5 + 0.5) * rw;
+                        const y = (-(worldPt.y * 0.5) + 0.5) * rh;
+                        vMesh.userData.labelEl.style.left = `${x}px`;
+                        vMesh.userData.labelEl.style.top = `${y}px`;
+                    }
+                });
+
+                radarRenderer.render(radarScene, radarCamera);
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // 6. UI ACTIONS: TIME RANGE SWITCHER, MODALS & RESIZE
+        // -----------------------------------------------------------------
+        function switchTimeRange(rangeKey) {
+            currentRangeKey = rangeKey;
+            const data = TIME_RANGES[rangeKey];
+
+            ['7d', '30d', 'all'].forEach(k => {
+                const btn = document.getElementById(`range-${k}`);
+                if (k === rangeKey) {
+                    btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all bg-[#252347] text-indigo-300 border border-indigo-500/40 shadow-sm";
+                } else {
+                    btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-gray-200 transition-all border border-transparent";
+                }
+            });
+
+            document.getElementById('kpi-hours').textContent = data.hours;
+            document.getElementById('kpi-hours-sub').textContent = data.hoursSub;
+            document.getElementById('kpi-lessons').textContent = data.lessons;
+            document.getElementById('kpi-lessons-bar').style.width = `${data.lessonsPct}%`;
+            document.getElementById('kpi-band').textContent = data.band;
+            document.getElementById('kpi-band-badge').textContent = data.bandBadge;
+            document.getElementById('kpi-confidence').textContent = data.confidence;
+            document.getElementById('kpi-streak').textContent = data.streak;
+
+            buildTrajectoryMeshes();
+            showToast('Đã đồng bộ dữ liệu thời gian', `Đang hiển thị báo cáo tiến độ: ${rangeKey === '7d' ? '7 ngày qua' : rangeKey === '30d' ? 'Tháng này' : 'Toàn thời gian'}`);
+        }
+
+        function pulseAll3DCharts() {
+            trajCamState.desiredTheta = (Math.random() - 0.5) * 0.5;
+            showToast('Đã đồng bộ KPI với biểu đồ 3D', 'Bạn có thể kéo chuột trực tiếp trên biểu đồ để xem góc 360°.');
+        }
+
+        function openPronunciationModal() {
+            const modal = document.getElementById('pronunciation-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function completePronunciationDrill() {
+            closeModal('pronunciation-modal');
+            const speaking = SKILLS_DATA.find(s => s.id === 'speaking');
+            speaking.band = 6.8;
+            speaking.progress = 74;
+            speaking.status = 'Đang tăng tốt';
+            renderSkillsUI();
+            buildRadarCrystalMeshes();
+            showToast('🎉 Hoàn thành bài luyện nguyên âm đôi!', 'Điểm dự phóng Speaking đã tăng lên Band 6.8.');
+        }
+
+        function openVocabModal() {
+            const countEl = document.getElementById('vocab-due-count');
+            const current = parseInt(countEl.textContent, 10);
+            const next = Math.max(0, current - 10);
+            countEl.textContent = next;
+            showToast('📘 Đã ôn tập nhanh 10 từ vựng!', `Còn lại ${next} từ cần ôn tập hôm nay trong Vocabulary Vault.`);
+        }
+
+        function openExportModal() {
+            showToast('📄 Đang kết xuất Báo cáo PDF...', 'Báo cáo học tập IELTS 7.0 của bạn đã sẵn sàng tải xuống.');
+        }
+
+        let toastTimer = null;
+        function showToast(title, desc) {
+            const banner = document.getElementById('toast-banner');
+            document.getElementById('toast-title').textContent = title;
+            document.getElementById('toast-desc').textContent = desc;
+            banner.classList.remove('opacity-0', 'translate-y-4');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                banner.classList.add('opacity-0', 'translate-y-4');
+            }, 3200);
+        }
+
+        function handleResize() {
+            const tCont = document.getElementById('trajectory-3d-container');
+            if (tCont && trajRenderer && trajCamera) {
+                const w = tCont.clientWidth;
+                const h = tCont.clientHeight;
+                if (w && h) {
+                    trajCamera.aspect = w / h;
+                    trajCamera.updateProjectionMatrix();
+                    trajRenderer.setSize(w, h);
+                }
+            }
+            const rCont = document.getElementById('radar-3d-container');
+            if (rCont && radarRenderer && radarCamera) {
+                const w = rCont.clientWidth;
+                const h = rCont.clientHeight;
+                if (w && h) {
+                    radarCamera.aspect = w / h;
+                    radarCamera.updateProjectionMatrix();
+                    radarRenderer.setSize(w, h);
+                }
+            }
+        }
+
+        window.addEventListener('resize', handleResize);
+
+        window.onload = function () {
+            renderSkillsUI();
+            renderHeatmapGrid();
+            initTrajectory3D();
+            initRadar3D();
+            animateAnalytics3D();
+        };
+    </script>
+</body>
+</html>

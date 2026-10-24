@@ -1,38 +1,67 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
-// Check if Upstash is configured, if not use a dummy redis to prevent crashes in dev
-const redis = process.env.UPSTASH_REDIS_REST_URL 
-  ? Redis.fromEnv() 
-  : ({
-      sadd: async () => {},
-      eval: async () => [0, 0, 0, 0],
-    } as any);
+// Kiểm tra xem Upstash Redis có thông tin thật hay đang để giá trị dummy
+const upstashUrl = process.env.UPSTASH_REDIS_REST_URL || "";
+const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN || "";
 
-export const ipRateLimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(10, "1 m"),
-  analytics: true,
-});
+const isUpstashConfigured =
+  Boolean(upstashUrl) &&
+  !upstashUrl.includes("dummy") &&
+  Boolean(upstashToken) &&
+  !upstashToken.includes("dummy");
 
-export const userFreeDailyQuota = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(2, "1 d"),
-  analytics: true,
-});
+// Mock limiter dùng cho local dev khi chưa có Upstash thật:
+// Trả về success: true ngay lập tức, không gây treo DNS hay lỗi ENOTFOUND
+function createMockLimiter(): Ratelimit {
+  return {
+    limit: async () => ({
+      success: true,
+      limit: 1000,
+      remaining: 999,
+      reset: Date.now() + 60000,
+      pending: Promise.resolve(),
+    }),
+  } as unknown as Ratelimit;
+}
+
+const realRedis = isUpstashConfigured
+  ? new Redis({
+      url: upstashUrl,
+      token: upstashToken,
+    })
+  : null;
+
+export const ipRateLimit: Ratelimit = realRedis
+  ? new Ratelimit({
+      redis: realRedis,
+      limiter: Ratelimit.slidingWindow(60, "1 m"),
+      analytics: true,
+    })
+  : createMockLimiter();
+
+export const userFreeDailyQuota: Ratelimit = realRedis
+  ? new Ratelimit({
+      redis: realRedis,
+      limiter: Ratelimit.slidingWindow(2, "1 d"),
+      analytics: true,
+    })
+  : createMockLimiter();
 
 // P0.2: Rate limiter for saving practice drafts (30 reqs / min / user)
-export const saveDraftRateLimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(30, "1 m"),
-  analytics: true,
-});
+export const saveDraftRateLimit: Ratelimit = realRedis
+  ? new Ratelimit({
+      redis: realRedis,
+      limiter: Ratelimit.slidingWindow(30, "1 m"),
+      analytics: true,
+    })
+  : createMockLimiter();
 
 // P0.2: Rate limiter for submitting practice attempts (5 reqs / min / user)
-export const submitAttemptRateLimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(5, "1 m"),
-  analytics: true,
-});
-
-// touched for audit
+export const submitAttemptRateLimit: Ratelimit = realRedis
+  ? new Ratelimit({
+      redis: realRedis,
+      limiter: Ratelimit.slidingWindow(5, "1 m"),
+      analytics: true,
+    })
+  : createMockLimiter();

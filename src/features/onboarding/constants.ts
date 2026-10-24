@@ -20,7 +20,9 @@ export const PRIMARY_GOALS = [
 ] as const;
 export type PrimaryGoal = (typeof PRIMARY_GOALS)[number];
 
-export const DAILY_STUDY_MINUTES = [15, 30, 45, 60, 90, 120] as const;
+export const DAILY_STUDY_MINUTES = [
+  15, 30, 45, 60, 90, 120, 150, 180, 210, 240,
+] as const;
 
 export const BAND_SCORES = Array.from({ length: 19 }, (_, index) => index / 2);
 

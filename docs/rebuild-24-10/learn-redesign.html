@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Thư viện học | Indigo Scholar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0C0E1D; --panel:#141731; --panel2:#1B1F40; --line:#2B3060;
+  --text:#EEF0FF; --mute:#98A0CF; --indigo:#5B5FEF; --indigo-hi:#7C80FF; --mark:#F6E85C; --ok:#5EE0A0;
+  --head:"Bricolage Grotesque","Be Vietnam Pro",system-ui,sans-serif;
+  --body:"Be Vietnam Pro",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+body{background:var(--ink);color:var(--text);font:400 15px/1.55 var(--body);-webkit-font-smoothing:antialiased}
+button,a,input{font:inherit;color:inherit}
+button,a{cursor:pointer;background:none;border:0;text-decoration:none}
+:focus-visible{outline:2px solid var(--mark);outline-offset:3px;border-radius:8px}
+h2{font:800 24px var(--head);letter-spacing:-.025em}
+.wrap{max-width:1240px;margin:0 auto;padding:0 clamp(16px,4vw,48px)}
+
+nav{position:sticky;top:0;z-index:20;background:rgba(12,14,29,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:28px;height:68px}
+.brand{display:flex;align-items:center;gap:12px;font:800 19px var(--head);letter-spacing:-.02em;white-space:nowrap}
+.logo{width:34px;height:34px;border-radius:10px;background:var(--indigo);display:grid;place-items:center;font-size:13px}
+.links{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1}
+.links a{padding:8px 14px;border-radius:10px;color:var(--mute);font-weight:500;white-space:nowrap;position:relative}
+.links a:hover,.links a.on{color:var(--text)}
+.links a.on::after{content:"";position:absolute;left:14px;right:14px;bottom:-1px;height:3px;border-radius:3px;background:var(--mark)}
+.me{width:36px;height:36px;border-radius:50%;background:var(--indigo);display:grid;place-items:center;font:700 14px var(--head);border:2px solid var(--panel2)}
+
+.pagehead{padding:40px 0 22px}
+.pagehead h1{font:800 clamp(30px,4vw,44px)/1.05 var(--head);letter-spacing:-.035em}
+.pagehead p{color:var(--mute);margin-top:8px}
+
+/* continue */
+.cont{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;background:var(--indigo);border-radius:24px;padding:28px 30px;position:relative;overflow:hidden}
+.cont::after{content:"";position:absolute;right:-60px;top:-70px;width:230px;height:230px;border-radius:50%;border:36px solid rgba(255,255,255,.07)}
+.cont small{font-weight:600;font-size:13px;opacity:.8}
+.cont h2{font-size:clamp(24px,3.2vw,34px);line-height:1.08;letter-spacing:-.035em;margin:6px 0 16px}
+.cbar{display:flex;align-items:center;gap:14px;font-weight:600;font-size:14px}
+.cbar .t{width:min(300px,50vw);height:8px;border-radius:8px;background:rgba(255,255,255,.22);overflow:hidden}
+.cbar .t i{display:block;height:100%;width:60%;background:var(--mark);border-radius:8px}
+.go{background:var(--mark);color:var(--ink);font:800 17px var(--head);padding:16px 28px;border-radius:14px;position:relative;z-index:1;transition:transform .15s;white-space:nowrap}
+.go:hover{transform:translateY(-2px)}
+
+/* toolbar */
+.tools{position:sticky;top:68px;z-index:10;background:var(--ink);padding:18px 0 0;margin-top:26px}
+.bar{display:flex;gap:12px;align-items:center}
+.search{flex:1;max-width:460px;display:flex;align-items:center;gap:12px;padding:0 16px;height:48px;border-radius:14px;border:1.5px solid var(--line);background:var(--panel);transition:border-color .15s}
+.search:focus-within{border-color:var(--indigo-hi)}
+.search svg{flex:none;color:var(--mute)}
+.search input{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--text)}
+.search input::placeholder{color:var(--mute)}
+.search kbd{font:600 12px var(--body);color:var(--mute);border:1px solid var(--line);border-radius:6px;padding:1px 8px}
+.fwrap{position:relative;margin-left:auto}
+.fbtn{height:48px;padding:0 18px;border-radius:14px;border:1.5px solid var(--line);background:var(--panel);font-weight:600;display:flex;gap:10px;align-items:center}
+.fbtn:hover,.fbtn[aria-expanded=true]{border-color:var(--indigo-hi)}
+.fbtn b{background:var(--mark);color:var(--ink);border-radius:99px;font-size:12px;padding:0 8px}
+.menu{position:absolute;right:0;top:56px;width:230px;background:var(--panel2);border:1.5px solid var(--line);border-radius:16px;padding:8px;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.menu[hidden]{display:none}
+.menu button{display:flex;justify-content:space-between;width:100%;text-align:left;padding:11px 12px;border-radius:10px;color:var(--mute)}
+.menu button:hover{background:var(--panel);color:var(--text)}
+.menu button[aria-checked=true]{color:var(--text);font-weight:600}
+.menu button[aria-checked=true]::after{content:"✓";color:var(--mark)}
+.tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-top:14px;border-bottom:1px solid var(--line)}
+.tab{padding:12px 16px;color:var(--mute);font-weight:600;white-space:nowrap;position:relative;display:flex;gap:8px;align-items:center}
+.tab:hover{color:var(--text)}
+.tab[aria-selected=true]{color:var(--text)}
+.tab[aria-selected=true]::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:3px;border-radius:3px;background:var(--mark)}
+.tab span{font-size:12px;color:var(--mute);background:var(--panel2);padding:0 8px;border-radius:99px}
+
+/* sections */
+section.s{margin-top:40px}
+.sh{display:flex;align-items:baseline;gap:14px;margin-bottom:16px}
+.sh p{color:var(--mute);font-size:14px}
+.cards{display:grid;gap:18px}
+.cards.four{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.cards.two{grid-template-columns:repeat(auto-fit,minmax(380px,1fr))}
+.card{--a:var(--indigo-hi);background:var(--panel);border:1.5px solid var(--line);border-radius:22px;padding:22px;display:flex;flex-direction:column;transition:border-color .15s,transform .15s;animation:in .25s ease both}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.card:hover{border-color:var(--a);transform:translateY(-3px)}
+.top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
+.ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font:800 17px var(--head);color:var(--a);background:color-mix(in srgb,var(--a) 15%,transparent)}
+.tag{font:700 10.5px var(--body);letter-spacing:.04em;padding:4px 10px;border-radius:8px;color:var(--a);background:color-mix(in srgb,var(--a) 14%,transparent)}
+.card h3{font:800 21px/1.15 var(--head);letter-spacing:-.02em;margin-bottom:8px}
+.card p{color:var(--mute);font-size:14px;flex:1;margin-bottom:20px}
+.meta{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--mute);margin-bottom:8px}
+.meta b{font:800 22px var(--head);color:var(--text);letter-spacing:-.03em}
+.track{height:6px;border-radius:6px;background:var(--panel2);overflow:hidden;margin-bottom:18px}
+.track i{display:block;height:100%;background:var(--a);border-radius:6px;min-width:0}
+.cta{padding:13px;border-radius:12px;border:1.5px solid var(--line);font-weight:700;text-align:center;transition:.15s}
+.card:hover .cta,.cta:focus-visible{background:var(--a);border-color:var(--a);color:var(--ink)}
+
+.card.h{flex-direction:row;gap:18px;align-items:flex-start}
+.card.h .body{flex:1;display:flex;flex-direction:column;min-width:0}
+.card.h .ic{flex:none}
+.card.h .tag{align-self:flex-start;margin-bottom:8px}
+.card.h .cta{align-self:flex-start;padding:11px 20px}
+
+.empty{text-align:center;padding:80px 20px;color:var(--mute)}
+.empty h2{color:var(--text);margin-bottom:8px}
+.empty button{margin-top:18px;padding:12px 22px;border-radius:12px;background:var(--indigo);color:var(--text);font-weight:700}
+.empty button:hover{background:var(--indigo-hi)}
+.foot{height:72px}
+
+@media(max-width:700px){
+  .cont{grid-template-columns:1fr}
+  .cards.two{grid-template-columns:1fr}
+  .card.h{flex-direction:column}
+  .search kbd{display:none}
+  .fbtn span{display:none}
+  nav .wrap{gap:12px}.brand span{display:none}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<nav><div class="wrap">
+  <div class="brand"><div class="logo">IS</div><span>Indigo Scholar</span></div>
+  <div class="links"><a href="#">Home</a><a class="on" href="#">Learn</a><a href="#">Dictation</a><a href="#">Plans</a><a href="#">Roadmap</a><a href="#">Progress</a><a href="#">Pricing</a><a href="#">Profile &amp; Settings</a></div>
+  <div class="me">H</div>
+</div></nav>
+
+<div class="wrap">
+  <div class="pagehead"><h1>Thư viện học</h1><p>Chọn một kỹ năng để luyện, hoặc làm tiếp bài đang dở.</p></div>
+
+  <section class="cont">
+    <div>
+      <small>Tiếp tục học</small>
+      <h2>Listening Section 2: Campus Accommodation</h2>
+      <div class="cbar"><span>Tiến độ 60%</span><div class="t" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"><i></i></div></div>
+    </div>
+    <button class="go">Làm tiếp ngay</button>
+  </section>
+
+  <div class="tools">
+    <div class="bar">
+      <label class="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Tìm bài luyện, kỹ năng..." autocomplete="off" aria-label="Tìm kiếm">
+        <kbd>/</kbd>
+      </label>
+      <div class="fwrap">
+        <button class="fbtn" id="fbtn" aria-haspopup="true" aria-expanded="false">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>
+          <span>Lọc kết quả</span><b id="fcount" hidden>1</b>
+        </button>
+        <div class="menu" id="menu" hidden role="menu"></div>
+      </div>
+    </div>
+    <div class="tabs" id="tabs" role="tablist"></div>
+  </div>
+
+  <div id="out"></div>
+  <div class="foot"></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');
+
+const items=[
+ {id:'li',sec:'skills',cat:['skill'],ic:'Li',a:'#8B8FFF',tag:'CHUẨN FORMAT THI',title:'Listening Practice',desc:'Luyện nghe audio bản xứ, chỉnh tốc độ, bài tập điền từ và trắc nghiệm kèm transcript tương tác sau khi nộp.',meta:'4 Parts • 25m',p:45},
+ {id:'re',sec:'skills',cat:['skill'],ic:'Re',a:'#5EE0A0',tag:'KHO 50+ PASSAGES',title:'Reading Practice',desc:'Kho bài đọc chuẩn đề thi thật, tra từ một chạm, highlight dẫn chứng và phân tích đáp án chi tiết.',meta:'3 Passages • 60m',p:70},
+ {id:'wr',sec:'skills',cat:['skill'],ic:'Wr',a:'#F5B73D',tag:'AI POWERED',ai:1,title:'Writing Practice',desc:'Luyện Task 1 và Task 2 có đếm từ tự động, gợi ý dàn ý, lưu nháp liên tục và AI chấm chi tiết theo 4 tiêu chí.',meta:'Task 1 & 2 • 60m',p:20},
+ {id:'sp',sec:'skills',cat:['skill'],ic:'Sp',a:'#4BB3FF',tag:'AI POWERED',ai:1,title:'Speaking AI Practice',desc:'Luyện nói 1:1 với AI, chấm phát âm IPA, độ trôi chảy và phản xạ câu hỏi Part 1-3.',meta:'Part 1-3 • 15m',p:0},
+ {id:'mt',sec:'more',cat:['mock'],ic:'Mt',a:'#A9B1E8',tag:'FULL TEST',title:'Thi thử (Mock Test Room)',desc:'Mô phỏng giao diện thi trên máy tính (Computer-delivered IELTS) chuẩn IDP/BC, chia đôi màn hình, highlight và ghi chú.',meta:'4 Skills • 3h',p:0},
+ {id:'er',sec:'more',cat:['mine'],ic:'!',a:'#FF6A82',tag:'SMART LOG',title:'Sổ tay lỗi sai',desc:'Tự động gom các câu làm sai, phân loại theo dạng bài và gợi ý bài tập khắc phục điểm yếu.',meta:'24 lỗi cần ôn lại',p:0},
+ {id:'vo',sec:'found',cat:['found','mine'],ic:'Aa',a:'#FF8FA3',tag:'OXFORD 3000/5000',title:'Vocabulary Foundation',desc:'Bộ từ vựng học thuật theo chủ đề, ví dụ ngữ cảnh, phát âm chuẩn IPA và bài tập phản xạ.',meta:'1,200 từ đã lưu',p:35},
+ {id:'gr',sec:'found',cat:['found'],ic:'Gr',a:'#B9A4FF',tag:'IELTS & GIAO TIẾP',title:'Grammar Intensive',desc:'Hệ thống ngữ pháp trọng tâm, phân tích lỗi sai kinh điển và bài tập ứng dụng tự động chấm.',meta:'18/25 chủ điểm',p:60}
+];
+const secs=[
+ {id:'skills',title:'Bốn kỹ năng IELTS',sub:'Nghe, đọc, viết, nói',cls:'four',h:false},
+ {id:'more',title:'Thi thử và ôn lỗi sai',sub:'Kiểm tra và lấp lỗ hổng',cls:'two',h:true},
+ {id:'found',title:'Nền tảng',sub:'Từ vựng và ngữ pháp',cls:'two',h:true}
+];
+const tabs=[['all','Tất cả'],['skill','4 Kỹ năng IELTS'],['found','Nền tảng Từ vựng & Ngữ pháp'],['mock','Thi thử'],['mine','Kho của tôi']];
+const filters=[['all','Tất cả'],['doing','Đang học'],['new','Chưa bắt đầu'],['ai','Có AI chấm']];
+const S={q:'',tab:'all',f:'all'};
+
+const okF=(it,f)=>f==='all'||(f==='doing'&&it.p>0&&it.p<100)||(f==='new'&&it.p===0)||(f==='ai'&&it.ai);
+const okQ=it=>!S.q||norm(it.title+' '+it.desc+' '+it.tag+' '+it.meta).includes(norm(S.q));
+const okT=(it,t)=>t==='all'||it.cat.includes(t);
+const list=(tab=S.tab)=>items.filter(it=>okT(it,tab)&&okF(it,S.f)&&okQ(it));
+
+function card(it,h,i){
+  const cta=it.p>0?'Làm tiếp':'Bắt đầu';
+  const pct=`<div class="meta"><span>${esc(it.meta)}</span><b>${it.p}%</b></div><div class="track"><i style="width:${it.p}%"></i></div>`;
+  const head=`<div class="ic">${it.ic}</div>`;
+  const style=`style="--a:${it.a};animation-delay:${i*40}ms"`;
+  if(h)return `<article class="card h" ${style}>${head}<div class="body"><span class="tag">${esc(it.tag)}</span><h3>${esc(it.title)}</h3><p>${esc(it.desc)}</p>${pct}<a class="cta" href="#">${cta}</a></div></article>`;
+  return `<article class="card" ${style}><div class="top">${head}<span class="tag">${esc(it.tag)}</span></div><h3>${esc(it.title)}</h3><p>${esc(it.desc)}</p>${pct}<a class="cta" href="#">${cta}</a></article>`;
+}
+function render(){
+  $('tabs').innerHTML=tabs.map(([k,l])=>`<button class="tab" role="tab" data-t="${k}" aria-selected="${S.tab===k}">${l}<span>${list(k).length}</span></button>`).join('');
+  document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{S.tab=b.dataset.t;render()});
+  const vis=list();
+  if(!vis.length){
+    $('out').innerHTML=`<div class="empty"><h2>Không tìm thấy bài nào</h2><p>${S.q?`Không có kết quả cho "${esc(S.q)}".`:'Không có bài nào khớp bộ lọc này.'} Thử từ khoá khác hoặc xoá bộ lọc.</p><button id="reset">Xoá bộ lọc</button></div>`;
+    $('reset').onclick=()=>{S.q='';S.tab='all';S.f='all';$('q').value='';render()};
+  }else{
+    $('out').innerHTML=secs.map(s=>{const c=vis.filter(it=>it.sec===s.id);if(!c.length)return '';
+      return `<section class="s"><div class="sh"><h2>${s.title}</h2><p>${s.sub}</p></div><div class="cards ${s.cls}">${c.map((it,i)=>card(it,s.h,i)).join('')}</div></section>`}).join('');
+  }
+  $('menu').innerHTML=filters.map(([k,l])=>`<button role="menuitemradio" aria-checked="${S.f===k}" data-f="${k}">${l}</button>`).join('');
+  document.querySelectorAll('#menu button').forEach(b=>b.onclick=()=>{S.f=b.dataset.f;closeMenu();render()});
+  $('fcount').hidden=S.f==='all';
+}
+function closeMenu(){$('menu').hidden=true;$('fbtn').setAttribute('aria-expanded','false')}
+$('fbtn').onclick=e=>{e.stopPropagation();const o=$('menu').hidden;$('menu').hidden=!o;$('fbtn').setAttribute('aria-expanded',o)};
+document.addEventListener('click',e=>{if(!e.target.closest('.fwrap'))closeMenu()});
+$('q').oninput=e=>{S.q=e.target.value.trim();render()};
+document.addEventListener('keydown',e=>{
+  if(e.key==='/'&&!['INPUT','TEXTAREA'].includes(document.activeElement.tagName)){e.preventDefault();$('q').focus()}
+  if(e.key==='Escape'){closeMenu();if(document.activeElement===$('q')){$('q').blur()}}
+});
+render();
+</script>
+</body>
+</html>

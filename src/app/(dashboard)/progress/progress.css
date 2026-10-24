@@ -1,0 +1,115 @@
+:root {
+  --indigoBg: #0d0e15;
+  --indigoCard: #141621;
+  --indigoCardInner: #191c2a;
+  --indigoBorder: #232637;
+  --indigoPrimary: #5850ec;
+  --indigoAccent: #6366f1;
+}
+
+.progress-root {
+  background-color: var(--indigoBg);
+  color: #f3f4f6;
+  min-height: 100dvh;
+  font-family: var(--font-be-vietnam-pro, "Be Vietnam Pro", system-ui, sans-serif);
+}
+
+/* KPI Card Subtle Corner Radial Glow */
+.progress-root .kpi-card {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.progress-root .kpi-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(99, 102, 241, 0.45);
+  box-shadow: 0 14px 30px -10px rgba(99, 102, 241, 0.22);
+}
+
+.progress-root .kpi-corner-circle {
+  position: absolute;
+  right: -18px;
+  bottom: -24px;
+  width: 96px;
+  height: 96px;
+  border-radius: 9999px;
+  pointer-events: none;
+  transition: transform 0.35s ease;
+}
+
+.progress-root .kpi-card:hover .kpi-corner-circle {
+  transform: scale(1.25);
+}
+
+/* Floating 3D HTML Labels inside Three.js containers */
+.progress-root .label-3d {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  cursor: pointer;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+  will-change: left, top;
+}
+
+.progress-root .label-3d:hover {
+  transform: translate(-50%, -58%) scale(1.08);
+  z-index: 30;
+}
+
+/* 3D Isometric Heatmap Perspective */
+.progress-root .heatmap-grid-3d {
+  transform: perspective(600px) rotateX(28deg) rotateZ(-8deg) scale(0.95);
+  transform-style: preserve-3d;
+}
+
+.progress-root .heatmap-cell {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.progress-root .heatmap-grid-3d .heatmap-cell[data-level="3"] {
+  transform: translateZ(10px);
+  box-shadow: -3px 6px 0px #312e81, 0 0 12px rgba(99, 102, 241, 0.6);
+}
+
+.progress-root .heatmap-grid-3d .heatmap-cell[data-level="2"] {
+  transform: translateZ(6px);
+  box-shadow: -2px 4px 0px #1e1b4b;
+}
+
+.progress-root .heatmap-grid-3d .heatmap-cell[data-level="1"] {
+  transform: translateZ(3px);
+}
+
+/* Glassmorphic Panel */
+.progress-root .glass-panel {
+  background: rgba(20, 22, 33, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+}
+
+/* Pulse animation for voice waves */
+@keyframes wavePulse {
+  0%, 100% {
+    transform: scaleY(0.4);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.wave-bar {
+  animation: wavePulse 1s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-root *,
+  .progress-root ::before,
+  .progress-root ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
