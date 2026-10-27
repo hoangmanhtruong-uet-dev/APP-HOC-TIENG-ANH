@@ -7,10 +7,12 @@ import {
 } from "@/features/listening/model";
 
 describe("listening model", () => {
-  it("accepts only the three implemented Listening types", () => {
+  it("accepts all implemented Listening types", () => {
     expect(isListeningQuestionType("single_choice")).toBe(true);
     expect(isListeningQuestionType("multiple_choice")).toBe(true);
     expect(isListeningQuestionType("short_text")).toBe(true);
+    expect(isListeningQuestionType("matching")).toBe(true);
+    expect(isListeningQuestionType("map_labelling")).toBe(true);
     expect(isListeningQuestionType("true_false_not_given")).toBe(false);
   });
   it("formats non-negative database-derived countdown values", () => {

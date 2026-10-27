@@ -9,7 +9,7 @@
 .listening-card {
   background-color: #141731;
   border: 1px solid #2B3060;
-  border-radius: 1.25rem;
+  border-radius: 1.5rem;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -17,14 +17,14 @@
   background-color: #1B1F40;
   border-color: #3F478C;
   transform: translateY(-2px);
-  box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.5), 0 0 20px -5px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 16px 32px -12px rgba(0, 0, 0, 0.6), 0 0 24px -5px rgba(99, 102, 241, 0.2);
 }
 
 .listening-card-subtle {
   background-color: rgba(20, 23, 49, 0.6);
   border: 1px solid rgba(43, 48, 96, 0.6);
   backdrop-filter: blur(12px);
-  border-radius: 1.25rem;
+  border-radius: 1.5rem;
 }
 
 .listening-badge-navy {
@@ -46,10 +46,10 @@
 }
 
 .listening-player-glass {
-  background: rgba(20, 23, 49, 0.92);
-  backdrop-filter: blur(20px);
+  background: rgba(16, 20, 54, 0.95);
+  backdrop-filter: blur(24px);
   border: 1px solid #2B3060;
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 30px -5px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 24px 48px -15px rgba(0, 0, 0, 0.8), 0 0 35px -5px rgba(99, 102, 241, 0.25);
 }
 
 @keyframes wave-bounce {
@@ -65,7 +65,33 @@
   animation: wave-bounce 1s ease-in-out infinite alternate;
 }
 
-/* Custom scrollbar for clean UI */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Hide scrollbar for clean tab pill strips */
+.scrollbar-none::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none,
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom scrollbars */
 .listening-theme-root ::-webkit-scrollbar {
   width: 6px;
   height: 6px;

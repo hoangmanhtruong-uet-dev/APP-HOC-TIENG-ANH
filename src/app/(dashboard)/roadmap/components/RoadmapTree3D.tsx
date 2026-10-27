@@ -302,7 +302,7 @@ export function RoadmapTree3D({
 
     // Animation loop
     let frameId: number;
-    let clock = new THREE.Clock();
+    const clock = new THREE.Clock();
 
     const animate = () => {
       frameId = requestAnimationFrame(animate);

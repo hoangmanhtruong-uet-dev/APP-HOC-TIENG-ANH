@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ProgressPage() {
-  let initialStreak = 12;
+  const initialStreak = 12;
   let initialCompletedLessons = 38;
   let initialTargetBand = "7.5";
 

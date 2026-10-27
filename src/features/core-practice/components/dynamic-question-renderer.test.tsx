@@ -114,4 +114,83 @@ describe("DynamicQuestionRenderer", () => {
       answerText: "Paris",
     });
   });
+
+  it("renders MapLabellingRenderer when type is map_labelling", () => {
+    const onChange = vi.fn();
+    const question = {
+      id: "q5",
+      type: "map_labelling",
+      promptMarkdown: "Label the map of the university campus.",
+      options: [
+        { id: "opt-a", label: "A. Library", position: 1 },
+        { id: "opt-b", label: "B. West Wing", position: 2 },
+      ],
+    };
+
+    render(
+      <DynamicQuestionRenderer
+        question={question}
+        draft={{ answerText: "", selectedOptionIds: [] }}
+        onChange={onChange}
+      />
+    );
+
+    // Map canvas and compass should be present
+    expect(screen.getByText("Main Entrance")).toBeInTheDocument();
+    expect(screen.getByText("Bản đồ vị trí (Nhấp vào ký tự A-G để chọn đáp án)")).toBeInTheDocument();
+
+    // Click pin A
+    const pinA = screen.getByRole("button", { name: "Vị trí A" });
+    fireEvent.click(pinA);
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        answerText: "A",
+      })
+    );
+
+    // Zoom modal toggle
+    const zoomBtn = screen.getByRole("button", { name: /Phóng to/i });
+    fireEvent.click(zoomBtn);
+    expect(screen.getByText("Bản đồ vị trí chi tiết")).toBeInTheDocument();
+
+    const closeBtn = screen.getByRole("button", { name: "Xong" });
+    fireEvent.click(closeBtn);
+    expect(screen.queryByText("Bản đồ vị trí chi tiết")).not.toBeInTheDocument();
+  });
+
+  it("renders MatchingPillSelector when type is matching", () => {
+    const onChange = vi.fn();
+    const question = {
+      id: "q6",
+      type: "matching",
+      promptMarkdown: "Match each facility to the visitor opinion.",
+      options: [
+        { id: "opt-a", label: "A. Highly recommended", position: 1 },
+        { id: "opt-b", label: "B. Needs renovation", position: 2 },
+        { id: "opt-c", label: "C. Under consideration", position: 3 },
+      ],
+    };
+
+    render(
+      <DynamicQuestionRenderer
+        question={question}
+        draft={{ answerText: "", selectedOptionIds: [] }}
+        onChange={onChange}
+      />
+    );
+
+    // Options box should list choices
+    expect(screen.getByText("Khung phương án phân loại:")).toBeInTheDocument();
+    expect(screen.getByText("Highly recommended")).toBeInTheDocument();
+
+    // Pill buttons for 1-touch selection
+    const pillB = screen.getByRole("button", { name: "Chọn phương án B" });
+    expect(pillB).toBeInTheDocument();
+    fireEvent.click(pillB);
+
+    expect(onChange).toHaveBeenCalledWith({
+      answerText: "B",
+      selectedOptionIds: ["opt-b"],
+    });
+  });
 });

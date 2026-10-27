@@ -1,7 +1,7 @@
 [
   {
     "word": "about",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "A1",
     "phon_br": "/əˈbaʊt/",
     "phon_n_am": "/əˈbaʊt/",
@@ -13,7 +13,7 @@
   },
   {
     "word": "above",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "A1",
     "phon_br": "/əˈbʌv/",
     "phon_n_am": "/əˈbʌv/",
@@ -25,7 +25,7 @@
   },
   {
     "word": "across",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "A1",
     "phon_br": "/əˈkrɒs/",
     "phon_n_am": "/əˈkrɔːs/",
@@ -169,7 +169,7 @@
   },
   {
     "word": "again",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "A1",
     "phon_br": "/əˈɡen/",
     "phon_n_am": "/əˈɡen/",
@@ -193,7 +193,7 @@
   },
   {
     "word": "ago",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "A1",
     "phon_br": "/əˈɡəʊ/",
     "phon_n_am": "/əˈɡəʊ/",
@@ -253,7 +253,7 @@
   },
   {
     "word": "also",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "A1",
     "phon_br": "/ˈɔːlsəʊ/",
     "phon_n_am": "/ˈɔːlsəʊ/",
@@ -265,7 +265,7 @@
   },
   {
     "word": "always",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "A1",
     "phon_br": "/ˈɔːlweɪz/",
     "phon_n_am": "/ˈɔːlweɪz/",
@@ -445,7 +445,7 @@
   },
   {
     "word": "around",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "A1",
     "phon_br": "/əˈraʊnd/",
     "phon_n_am": "/əˈraʊnd/",
@@ -577,7 +577,7 @@
   },
   {
     "word": "away",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "A1",
     "phon_br": "/əˈweɪ/",
     "phon_n_am": "/əˈweɪ/",
@@ -601,7 +601,7 @@
   },
   {
     "word": "back",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "A1",
     "phon_br": "/bæk/",
     "phon_n_am": "/bæk/",
@@ -841,7 +841,7 @@
   },
   {
     "word": "behind",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "A1",
     "phon_br": "/bɪˈhaɪnd/",
     "phon_n_am": "/bɪˈhaɪnd/",
@@ -865,7 +865,7 @@
   },
   {
     "word": "below",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "A1",
     "phon_br": "/bɪˈləʊ/",
     "phon_n_am": "/bɪˈləʊ/",
@@ -985,7 +985,7 @@
   },
   {
     "word": "abroad",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "A2",
     "phon_br": "/əˈbrɔːd/",
     "phon_n_am": "/əˈbrɔːd/",
@@ -1069,7 +1069,7 @@
   },
   {
     "word": "actually",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "A2",
     "phon_br": "/ˈæktʃuəli/",
     "phon_n_am": "/ˈæktʃuəli/",
@@ -1225,7 +1225,7 @@
   },
   {
     "word": "almost",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "A2",
     "phon_br": "/ˈɔːlməʊst/",
     "phon_n_am": "/ˈɔːlməʊst/",
@@ -1249,7 +1249,7 @@
   },
   {
     "word": "along",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "A2",
     "phon_br": "/əˈlɒŋ/",
     "phon_n_am": "/əˈlɔːŋ/",
@@ -1261,7 +1261,7 @@
   },
   {
     "word": "already",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "A2",
     "phon_br": "/ɔːlˈredi/",
     "phon_n_am": "/ɔːlˈredi/",
@@ -1345,7 +1345,7 @@
   },
   {
     "word": "any more",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "A2",
     "phon_br": "/ˌeni ˈmɔː(r)/",
     "phon_n_am": "/ˌeni ˈmɔːr/",
@@ -1369,7 +1369,7 @@
   },
   {
     "word": "anyway",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "A2",
     "phon_br": "/ˈeniweɪ/",
     "phon_n_am": "/ˈeniweɪ/",
@@ -1381,7 +1381,7 @@
   },
   {
     "word": "anywhere",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "A2",
     "phon_br": "/ˈeniweə(r)/",
     "phon_n_am": "/ˈeniwer/",
@@ -1705,7 +1705,7 @@
   },
   {
     "word": "badly",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "A2",
     "phon_br": "/ˈbædli/",
     "phon_n_am": "/ˈbædli/",
@@ -1921,7 +1921,7 @@
   },
   {
     "word": "absolutely",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "B1",
     "phon_br": "/ˈæbsəluːtli/",
     "phon_n_am": "/ˈæbsəluːtli/",
@@ -2113,7 +2113,7 @@
   },
   {
     "word": "ahead",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "B1",
     "phon_br": "/əˈhed/",
     "phon_n_am": "/əˈhed/",
@@ -2305,7 +2305,7 @@
   },
   {
     "word": "apart",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "B1",
     "phon_br": "/əˈpɑːt/",
     "phon_n_am": "/əˈpɑːrt/",
@@ -2365,7 +2365,7 @@
   },
   {
     "word": "approximately",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "B1",
     "phon_br": "/əˈprɒksɪmətli/",
     "phon_n_am": "/əˈprɑːksɪmətli/",
@@ -2509,7 +2509,7 @@
   },
   {
     "word": "backwards",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "B1",
     "phon_br": "/ˈbækwədz/",
     "phon_n_am": "/ˈbækwərdz/",
@@ -2857,7 +2857,7 @@
   },
   {
     "word": "by",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "B1",
     "phon_br": "/baɪ/",
     "phon_n_am": "/baɪ/",
@@ -3061,7 +3061,7 @@
   },
   {
     "word": "afterwards",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "B2",
     "phon_br": "/ˈɑːftəwədz/",
     "phon_n_am": "/ˈæftərwərdz/",
@@ -3217,7 +3217,7 @@
   },
   {
     "word": "apparently",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "B2",
     "phon_br": "/əˈpærəntli/",
     "phon_n_am": "/əˈpærəntli/",
@@ -3481,7 +3481,7 @@
   },
   {
     "word": "basically",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "B2",
     "phon_br": "/ˈbeɪsɪkli/",
     "phon_n_am": "/ˈbeɪsɪkli/",
@@ -3541,7 +3541,7 @@
   },
   {
     "word": "beyond",
-    "pos": "verb",
+    "pos": "adverb",
     "cefr": "B2",
     "phon_br": "/bɪˈjɒnd/",
     "phon_n_am": "/bɪˈjɑːnd/",

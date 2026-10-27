@@ -1,147 +1,63 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
   Headphones,
-  Flame,
-  Bell,
-  ChevronDown,
-  Check,
-  Activity,
   Mic,
-  Globe2,
-  ListTodo,
-  ArrowRight,
   Play,
   Pause,
-  RotateCcw,
-  RotateCw,
-  SkipBack,
-  SkipForward,
-  Volume2,
-  VolumeX,
   Sparkles,
-  Waves,
-  AudioLines,
-  Search,
-  Clock,
-  Award,
-  BookOpen,
+  ArrowRight,
   CheckCircle2,
-  Compass,
-  SlidersHorizontal,
-  Calendar,
+  Globe2,
+  Clock,
+  BookOpen,
+  Sliders,
+  ChevronDown,
+  Layers,
+  Activity,
+  Target,
+  ShieldAlert,
+  Search,
   X,
-  Zap
+  Compass,
+  Bookmark,
+  Award,
+  Check,
+  Radio
 } from "lucide-react";
 
 import type { ListeningCatalogItem } from "@/features/listening/server/content";
+import {
+  CURATED_EXERCISES,
+  BAND_STAGES,
+  TOPIC_TRACKS,
+  type CuratedExercise,
+  type BandStage
+} from "./components/listening-curated-data";
+
+export { BAND_STAGES };
+import { LiveMiniLab } from "./components/LiveMiniLab";
+import { FloatingAudioDock, type FloatingAudioTrack } from "./components/FloatingAudioDock";
+import { QuickPracticeModal } from "./components/QuickPracticeModal";
+import type { VisualMode, AmbientNoise } from "./components/ThreeSonicVisualizer";
 import "./listening.css";
 
-// 8 IELTS Band stages from curriculum
-export interface BandStage {
-  id: string;
-  bandRange: string;
-  name: string;
-  vietnameseTitle: string;
-  minBand: number;
-  maxBand: number;
-  accent: string;
-  description: string;
-  focus: string;
-}
-
-export const BAND_STAGES: BandStage[] = [
+// Dynamic import for Three.js 3D canvas (prevents SSR hydration error)
+const ThreeSonicVisualizer = dynamic(
+  () => import("./components/ThreeSonicVisualizer").then((mod) => mod.ThreeSonicVisualizer),
   {
-    id: "starter",
-    bandRange: "0.0 - 2.5",
-    name: "Starter",
-    vietnameseTitle: "Mất gốc Listening",
-    minBand: 0,
-    maxBand: 2.5,
-    accent: "UK / Slow",
-    description: "Nhận diện bảng chữ cái, đánh vần tên riêng, số điện thoại, ngày tháng.",
-    focus: "Chính tả số, tên người, từ vựng sinh hoạt hàng ngày"
-  },
-  {
-    id: "elementary",
-    bandRange: "2.5 - 3.5",
-    name: "Elementary",
-    vietnameseTitle: "Nhập môn Nghe IELTS",
-    minBand: 2.5,
-    maxBand: 3.5,
-    accent: "UK Standard",
-    description: "Nghe hiểu các thông báo đơn giản, hội thoại ngắn ở quầy dịch vụ.",
-    focus: "Điền form thông tin, nhận biết mốc thời gian và địa điểm"
-  },
-  {
-    id: "pre-ielts",
-    bandRange: "3.5 - 4.5",
-    name: "Pre-IELTS",
-    vietnameseTitle: "Nền tảng Listening",
-    minBand: 3.5,
-    maxBand: 4.5,
-    accent: "UK / US",
-    description: "Bắt đầu làm quen với các đoạn hội thoại Section 1 và Section 2 ngắn.",
-    focus: "Section 1 Form completion & Section 2 Hướng dẫn du lịch"
-  },
-  {
-    id: "foundation",
-    bandRange: "4.5 - 5.5",
-    name: "Foundation",
-    vietnameseTitle: "Chinh phục B1+",
-    minBand: 4.5,
-    maxBand: 5.5,
-    accent: "UK / US / AUS",
-    description: "Phát triển kỹ năng nghe bắt từ khóa (keywords) và nhận diện bẫy phổ biến.",
-    focus: "Trắc nghiệm Section 2 & Độc thoại Section 3 thảo luận nhóm"
-  },
-  {
-    id: "intermediate",
-    bandRange: "5.5 - 6.5",
-    name: "Intermediate",
-    vietnameseTitle: "Bứt phá Band 6.5",
-    minBand: 5.5,
-    maxBand: 6.5,
-    accent: "Global Accents",
-    description: "Nghe hiểu bài giảng học thuật Section 4, liên kết ý và xử lý câu hỏi Matching.",
-    focus: "Paraphrase phức tạp & Điền tóm tắt bài giảng Section 4"
-  },
-  {
-    id: "upper-intermediate",
-    bandRange: "6.5 - 7.5",
-    name: "Upper-Intermediate",
-    vietnameseTitle: "Mục tiêu Du học & Định cư",
-    minBand: 6.5,
-    maxBand: 7.5,
-    accent: "Native Speed",
-    description: "Làm chủ tốc độ nói tự nhiên, nuốt âm, nối âm và ngữ điệu người bản ngữ.",
-    focus: "Full Section 1-4 với độ chính xác cao > 30/40 câu"
-  },
-  {
-    id: "advanced",
-    bandRange: "7.5 - 8.5",
-    name: "Advanced",
-    vietnameseTitle: "Chuyên sâu Học thuật",
-    minBand: 7.5,
-    maxBand: 8.5,
-    accent: "Diverse Accents",
-    description: "Nhận biết thái độ, hàm ý ngầm của người nói trong các bài thuyết trình chuyên sâu.",
-    focus: "Multiple Choice nhiều bẫy Section 3 & Lecture trừu tượng"
-  },
-  {
-    id: "expert",
-    bandRange: "8.5 - 9.0",
-    name: "Expert",
-    vietnameseTitle: "Master Tuyệt đối",
-    minBand: 8.5,
-    maxBand: 9.0,
-    accent: "Complex Native",
-    description: "Hoàn thiện tối đa độ nhạy âm thanh, phản xạ tức thì, điểm số 38-40/40 tuyệt đối.",
-    focus: "Tốc độ 1.25x - 1.5x, từ vựng hiếm và bẫy logic tinh vi"
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full min-h-[260px] flex items-center justify-center text-xs text-indigo-300 font-mono">
+        <Activity className="w-5 h-5 animate-spin mr-2" />
+        Đang nạp 3D Sonic Engine...
+      </div>
+    )
   }
-];
+);
 
 export interface ListeningHubProps {
   items: ListeningCatalogItem[];
@@ -161,7 +77,7 @@ export function ListeningHubClient({
   attemptsCount,
   profile
 }: ListeningHubProps) {
-  // 1. Initial State Setup
+  // 1. Initial Band Stage
   const userTargetBand = profile?.target_band ?? 6.5;
   const initialStage = useMemo(() => {
     return (
@@ -170,1226 +86,1179 @@ export function ListeningHubClient({
           return userTargetBand >= s.minBand && userTargetBand <= 9.0;
         }
         return userTargetBand >= s.minBand && userTargetBand < s.maxBand;
-      }) ?? BAND_STAGES[5] // default to Upper-Intermediate 6.5 - 7.5
+      }) ?? BAND_STAGES[5] // Default Upper-Intermediate (6.5 - 7.5)
     );
   }, [userTargetBand]);
 
   const [selectedStage, setSelectedStage] = useState<BandStage>(initialStage);
-  const [isBandDropdownOpen, setIsBandDropdownOpen] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [activeBandRange, setActiveBandRange] = useState<string>("all");
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [showBandDropdown, setShowBandDropdown] = useState(false);
 
-  // 2. Audio Player State
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState<number>(1.0);
-  const [currentTime, setCurrentTime] = useState<number>(75);
-  const [duration, setDuration] = useState<number>(185);
-  const [isMuted, setIsMuted] = useState(false);
-  const [currentTrack, setCurrentTrack] = useState<{
-    id: string;
-    title: string;
-    subtitle: string;
-    accent: string;
-    bandRange: string;
-    audioUrl?: string;
-  }>({
-    id: "community-library",
-    title: "Community Library Visit & Membership",
-    subtitle: "Section 1 • Daily Conversation",
-    accent: "UK Accent",
-    bandRange: "5.5 - 6.5",
-    audioUrl: "/audio/listening/community-library-visit.wav"
+  // 2. Audio & Visualizer States
+  const [currentTrack, setCurrentTrack] = useState<FloatingAudioTrack>({
+    id: CURATED_EXERCISES[0].id,
+    title: CURATED_EXERCISES[0].title,
+    subtitle: CURATED_EXERCISES[0].subtitle,
+    accent: CURATED_EXERCISES[0].accent,
+    bandRange: CURATED_EXERCISES[0].band,
+    durationSec: CURATED_EXERCISES[0].durationSec,
+    audioUrl: CURATED_EXERCISES[0].audioUrl
   });
+
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [playbackSpeed, setPlaybackSpeed] = useState<number>(1.0);
+  const [ambientNoise, setAmbientNoise] = useState<AmbientNoise>("off");
+  const [visualMode, setVisualMode] = useState<VisualMode>("sphere");
+  const [isDockMinimized, setIsDockMinimized] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [abLoop, setAbLoop] = useState(false);
+
+  // 3. Bento Grid State
+  const [bentoSpeedPreview, setBentoSpeedPreview] = useState(1.25);
+  const [bentoAccentPreview, setBentoAccentPreview] = useState("UK");
+
+  // 4. Exercise Library & Filtering States
+  const [activeFilter, setActiveFilter] = useState<string>("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [onlyUncompleted, setOnlyUncompleted] = useState(false);
+  const [bookmarkedIds, setBookmarkedIds] = useState<string[]>(["ex-1", "ex-4"]);
+  const [vocabPopoverId, setVocabPopoverId] = useState<string | null>(null);
+
+  // 5. Quick Practice Modal State
+  const [activePracticeExercise, setActivePracticeExercise] = useState<CuratedExercise | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Auto-dismiss toast
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage((prev) => (prev === msg ? null : prev));
     }, 3000);
-  };
+  }, []);
 
-  // Sync Audio Element
+  // Web Speech API fallback synthesizer
+  const speakText = useCallback((text: string, lang = "en-GB", rate = 1.0) => {
+    try {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = lang;
+        utterance.rate = rate;
+        utterance.pitch = 1.0;
+        window.speechSynthesis.speak(utterance);
+      }
+    } catch {
+      // Ignored if blocked by autoplay restrictions
+    }
+  }, []);
+
+  // Merge Curated Exercises with real Supabase database items
+  const allExercises = useMemo<CuratedExercise[]>(() => {
+    const curated = [...CURATED_EXERCISES];
+
+    if (items && items.length > 0) {
+      items.forEach((item, idx) => {
+        const exists = curated.some((c) => c.slug === item.slug);
+        if (!exists) {
+          curated.push({
+            id: `db-${item.slug || idx}`,
+            slug: item.slug,
+            title: item.title,
+            subtitle: item.summary,
+            badge: "OFFICIAL",
+            badgeColor: "from-indigo-500/20 to-blue-500/20 text-indigo-300 border-indigo-500/30",
+            accent: "UK Accent",
+            accentFlag: "🇬🇧",
+            band: item.difficulty || "6.0 - 7.5",
+            bandGroup: "Band 6.5 - 7.5",
+            duration: `${Math.floor((item.durationSeconds || 180) / 60)}m ${(item.durationSeconds || 180) % 60}s`,
+            durationSec: item.durationSeconds || 180,
+            questionsCount: item.questionCount || 10,
+            category: item.testType || "IELTS Practice",
+            section: "Section 2",
+            isSpeedRun: false,
+            completed: false,
+            paraphraseTraps: 6,
+            sampleSentence: item.summary,
+            transcript: [
+              { time: 0, text: item.title },
+              { time: 10, text: item.summary }
+            ],
+            vocab: [
+              { word: "Comprehensive", meaning: "Toàn diện, bao quát", ipa: "/ˌkɒm.prɪˈhen.sɪv/" }
+            ],
+            questions: [
+              { id: 1, q: `${item.title}: Check comprehension.`, answer: "yes", hint: "Nghe kỹ bối cảnh mở đầu" }
+            ]
+          });
+        }
+      });
+    }
+
+    return curated;
+  }, [items]);
+
+  // Filtered Exercises
+  const filteredExercises = useMemo(() => {
+    return allExercises.filter((ex) => {
+      if (onlyUncompleted && ex.completed) return false;
+
+      if (searchQuery.trim() !== "") {
+        const q = searchQuery.toLowerCase();
+        const matchTitle = ex.title.toLowerCase().includes(q);
+        const matchSub = ex.subtitle.toLowerCase().includes(q);
+        const matchCat = ex.category.toLowerCase().includes(q);
+        if (!matchTitle && !matchSub && !matchCat) return false;
+      }
+
+      if (activeFilter === "ALL") return true;
+      if (activeFilter === "UK") return ex.accent.toLowerCase().includes("uk");
+      if (activeFilter === "US") return ex.accent.toLowerCase().includes("us");
+      if (activeFilter === "AUS") return ex.accent.toLowerCase().includes("aus");
+      if (activeFilter === "SPEED") return ex.isSpeedRun;
+      if (activeFilter === "BAND_LOW") return ex.bandGroup === "Band 4.5 - 6.5";
+      if (activeFilter === "BAND_MID") return ex.bandGroup === "Band 6.5 - 7.5";
+      if (activeFilter === "BAND_HIGH") return ex.bandGroup === "Band 7.5 - 9.0";
+      return true;
+    });
+  }, [allExercises, activeFilter, searchQuery, onlyUncompleted]);
+
+  // Audio Sync & Playback Timer
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    const timer = setInterval(() => {
+      setCurrentTime((prev) => {
+        if (prev >= currentTrack.durationSec) {
+          if (abLoop) return 0;
+          setIsPlaying(false);
+          return 0;
+        }
+        return prev + 1;
+      });
+    }, 1000 / playbackSpeed);
+
+    return () => clearInterval(timer);
+  }, [isPlaying, currentTrack.durationSec, playbackSpeed, abLoop]);
+
+  // Audio element sync
   useEffect(() => {
     if (!audioRef.current) return;
     audioRef.current.playbackRate = playbackSpeed;
-  }, [playbackSpeed]);
+    audioRef.current.muted = isMuted;
+  }, [playbackSpeed, isMuted]);
 
   useEffect(() => {
-    if (!audioRef.current) return;
+    if (!audioRef.current || !currentTrack.audioUrl) return;
+
     if (isPlaying) {
       try {
         const p = audioRef.current.play();
         if (p && typeof p.catch === "function") {
           p.catch(() => {
-            // Autoplay restricted
+            // Fallback to speech synthesis if autoplay is blocked
           });
         }
-      } catch {
-        // Not implemented in test environment
-      }
+      } catch {}
     } else {
       try {
         audioRef.current.pause();
-      } catch {
-        // Not implemented in test environment
-      }
+      } catch {}
     }
   }, [isPlaying, currentTrack]);
 
-  // Handle Play/Pause
-  const togglePlayPause = () => {
-    setIsPlaying((prev) => !prev);
-  };
-
-  // Seek ±5 seconds
-  const seekRelative = (seconds: number) => {
-    if (audioRef.current) {
-      const nextTime = Math.max(
-        0,
-        Math.min(audioRef.current.currentTime + seconds, duration)
-      );
-      audioRef.current.currentTime = nextTime;
-      setCurrentTime(nextTime);
-    } else {
-      setCurrentTime((prev) => Math.max(0, Math.min(prev + seconds, duration)));
+  // Find active transcript line
+  const activeExerciseObj = allExercises.find((e) => e.id === currentTrack.id) || allExercises[0];
+  const currentTranscriptLine = useMemo(() => {
+    if (!activeExerciseObj?.transcript || activeExerciseObj.transcript.length === 0) {
+      return activeExerciseObj?.sampleSentence || "";
     }
-    showToast(seconds > 0 ? `Đã tua tới +${seconds}s` : `Đã tua lùi ${seconds}s`);
+    const lines = activeExerciseObj.transcript;
+    let activeLine = lines[0]?.text || "";
+    for (let i = 0; i < lines.length; i++) {
+      if (currentTime >= lines[i].time) {
+        activeLine = lines[i].text;
+      }
+    }
+    return activeLine;
+  }, [activeExerciseObj, currentTime]);
+
+  // Toggle Play / Pause
+  const handleTogglePlay = () => {
+    const nextState = !isPlaying;
+    setIsPlaying(nextState);
+
+    if (nextState) {
+      if (!currentTrack.audioUrl && activeExerciseObj) {
+        const lang = activeExerciseObj.accent.includes("US")
+          ? "en-US"
+          : activeExerciseObj.accent.includes("AUS")
+          ? "en-AU"
+          : "en-GB";
+        speakText(activeExerciseObj.sampleSentence, lang, playbackSpeed);
+      }
+      showToast("Đang phát âm thanh");
+    } else {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+      showToast("Đã tạm dừng");
+    }
   };
 
-  // Cycle speed
+  // Preview an exercise
+  const handlePreviewExercise = (exercise: CuratedExercise) => {
+    if (currentTrack.id === exercise.id && isPlaying) {
+      setIsPlaying(false);
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+      showToast("Đã dừng phát");
+    } else {
+      setCurrentTrack({
+        id: exercise.id,
+        title: exercise.title,
+        subtitle: exercise.subtitle,
+        accent: exercise.accent,
+        bandRange: exercise.band,
+        durationSec: exercise.durationSec,
+        audioUrl: exercise.audioUrl
+      });
+      setCurrentTime(0);
+      setIsPlaying(true);
+      setIsDockMinimized(false);
+
+      if (!exercise.audioUrl) {
+        const lang = exercise.accent.includes("US")
+          ? "en-US"
+          : exercise.accent.includes("AUS")
+          ? "en-AU"
+          : "en-GB";
+        speakText(exercise.sampleSentence, lang, playbackSpeed);
+      }
+      showToast(`Đang nghe thử: ${exercise.title}`);
+    }
+  };
+
+  // Open Quick Practice Modal
+  const handleOpenPracticeModal = (exercise: CuratedExercise) => {
+    setActivePracticeExercise(exercise);
+    setCurrentTrack({
+      id: exercise.id,
+      title: exercise.title,
+      subtitle: exercise.subtitle,
+      accent: exercise.accent,
+      bandRange: exercise.band,
+      durationSec: exercise.durationSec,
+      audioUrl: exercise.audioUrl
+    });
+    setCurrentTime(0);
+    setIsPlaying(true);
+
+    if (!exercise.audioUrl) {
+      const lang = exercise.accent.includes("US")
+        ? "en-US"
+        : exercise.accent.includes("AUS")
+        ? "en-AU"
+        : "en-GB";
+      speakText(exercise.sampleSentence, lang, playbackSpeed);
+    }
+  };
+
+  const toggleBookmark = (id: string) => {
+    setBookmarkedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+    showToast(bookmarkedIds.includes(id) ? "Đã gỡ bài tập" : "Đã lưu bài vào yêu thích");
+  };
+
   const cycleSpeed = () => {
-    const speeds = [1.0, 1.25, 1.5];
+    const speeds = [0.75, 1.0, 1.25, 1.5];
     const nextIdx = (speeds.indexOf(playbackSpeed) + 1) % speeds.length;
     const next = speeds[nextIdx];
     setPlaybackSpeed(next);
     showToast(`Tốc độ nghe: ${next}x`);
   };
 
-  // Toggle Mute
-  const toggleMute = () => {
-    if (audioRef.current) {
-      audioRef.current.muted = !isMuted;
-    }
-    setIsMuted(!isMuted);
-  };
-
-  // Quick preview trigger
-  const handlePreviewTrack = (track: {
-    id: string;
-    title: string;
-    subtitle: string;
-    accent: string;
-    bandRange: string;
-    audioUrl?: string;
-  }) => {
-    setCurrentTrack(track);
-    setIsPlaying(true);
-    setCurrentTime(0);
-    showToast(`Đang nghe thử: ${track.title}`);
-  };
-
-  // 3. Built-in Curated Exercises
-  const mockPracticeList = useMemo(() => {
-    const baseList = [
-      {
-        slug: "community-library-visit",
-        title: "Community Library Visit & Membership",
-        summary: "Đăng ký thẻ thư viện và hỏi giờ mở cửa, quy định mượn sách.",
-        category: "Daily Conversations",
-        bandRange: "5.5 - 6.5",
-        accent: "UK Accent",
-        accentCode: "uk",
-        difficulty: "Foundation",
-        questionCount: 10,
-        durationSeconds: 185,
-        isNew: true,
-        tag: "HOT",
-        audioUrl: "/audio/listening/community-library-visit.wav"
-      },
-      {
-        slug: "campus-accommodation-booking",
-        title: "University Accommodation Services",
-        summary: "Sinh viên năm nhất trao đổi về việc thuê ký túc xá và homestay ngoại ô.",
-        category: "Campus Life",
-        bandRange: "6.0 - 7.0",
-        accent: "AUS Accent",
-        accentCode: "aus",
-        difficulty: "Intermediate",
-        questionCount: 10,
-        durationSeconds: 240,
-        isNew: true,
-        tag: "BAND 6.5+",
-        audioUrl: "/audio/listening/community-library-visit.wav"
-      },
-      {
-        slug: "ocean-renewable-energy",
-        title: "Tidal & Wave Energy Research Lecture",
-        summary: "Bài giảng học thuật về công nghệ khai thác năng lượng thủy triều ngoài khơi Scotland.",
-        category: "Academic Lectures",
-        bandRange: "7.0 - 8.5",
-        accent: "UK Accent",
-        accentCode: "uk",
-        difficulty: "Advanced",
-        questionCount: 10,
-        durationSeconds: 320,
-        isNew: false,
-        tag: "BAND 7.5+",
-        audioUrl: "/audio/listening/community-library-visit.wav"
-      },
-      {
-        slug: "city-cycling-path-proposal",
-        title: "City Council: Public Cycling Route Scheme",
-        summary: "Thảo luận quy hoạch đường đạp xe đô thị, trắc nghiệm và gắn nhãn bản đồ Section 2.",
-        category: "Maps & Plans",
-        bandRange: "5.0 - 6.5",
-        accent: "US Accent",
-        accentCode: "us",
-        difficulty: "Intermediate",
-        questionCount: 10,
-        durationSeconds: 210,
-        isNew: false,
-        tag: "MAP / DIAGRAM",
-        audioUrl: "/audio/listening/community-library-visit.wav"
-      },
-      {
-        slug: "coffee-industry-supply-chain",
-        title: "Global Coffee Farming & Fair Trade",
-        summary: "Tác động kinh tế của phong trào thương mại công bằng đối với nông dân trồng cà phê.",
-        category: "Academic Lectures",
-        bandRange: "6.5 - 8.0",
-        accent: "US Accent",
-        accentCode: "us",
-        difficulty: "Upper-Intermediate",
-        questionCount: 10,
-        durationSeconds: 290,
-        isNew: true,
-        tag: "SECTION 4",
-        audioUrl: "/audio/listening/community-library-visit.wav"
-      },
-      {
-        slug: "lost-property-inquiry",
-        title: "Airport Lost Property Hotline",
-        summary: "Báo mất hành lý tại sân bay Sydney: màu sắc vali, thương hiệu, giấy tờ bên trong.",
-        category: "Daily Conversations",
-        bandRange: "0.0 - 4.5",
-        accent: "AUS Accent",
-        accentCode: "aus",
-        difficulty: "Elementary",
-        questionCount: 6,
-        durationSeconds: 150,
-        isNew: false,
-        tag: "STARTER",
-        audioUrl: "/audio/listening/community-library-visit.wav"
-      }
-    ];
-
-    // Merge Supabase items if available
-    if (items.length > 0) {
-      const dbSlugs = new Set(items.map((i) => i.slug));
-      const dbFormatted = items.map((dbItem) => ({
-        slug: dbItem.slug,
-        title: dbItem.title,
-        summary: dbItem.summary || "Bài luyện nghe kiểm tra theo format chuẩn IELTS.",
-        category: "IELTS Practice",
-        bandRange: "5.5 - 7.5",
-        accent: "UK / Global Accent",
-        accentCode: "uk",
-        difficulty: dbItem.difficulty || "Intermediate",
-        questionCount: dbItem.questionCount || 10,
-        durationSeconds: dbItem.durationSeconds || 240,
-        isNew: true,
-        tag: "VERIFIED",
-        audioUrl: "/audio/listening/community-library-visit.wav"
-      }));
-      const remainingBase = baseList.filter((b) => !dbSlugs.has(b.slug));
-      return [...dbFormatted, ...remainingBase];
-    }
-
-    return baseList;
-  }, [items]);
-
-  // 4. Filtering Logic
-  const filteredPracticeList = useMemo(() => {
-    return mockPracticeList.filter((item) => {
-      // Search query
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase();
-        const matchesQuery =
-          item.title.toLowerCase().includes(query) ||
-          item.summary.toLowerCase().includes(query) ||
-          item.category.toLowerCase().includes(query);
-        if (!matchesQuery) return false;
-      }
-
-      // Filter modes / accents
-      if (activeFilter === "uk" && item.accentCode !== "uk") return false;
-      if (activeFilter === "us" && item.accentCode !== "us") return false;
-      if (activeFilter === "aus" && item.accentCode !== "aus") return false;
-      if (activeFilter === "speed" && item.durationSeconds > 220) return false;
-
-      // Band range filter
-      if (activeBandRange === "0-4.5") {
-        if (!item.bandRange.includes("0.0") && !item.bandRange.includes("5.0"))
-          return false;
-      } else if (activeBandRange === "4.5-6.5") {
-        if (!item.bandRange.includes("5.5") && !item.bandRange.includes("6.0"))
-          return false;
-      } else if (activeBandRange === "6.5-7.5") {
-        if (!item.bandRange.includes("6.5") && !item.bandRange.includes("7.0"))
-          return false;
-      } else if (activeBandRange === "7.5-9.0") {
-        if (!item.bandRange.includes("7.5") && !item.bandRange.includes("8.0") && !item.bandRange.includes("8.5"))
-          return false;
-      }
-
-      return true;
-    });
-  }, [mockPracticeList, searchQuery, activeFilter, activeBandRange]);
-
-  // Exam Countdown calculation
-  const examCountdown = useMemo(() => {
-    if (!profile?.target_exam_date) return null;
-    const targetDate = new Date(profile.target_exam_date);
-    const now = new Date();
-    const diffDays = Math.ceil(
-      (targetDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-    );
-    return diffDays > 0 ? diffDays : null;
-  }, [profile?.target_exam_date]);
-
-  // Daily target minutes
-  const targetDailyMinutes = profile?.daily_study_minutes ?? 20;
-
   return (
-    <div className="listening-theme-root font-sans pb-36 -mx-4 -my-6 sm:-mx-6 sm:-my-8 lg:-mx-8 lg:-my-8 p-4 sm:p-6 lg:p-8">
-      {/* Hidden Audio Element */}
+    <div className="listening-theme-root pb-32 relative overflow-x-hidden selection:bg-indigo-500 selection:text-white">
+      {/* Hidden real audio element */}
       <audio
         ref={audioRef}
         src={currentTrack.audioUrl}
-        onTimeUpdate={() => {
-          if (audioRef.current) {
-            setCurrentTime(audioRef.current.currentTime);
-            if (audioRef.current.duration) {
-              setDuration(audioRef.current.duration);
-            }
-          }
-        }}
-        onEnded={() => setIsPlaying(false)}
         preload="metadata"
+        onEnded={() => {
+          if (!abLoop) setIsPlaying(false);
+        }}
       />
 
-      {/* Floating Toast Alert */}
+      {/* Floating Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-6 right-6 z-50 flex items-center gap-2 rounded-xl bg-[#1B1F40] px-4 py-3 text-sm font-medium text-[#EEF0FF] shadow-2xl border border-[#3F478C] animate-in fade-in slide-in-from-top-4 duration-300">
-          <Sparkles size={16} className="text-[#F6E85C]" />
+        <div className="fixed top-20 right-6 z-50 animate-fadeIn bg-indigo-600/90 text-white px-4 py-2.5 rounded-2xl shadow-xl backdrop-blur-md text-xs font-bold border border-indigo-400/40 flex items-center gap-2">
+          <Sparkles size={14} className="text-[#F6E85C]" />
           <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* 1. HERO & HEADER SECTION */}
-      <section className="relative mb-10 overflow-hidden rounded-[2.5rem] bg-[#141731] border border-[#2B3060] px-6 py-10 md:px-12 md:py-14 text-white shadow-2xl">
-        {/* Glow ambient spots */}
-        <div className="absolute -top-1/3 -right-1/4 h-[600px] w-[600px] rounded-full bg-indigo-500/15 blur-[120px] pointer-events-none" />
-        <div className="absolute -bottom-1/3 -left-1/4 h-[500px] w-[500px] rounded-full bg-violet-600/10 blur-[100px] pointer-events-none" />
+      {/* Ambient background glows */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[130px]" />
+        <div className="absolute top-1/4 right-0 w-[450px] h-[450px] bg-violet-600/10 rounded-full blur-[140px]" />
+        <div className="absolute bottom-0 left-1/3 w-[500px] h-[400px] bg-cyan-600/10 rounded-full blur-[150px]" />
+      </div>
 
-        {/* Top bar inside hero */}
-        <header className="relative z-10 flex flex-wrap items-center justify-between gap-4 mb-10">
-          <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <p className="text-xs font-bold tracking-widest text-indigo-300 uppercase">
-                Listening Training Center
-              </p>
-            </div>
-            <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-3">
-              Chào mừng trở lại, Scholar
-            </h2>
-          </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 space-y-10 relative z-10">
+        {/* =========================================================
+            1. HERO SECTION WITH THREE.JS 3D SONIC VISUALIZER
+        ========================================================= */}
+        <section className="relative rounded-3xl overflow-hidden border border-[#2B3060] bg-gradient-to-br from-[#141731] via-[#0E1128] to-[#17143C] shadow-2xl">
+          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-indigo-400/60 to-transparent" />
 
-          <div className="flex items-center gap-3">
-            {/* Streak Counter */}
-            <div className="flex items-center gap-2 bg-[#1B1F40]/80 backdrop-blur-md px-4 py-2 rounded-full border border-[#2B3060] shadow-sm">
-              <Flame size={16} className="text-amber-400 fill-amber-400" />
-              <span className="text-xs font-semibold text-[#EEF0FF]">5 Ngày Streak</span>
-            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 p-6 sm:p-8 lg:p-10 items-center relative">
+            {/* Left 7 Columns */}
+            <div className="lg:col-span-7 space-y-6 relative z-10">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold tracking-wider uppercase">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 -ml-4" />
+                  LISTENING TRAINING CENTER
+                </div>
 
-            {/* Exam Countdown */}
-            {examCountdown && (
-              <div className="hidden sm:flex items-center gap-2 bg-[#1B1F40]/80 backdrop-blur-md px-4 py-2 rounded-full border border-[#2B3060] shadow-sm">
-                <Calendar size={14} className="text-indigo-400" />
-                <span className="text-xs font-medium text-zinc-300">
-                  Còn <strong className="text-white font-semibold">{examCountdown} ngày</strong> thi
-                </span>
-              </div>
-            )}
+                {/* Band Selector Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowBandDropdown(!showBandDropdown)}
+                    className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/40 text-indigo-200 text-xs font-semibold transition-colors"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>
+                      {selectedStage.name} (Band {selectedStage.bandRange})
+                    </span>
+                    <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+                  </button>
 
-            <button
-              onClick={() => showToast("Bạn không có thông báo mới.")}
-              aria-label="Thông báo"
-              className="p-2.5 bg-[#1B1F40]/80 hover:bg-[#252A56] rounded-full border border-[#2B3060] text-zinc-300 hover:text-white transition-colors"
-            >
-              <Bell size={18} />
-            </button>
-          </div>
-        </header>
-
-        {/* Main Hero Grid */}
-        <div className="relative z-10 grid lg:grid-cols-12 gap-10 items-end">
-          <div className="lg:col-span-7">
-            {/* Interactive Band Selector Trigger */}
-            <div className="relative inline-block mb-6">
-              <button
-                onClick={() => setIsBandDropdownOpen(!isBandDropdownOpen)}
-                className="inline-flex items-center gap-2.5 rounded-full border border-indigo-400/40 bg-indigo-500/15 hover:bg-indigo-500/25 px-4 py-2 transition-all group"
-                aria-expanded={isBandDropdownOpen}
-                aria-haspopup="true"
-              >
-                <Sparkles size={15} className="text-[#F6E85C]" />
-                <span className="text-xs font-bold tracking-wider text-indigo-200 uppercase">
-                  IELTS Band {selectedStage.bandRange} • {selectedStage.name}
-                </span>
-                <ChevronDown
-                  size={15}
-                  className={`text-indigo-300 transition-transform duration-200 ${
-                    isBandDropdownOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-
-              {/* Band Dropdown Menu */}
-              {isBandDropdownOpen && (
-                <div className="absolute left-0 top-full mt-2 w-[340px] sm:w-[420px] rounded-2xl bg-[#141731] border border-[#2B3060] p-3 shadow-2xl z-50 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
-                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#2B3060] px-2">
-                    <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                      Chọn Chặng Luyện Nghe (0.0 - 9.0)
-                    </p>
-                    <button
-                      onClick={() => setIsBandDropdownOpen(false)}
-                      className="text-zinc-400 hover:text-white"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                  <div className="max-h-[360px] overflow-y-auto space-y-1.5 pr-1">
-                    {BAND_STAGES.map((stage) => {
-                      const isSelected = selectedStage.id === stage.id;
-                      return (
+                  {showBandDropdown && (
+                    <div className="absolute left-0 mt-2 w-72 rounded-2xl bg-[#141731] border border-[#2B3060] shadow-2xl p-2 z-50 backdrop-blur-xl">
+                      {BAND_STAGES.map((b) => (
                         <button
-                          key={stage.id}
+                          key={b.id}
                           onClick={() => {
-                            setSelectedStage(stage);
-                            setIsBandDropdownOpen(false);
-                            showToast(`Đã chuyển sang ${stage.name} (Band ${stage.bandRange})`);
+                            setSelectedStage(b);
+                            setShowBandDropdown(false);
+                            showToast(`Đã chọn mục tiêu: ${b.name} (${b.bandRange})`);
                           }}
-                          className={`w-full text-left p-3 rounded-xl transition-all flex items-start justify-between gap-3 ${
-                            isSelected
-                              ? "bg-indigo-600/30 border border-indigo-500/50"
-                              : "hover:bg-[#1B1F40] border border-transparent"
+                          className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center justify-between ${
+                            selectedStage.id === b.id
+                              ? "bg-indigo-600 text-white"
+                              : "text-zinc-300 hover:bg-[#1B1F40]"
                           }`}
                         >
                           <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <span
-                                className={`text-xs font-bold px-2 py-0.5 rounded-md ${
-                                  isSelected
-                                    ? "bg-indigo-500 text-white"
-                                    : "bg-[#2B3060] text-indigo-200"
-                                }`}
-                              >
-                                Band {stage.bandRange}
-                              </span>
-                              <span className="font-semibold text-sm text-white">
-                                {stage.name}
-                              </span>
-                            </div>
-                            <p className="text-xs text-zinc-400 line-clamp-1">
-                              {stage.vietnameseTitle}: {stage.description}
-                            </p>
+                            <div className="font-bold">{b.name} ({b.bandRange})</div>
+                            <div className="text-[10px] text-zinc-400 font-normal">{b.vietnameseTitle}</div>
                           </div>
-                          {isSelected && (
-                            <Check size={18} className="text-[#F6E85C] shrink-0 mt-1" />
-                          )}
+                          {selectedStage.id === b.id && <Check className="w-3.5 h-3.5 shrink-0" />}
                         </button>
-                      );
-                    })}
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Headline */}
+              <div className="space-y-3">
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.15] text-white">
+                  Luyện Nghe IELTS Thực Chiến{" "}
+                  <span className="block mt-1 bg-gradient-to-r from-indigo-400 via-violet-300 to-[#F6E85C] bg-clip-text text-transparent">
+                    Chuẩn Format & Phản Xạ Nhanh.
+                  </span>
+                </h1>
+                <p className="text-zinc-300 text-sm sm:text-base max-w-2xl leading-relaxed">
+                  Luyện tập với âm thanh người bản ngữ đa quốc gia (
+                  <span className="text-indigo-300 font-medium">UK, US, AUS</span>), nhận diện{" "}
+                  <span className="text-[#F6E85C] font-medium">bẫy Paraphrase</span>, làm chủ âm đuôi{" "}
+                  <code className="px-1.5 py-0.5 rounded bg-white/10 text-amber-300 text-xs">-s / -ed</code>{" "}
+                  và bứt phá điểm số Listening.
+                </p>
+              </div>
+
+              {/* CTAs */}
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <button
+                  onClick={() => {
+                    const el = document.getElementById("live-mini-lab");
+                    el?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  className="inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/25 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                >
+                  <Mic className="w-4 h-4 stroke-[2.5]" />
+                  <span>Luyện Chép Chính Tả Ngay</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    const el = document.getElementById("exercise-library");
+                    el?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/45 border border-indigo-400/40 text-white font-semibold text-sm backdrop-blur-md transition-colors"
+                >
+                  <span>Khám phá kho bài tập</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <button
+                  onClick={handleTogglePlay}
+                  className={`inline-flex items-center gap-2 px-4 py-3 rounded-xl border text-xs font-semibold transition-all ${
+                    isPlaying
+                      ? "bg-emerald-500/20 border-emerald-400/50 text-emerald-300"
+                      : "bg-white/[0.04] hover:bg-white/[0.08] border-white/10 text-zinc-300"
+                  }`}
+                >
+                  <Radio
+                    className={`w-4 h-4 ${
+                      isPlaying ? "animate-spin text-emerald-400" : "text-indigo-400"
+                    }`}
+                  />
+                  <span>{isPlaying ? "Sóng Âm 3D Đang Phát" : "Kích hoạt Sóng Âm 3D"}</span>
+                </button>
+              </div>
+
+              {/* Mini Metrics */}
+              <div className="grid grid-cols-3 gap-3 pt-2 max-w-xl">
+                <div className="p-3.5 rounded-2xl bg-[#0C0E1D]/80 border border-[#2B3060]">
+                  <div className="text-[11px] text-zinc-400 flex items-center gap-1.5 font-bold uppercase tracking-wider">
+                    <Clock className="w-3.5 h-3.5 text-indigo-400" />
+                    MỤC TIÊU NGÀY
+                  </div>
+                  <div className="mt-1 flex items-baseline gap-1">
+                    <span className="text-xl font-black text-white">
+                      {profile?.daily_study_minutes ?? 45}m
+                    </span>
+                    <span className="text-xs text-zinc-400">/ngày</span>
+                    <span className="ml-auto text-[11px] text-indigo-300 font-semibold">
+                      {attemptsCount} lượt bài
+                    </span>
+                  </div>
+                  <div className="mt-2 h-1.5 w-full bg-[#1B1F40] rounded-full overflow-hidden">
+                    <div className="h-full w-[68%] bg-gradient-to-r from-indigo-500 to-cyan-400 rounded-full" />
                   </div>
                 </div>
-              )}
+
+                <div className="p-3.5 rounded-2xl bg-[#0C0E1D]/80 border border-[#2B3060]">
+                  <div className="text-[11px] text-zinc-400 flex items-center gap-1.5 font-bold uppercase tracking-wider">
+                    <Target className="w-3.5 h-3.5 text-emerald-400" />
+                    ĐỘ CHÍNH XÁC
+                  </div>
+                  <div className="mt-1 flex items-baseline justify-between">
+                    <span className="text-xl font-black text-emerald-400">{accuracy}%</span>
+                    <span className="text-[10px] text-emerald-300/80 bg-emerald-500/15 px-1.5 py-0.5 rounded border border-emerald-500/30">
+                      IELTS Target
+                    </span>
+                  </div>
+                  <div className="mt-2 h-1.5 w-full bg-[#1B1F40] rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-700"
+                      style={{ width: `${accuracy}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-[#0C0E1D]/80 border border-[#2B3060]">
+                  <div className="text-[11px] text-zinc-400 flex items-center gap-1.5 font-bold uppercase tracking-wider">
+                    <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+                    CẦN CẢI THIỆN
+                  </div>
+                  <div className="mt-1">
+                    <span className="text-xs font-bold text-amber-300 block truncate">
+                      Map & Âm đuôi -s/-ed
+                    </span>
+                    <span className="text-[11px] text-zinc-400">Độ chính xác: 62%</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-4 leading-tight">
-              Luyện Nghe IELTS Thực Chiến <br className="hidden sm:block" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-indigo-100 to-violet-300">
-                Chuẩn Format & Phản Xạ Nhanh.
-              </span>
-            </h1>
-            <p className="text-base text-zinc-300 max-w-[55ch] leading-relaxed mb-6">
-              Luyện tập với âm thanh người bản ngữ đa quốc gia, nhận diện bẫy paraphrase và
-              tăng tốc độ xử lý câu hỏi để tự tin bứt phá điểm số bài thi Listening.
-            </p>
+            {/* Right 5 Columns: 3D Sonic Neural Engine */}
+            <div className="lg:col-span-5 flex flex-col gap-4 relative">
+              <div className="relative rounded-2xl bg-[#0C0E1D]/90 border border-indigo-500/30 overflow-hidden shadow-2xl min-h-[300px] flex flex-col justify-between">
+                {/* 3D Header Controls */}
+                <div className="p-3.5 flex items-center justify-between border-b border-[#2B3060]/70 relative z-10 bg-[#0C0E1D]/50 backdrop-blur-md">
+                  <div className="flex items-center gap-2">
+                    <Activity
+                      className={`w-4 h-4 ${
+                        isPlaying ? "text-cyan-400 animate-pulse" : "text-indigo-400"
+                      }`}
+                    />
+                    <span className="text-xs font-bold tracking-wide text-zinc-200">
+                      3D SONIC NEURAL ENGINE
+                    </span>
+                  </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <Link
-                href="/dictation"
-                className="inline-flex items-center gap-2 bg-[#F6E85C] hover:bg-[#F6E85C]/90 text-[#0C0E1D] font-bold text-sm px-5 py-2.5 rounded-xl shadow-lg transition-transform hover:-translate-y-0.5"
-              >
-                <Mic size={16} />
-                Luyện Chép Chính Tả
-              </Link>
+                  {/* Visual Mode Selector */}
+                  <div className="flex items-center gap-1 bg-[#141731] p-0.5 rounded-lg border border-[#2B3060]">
+                    {(
+                      [
+                        { id: "sphere" as const, label: "Orb" },
+                        { id: "wave" as const, label: "Wave" },
+                        { id: "matrix" as const, label: "Matrix" }
+                      ] as const
+                    ).map((m) => (
+                      <button
+                        key={m.id}
+                        onClick={() => setVisualMode(m.id)}
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-colors ${
+                          visualMode === m.id
+                            ? "bg-indigo-600 text-white shadow"
+                            : "text-zinc-400 hover:text-white"
+                        }`}
+                      >
+                        {m.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 3D Canvas */}
+                <div className="relative flex-1 flex items-center justify-center">
+                  <ThreeSonicVisualizer
+                    isPlaying={isPlaying}
+                    visualMode={visualMode}
+                    playbackSpeed={playbackSpeed}
+                    ambientNoise={ambientNoise}
+                  />
+
+                  {/* Floating Interaction Info */}
+                  <div className="absolute bottom-3 inset-x-3 flex items-center justify-between px-3 py-2 rounded-xl bg-[#141731]/85 border border-[#2B3060] backdrop-blur-md text-[11px]">
+                    <div className="flex items-center gap-2 truncate">
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          isPlaying ? "bg-emerald-400 animate-ping" : "bg-amber-400"
+                        }`}
+                      />
+                      <span className="text-zinc-300 font-medium truncate">
+                        {isPlaying ? `Đang phát: ${currentTrack.title}` : "Di chuột để xoay sóng âm 3D"}
+                      </span>
+                    </div>
+                    <span className="text-indigo-300 font-mono font-bold ml-2 shrink-0">
+                      {playbackSpeed}x • {currentTrack.accent}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================
+            2. LIVE MINI-LAB (CHÉP CHÍNH TẢ DIFF & BẪY PARAPHRASE)
+        ========================================================= */}
+        <LiveMiniLab playbackSpeed={playbackSpeed} onSpeak={speakText} />
+
+        {/* =========================================================
+            3. 4 CHẾ ĐỘ LUYỆN NGHE CHUYÊN SÂU (BENTO GRID)
+        ========================================================= */}
+        <section className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                <Sliders className="w-4 h-4" />
+              </div>
+              <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+                4 Chế Độ Luyện Nghe Chuyên Sâu
+              </h2>
+            </div>
+            <p className="text-xs sm:text-sm text-zinc-400">
+              Chọn phương pháp phù hợp với giai đoạn ôn luyện của bạn
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            {/* Bento 1: Deep Dictation */}
+            <Link
+              href="/dictation"
+              className="lg:col-span-5 group relative rounded-3xl bg-gradient-to-br from-[#141731] via-[#10132B] to-[#1C153B] border border-amber-500/30 hover:border-amber-400 p-6 flex flex-col justify-between transition-all duration-300 shadow-lg hover:shadow-amber-500/10 overflow-hidden"
+            >
+              <Mic className="w-28 h-28 text-amber-500/[0.07] absolute -right-4 -top-2 group-hover:scale-110 group-hover:text-amber-500/[0.12] transition-all duration-500 pointer-events-none" />
+
+              <div className="space-y-4 relative z-10">
+                <div className="flex items-center justify-between">
+                  <div className="w-11 h-11 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                    <Mic className="w-5 h-5" />
+                  </div>
+                  <span className="px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[11px] font-extrabold tracking-wide uppercase">
+                    ★ HIỆU QUẢ NHẤT
+                  </span>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-bold text-white group-hover:text-amber-200 transition-colors">
+                    Deep Dictation (Chép Chính Tả)
+                  </h3>
+                  <p className="mt-2 text-sm text-zinc-300 leading-relaxed">
+                    Gõ chính xác từng từ trong câu nói. So khớp{" "}
+                    <span className="text-amber-300 font-medium">diff ký tự tức thì</span> để chữa
+                    triệt để lỗi nghe sót âm đuôi (<code className="text-amber-300">-s, -ed</code>
+                    ), mạo từ và nối âm.
+                  </p>
+                </div>
+
+                {/* Visual diff snippet */}
+                <div className="p-3 rounded-2xl bg-[#0C0E1D] border border-[#2B3060] text-xs font-mono space-y-1">
+                  <div className="text-zinc-400">Audio: "...two certified copies of transcripts"</div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-emerald-400">✓ two</span>
+                    <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      certifi<u>ed</u>
+                    </span>
+                    <span className="text-emerald-400">✓ copies</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-[#2B3060]/70 flex items-center justify-between text-xs font-bold text-amber-400 group-hover:text-amber-300 transition-colors">
+                <span className="underline underline-offset-4">Bắt đầu chép chính tả ngay</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </Link>
+
+            {/* Bento 2: Speed Run */}
+            <div className="lg:col-span-4 group relative rounded-3xl bg-[#141731] border border-[#2B3060] hover:border-rose-500/40 p-6 flex flex-col justify-between transition-all duration-300">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-11 h-11 rounded-2xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400">
+                    <Activity className="w-5 h-5" />
+                  </div>
+                  <span className="text-xs font-mono font-bold text-rose-300 bg-rose-500/15 px-2.5 py-1 rounded-lg border border-rose-500/25">
+                    Đang chọn: {bentoSpeedPreview}x
+                  </span>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-white">Speed Run (1.25x - 1.5x)</h3>
+                  <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
+                    Tăng tốc độ nghe để rèn luyện phản xạ não bộ, giúp bài thi thật ở 1.0x trở nên chậm
+                    rãi và dễ nắm bắt.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-4 gap-1.5 pt-1">
+                  {[1.0, 1.25, 1.5, 1.75].map((spd) => (
+                    <button
+                      key={spd}
+                      onClick={() => {
+                        setBentoSpeedPreview(spd);
+                        setPlaybackSpeed(spd);
+                        showToast(`Đặt tốc độ: ${spd}x`);
+                      }}
+                      className={`py-1.5 rounded-xl text-xs font-bold border transition-colors ${
+                        bentoSpeedPreview === spd
+                          ? "bg-rose-500/25 border-rose-400 text-rose-200"
+                          : "bg-[#0C0E1D] border-[#2B3060] text-zinc-400 hover:text-white"
+                      }`}
+                    >
+                      {spd}x
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <button
                 onClick={() => {
-                  const el = document.getElementById("practice-catalog-anchor");
-                  if (typeof el?.scrollIntoView === "function") {
-                    el.scrollIntoView({ behavior: "smooth" });
-                  }
+                  setActiveFilter("SPEED");
+                  document.getElementById("exercise-library")?.scrollIntoView({ behavior: "smooth" });
                 }}
-                className="inline-flex items-center gap-2 bg-[#1B1F40] hover:bg-[#252A56] text-white font-semibold text-sm px-5 py-2.5 rounded-xl border border-[#2B3060] transition-colors"
+                className="mt-6 pt-4 border-t border-[#2B3060]/70 flex items-center justify-between text-xs font-bold text-rose-400 hover:text-rose-300 transition-colors"
               >
-                Khám phá kho bài tập
-                <ArrowRight size={16} />
+                <span>Luyện phản xạ tốc độ cao</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+
+            {/* Bento 3: Luyện Giọng Accents */}
+            <div className="lg:col-span-3 group relative rounded-3xl bg-[#141731] border border-[#2B3060] hover:border-cyan-500/40 p-6 flex flex-col justify-between transition-all duration-300">
+              <div className="space-y-4">
+                <div className="w-11 h-11 rounded-2xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                  <Globe2 className="w-5 h-5" />
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-white">Luyện Giọng (Accents)</h3>
+                  <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
+                    Làm chủ các biến thể phát âm trong bài thi IELTS: Anh-Anh, Anh-Mỹ, và Anh-Úc.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {[
+                    { code: "UK", label: "🇬🇧 UK (50%)" },
+                    { code: "US", label: "🇺🇸 US (30%)" },
+                    { code: "AUS", label: "🇦🇺 AUS (20%)" }
+                  ].map((acc) => (
+                    <button
+                      key={acc.code}
+                      onClick={() => {
+                        setBentoAccentPreview(acc.code);
+                        setActiveFilter(acc.code);
+                        document.getElementById("exercise-library")?.scrollIntoView({ behavior: "smooth" });
+                      }}
+                      className={`px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-colors ${
+                        bentoAccentPreview === acc.code
+                          ? "bg-cyan-500/25 border-cyan-400 text-cyan-200"
+                          : "bg-[#0C0E1D] border-[#2B3060] text-zinc-300 hover:text-white"
+                      }`}
+                    >
+                      {acc.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  setActiveFilter(bentoAccentPreview);
+                  document.getElementById("exercise-library")?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="mt-6 pt-4 border-t border-[#2B3060]/70 flex items-center justify-between text-xs font-bold text-cyan-400 hover:text-cyan-300 transition-colors"
+              >
+                <span>Lọc giọng đọc ({bentoAccentPreview})</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
           </div>
 
-          {/* Daily Goal & Accuracy Stats Card */}
-          <div className="lg:col-span-5 w-full flex lg:justify-end">
-            <div className="bg-[#1B1F40]/90 backdrop-blur-xl border border-[#2B3060] rounded-3xl p-6 md:p-7 w-full max-w-sm shadow-2xl relative overflow-hidden">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <div className="flex items-center gap-1.5 mb-1 text-zinc-400">
-                    <Clock size={14} />
-                    <p className="text-xs font-bold uppercase tracking-wider">
-                      Mục Tiêu Ngày
-                    </p>
-                  </div>
-                  <p className="text-3xl font-extrabold tracking-tight text-white">
-                    15
-                    <span className="text-base font-medium text-zinc-400 ml-1">
-                      / {targetDailyMinutes}m
-                    </span>
-                  </p>
-                </div>
-
-                <div className="text-right">
-                  <div className="flex items-center justify-end gap-1.5 mb-1 text-zinc-400">
-                    <Award size={14} />
-                    <p className="text-xs font-bold uppercase tracking-wider">
-                      Độ Chính Xác
-                    </p>
-                  </div>
-                  <p className="text-3xl font-extrabold tracking-tight text-emerald-400">
-                    {accuracy > 0 ? `${accuracy}%` : "78%"}
-                  </p>
-                </div>
+          {/* Bento Banner 4: Full Test Banner */}
+          <div className="rounded-3xl bg-gradient-to-r from-[#141731] via-[#1B1B47] to-[#251A4C] border border-indigo-400/30 p-6 sm:p-7 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative overflow-hidden shadow-xl">
+            <div className="flex items-start sm:items-center gap-4 relative z-10">
+              <div className="w-14 h-14 rounded-2xl bg-indigo-500/25 border border-indigo-400/40 flex items-center justify-center text-indigo-300 shrink-0 shadow-lg shadow-indigo-500/20">
+                <Award className="w-7 h-7" />
               </div>
-
-              {/* Progress bar */}
-              <div className="h-2.5 w-full bg-[#0C0E1D] rounded-full overflow-hidden p-0.5 border border-[#2B3060]/50 mb-3">
-                <div
-                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-700"
-                  style={{ width: "75%" }}
-                />
-              </div>
-
-              <div className="flex items-center justify-between text-xs text-zinc-400">
-                <span>Đã làm: <strong>{attemptsCount > 0 ? attemptsCount : 6} lượt bài</strong></span>
-                <span className="text-emerald-400 font-semibold">Đạt 75% chỉ tiêu</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. 4 LISTENING MODES BENTO GRID */}
-      <section className="mb-14">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#EEF0FF] flex items-center gap-3">
-            <AudioLines className="text-indigo-400" size={24} />
-            4 Chế Độ Luyện Nghe Chuyên Sâu
-          </h2>
-          <span className="text-xs text-zinc-400 hidden sm:inline-block">
-            Chọn phương pháp phù hợp với giai đoạn ôn luyện
-          </span>
-        </div>
-
-        <div className="grid gap-5 md:grid-cols-3 lg:grid-cols-4 auto-rows-fr">
-          {/* Mode 1: Deep Dictation */}
-          <Link
-            href="/dictation"
-            className="group lg:col-span-2 relative overflow-hidden rounded-3xl bg-[#141731] p-7 hover:bg-[#1B1F40] transition-all border border-[#2B3060] hover:border-amber-500/40 flex flex-col justify-between shadow-lg"
-          >
-            <div className="absolute right-0 top-0 p-8 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all text-amber-400 pointer-events-none">
-              <Mic size={90} strokeWidth={1} />
-            </div>
-            <div>
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 mb-5 group-hover:scale-110 transition-transform">
-                <Mic size={24} />
-              </div>
-              <div className="flex items-center gap-2 mb-2">
-                <h3 className="text-xl font-bold text-white tracking-tight">
-                  Deep Dictation (Chép Chính Tả)
-                </h3>
-                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
-                  Hiệu quả nhất
-                </span>
-              </div>
-              <p className="text-sm text-zinc-300 max-w-[38ch] leading-relaxed mb-4">
-                Gõ chính xác từng từ trong câu nói. So khớp diff ký tự tức thì để chữa triệt
-                để lỗi nghe sót âm đuôi (-s, -ed), mạo từ và nối âm.
-              </p>
-            </div>
-            <div className="flex items-center justify-between pt-4 border-t border-[#2B3060]/60">
-              <span className="text-xs font-semibold text-amber-400 group-hover:underline">
-                Bắt đầu chép chính tả ngay
-              </span>
-              <ArrowRight
-                size={18}
-                className="text-zinc-400 group-hover:text-amber-400 group-hover:translate-x-1.5 transition-all"
-              />
-            </div>
-          </Link>
-
-          {/* Mode 2: Speed Run */}
-          <button
-            onClick={() => {
-              setActiveFilter("speed");
-              setPlaybackSpeed(1.25);
-              showToast("Đã kích hoạt Speed Run: Lọc bài nhanh & đặt tốc độ 1.25x!");
-              const el = document.getElementById("practice-catalog-anchor");
-              if (typeof el?.scrollIntoView === "function") {
-                el.scrollIntoView({ behavior: "smooth" });
-              }
-            }}
-            className="group text-left relative overflow-hidden rounded-3xl bg-[#141731] p-6 hover:bg-[#1B1F40] transition-all border border-[#2B3060] hover:border-rose-500/40 flex flex-col justify-between shadow-lg"
-          >
-            <div>
-              <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 mb-4 group-hover:scale-110 transition-transform">
-                <Activity size={22} />
-              </div>
-              <h3 className="text-lg font-bold text-white tracking-tight mb-2">
-                Speed Run (1.25x - 1.5x)
-              </h3>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                Tăng tốc độ nghe lên 1.25x hoặc 1.5x để rèn luyện phản xạ não bộ, giúp bài thi thật trở nên chậm rãi và dễ nắm bắt.
-              </p>
-            </div>
-            <div className="flex items-center justify-between pt-4 mt-4 border-t border-[#2B3060]/60">
-              <span className="text-xs font-semibold text-rose-400">Luyện phản xạ</span>
-              <ArrowRight
-                size={16}
-                className="text-zinc-400 group-hover:text-rose-400 group-hover:translate-x-1 transition-all"
-              />
-            </div>
-          </button>
-
-          {/* Mode 3: Accents Focus */}
-          <button
-            onClick={() => {
-              setActiveFilter("uk");
-              showToast("Đã lọc bài theo giọng Anh - Anh (UK Accent)");
-              const el = document.getElementById("practice-catalog-anchor");
-              if (typeof el?.scrollIntoView === "function") {
-                el.scrollIntoView({ behavior: "smooth" });
-              }
-            }}
-            className="group text-left relative overflow-hidden rounded-3xl bg-[#141731] p-6 hover:bg-[#1B1F40] transition-all border border-[#2B3060] hover:border-sky-500/40 flex flex-col justify-between shadow-lg"
-          >
-            <div>
-              <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/15 border border-sky-500/30 text-sky-400 mb-4 group-hover:scale-110 transition-transform">
-                <Globe2 size={22} />
-              </div>
-              <h3 className="text-lg font-bold text-white tracking-tight mb-2">
-                Luyện Giọng (Accents)
-              </h3>
-              <p className="text-xs text-zinc-400 leading-relaxed mb-3">
-                Làm chủ các biến thể phát âm trong bài thi IELTS: 🇬🇧 Anh-Anh, 🇺🇸 Anh-Mỹ, 🇦🇺 Anh-Úc.
-              </p>
-              <div className="flex gap-1.5 flex-wrap">
-                <span className="text-[10px] bg-[#1B1F40] border border-[#2B3060] px-2 py-0.5 rounded text-zinc-300">
-                  🇬🇧 UK
-                </span>
-                <span className="text-[10px] bg-[#1B1F40] border border-[#2B3060] px-2 py-0.5 rounded text-zinc-300">
-                  🇺🇸 US
-                </span>
-                <span className="text-[10px] bg-[#1B1F40] border border-[#2B3060] px-2 py-0.5 rounded text-zinc-300">
-                  🇦🇺 AUS
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between pt-4 mt-4 border-t border-[#2B3060]/60">
-              <span className="text-xs font-semibold text-sky-400">Chọn giọng đọc</span>
-              <ArrowRight
-                size={16}
-                className="text-zinc-400 group-hover:text-sky-400 group-hover:translate-x-1 transition-all"
-              />
-            </div>
-          </button>
-
-          {/* Mode 4: Full Comprehension Test Callout */}
-          <div className="md:col-span-3 lg:col-span-4 relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-900/60 to-[#141731] p-7 border border-indigo-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-xl">
-            <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none transform translate-x-10 translate-y-10">
-              <Waves size={240} strokeWidth={1} />
-            </div>
-            <div className="relative z-10 flex gap-5 items-center">
-              <div className="hidden sm:flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 shrink-0">
-                <ListTodo size={32} />
-              </div>
-              <div>
-                <div className="flex items-center gap-3 mb-1.5">
-                  <h3 className="text-xl font-bold text-white tracking-tight">
-                    Full Comprehension Test (Đề Thi Thử 4 Phần)
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-lg sm:text-xl font-extrabold text-white">
+                    Full Comprehension Test (Đề Thi Thử Chuẩn Phòng Thi)
                   </h3>
-                  <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                  <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/30 border border-indigo-400/40 text-indigo-200 text-[11px] font-bold">
+                    CAMBRIDGE FORMAT
+                  </span>
                 </div>
-                <p className="text-sm text-zinc-300 max-w-[55ch] leading-relaxed">
-                  Mô phỏng áp lực phòng thi thật với 4 Section hoàn chỉnh (40 câu hỏi, 30 phút).
-                  Hệ thống bấm giờ tự động và chấm điểm chuẩn thang điểm IELTS 9.0.
+                <p className="text-xs sm:text-sm text-zinc-300 max-w-3xl leading-relaxed">
+                  Mô phỏng áp lực phòng thi thật với <strong className="text-white">4 Sections liên tục (40 câu hỏi, 30 phút)</strong>. Hệ thống bấm giờ tự động, khóa tua lại và chấm điểm chuẩn thang điểm IELTS 9.0.
                 </p>
               </div>
             </div>
-            <Link
-              href="/practice/listening/community-library-visit"
-              className="relative z-10 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center gap-2 whitespace-nowrap self-stretch sm:self-auto justify-center"
-            >
-              Vào thi thử Full Test
-              <ArrowRight size={16} />
-            </Link>
-          </div>
-        </div>
-      </section>
 
-      {/* 3. INTERACTIVE FILTER TABS & SEARCH */}
-      <section id="practice-catalog-anchor" className="mb-8 scroll-mt-20">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#EEF0FF] flex items-center gap-2.5">
-              <Compass className="text-indigo-400" size={24} />
-              Kho Bài Luyện Nghe ({filteredPracticeList.length})
-            </h2>
-            <p className="text-xs text-zinc-400 mt-1">
-              Đang lọc theo: <strong>{selectedStage.name} (Band {selectedStage.bandRange})</strong>
-            </p>
-          </div>
-
-          {/* Search Bar */}
-          <div className="relative w-full md:w-72">
-            <Search
-              size={16}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400"
-            />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm bài nghe, chủ đề..."
-              className="w-full bg-[#141731] border border-[#2B3060] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 transition-colors"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
-              >
-                <X size={14} />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Filter Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-          <button
-            onClick={() => {
-              setActiveFilter("all");
-              setActiveBandRange("all");
-            }}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-              activeFilter === "all" && activeBandRange === "all"
-                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-                : "bg-[#141731] text-zinc-400 hover:text-white border border-[#2B3060]"
-            }`}
-          >
-            Tất cả bài tập
-          </button>
-          <button
-            onClick={() => setActiveFilter("uk")}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-              activeFilter === "uk"
-                ? "bg-indigo-600 text-white shadow-md"
-                : "bg-[#141731] text-zinc-400 hover:text-white border border-[#2B3060]"
-            }`}
-          >
-            🇬🇧 UK Accent
-          </button>
-          <button
-            onClick={() => setActiveFilter("us")}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-              activeFilter === "us"
-                ? "bg-indigo-600 text-white shadow-md"
-                : "bg-[#141731] text-zinc-400 hover:text-white border border-[#2B3060]"
-            }`}
-          >
-            🇺🇸 US Accent
-          </button>
-          <button
-            onClick={() => setActiveFilter("aus")}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-              activeFilter === "aus"
-                ? "bg-indigo-600 text-white shadow-md"
-                : "bg-[#141731] text-zinc-400 hover:text-white border border-[#2B3060]"
-            }`}
-          >
-            🇦🇺 AUS Accent
-          </button>
-          <button
-            onClick={() => setActiveFilter("speed")}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-              activeFilter === "speed"
-                ? "bg-rose-600 text-white shadow-md"
-                : "bg-[#141731] text-zinc-400 hover:text-white border border-[#2B3060]"
-            }`}
-          >
-            ⚡ Speed Run (Ngắn)
-          </button>
-
-          <span className="w-px h-6 bg-[#2B3060] mx-1 shrink-0" />
-
-          {/* Quick Band Filter Pills */}
-          <button
-            onClick={() => setActiveBandRange("0-4.5")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap border ${
-              activeBandRange === "0-4.5"
-                ? "border-amber-400/60 bg-amber-400/10 text-amber-300"
-                : "border-[#2B3060] text-zinc-400 hover:text-white"
-            }`}
-          >
-            Band 0.0 - 4.5
-          </button>
-          <button
-            onClick={() => setActiveBandRange("4.5-6.5")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap border ${
-              activeBandRange === "4.5-6.5"
-                ? "border-indigo-400/60 bg-indigo-400/10 text-indigo-300"
-                : "border-[#2B3060] text-zinc-400 hover:text-white"
-            }`}
-          >
-            Band 4.5 - 6.5
-          </button>
-          <button
-            onClick={() => setActiveBandRange("6.5-7.5")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap border ${
-              activeBandRange === "6.5-7.5"
-                ? "border-violet-400/60 bg-violet-400/10 text-violet-300"
-                : "border-[#2B3060] text-zinc-400 hover:text-white"
-            }`}
-          >
-            Band 6.5 - 7.5
-          </button>
-          <button
-            onClick={() => setActiveBandRange("7.5-9.0")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap border ${
-              activeBandRange === "7.5-9.0"
-                ? "border-emerald-400/60 bg-emerald-400/10 text-emerald-300"
-                : "border-[#2B3060] text-zinc-400 hover:text-white"
-            }`}
-          >
-            Band 7.5 - 9.0
-          </button>
-        </div>
-      </section>
-
-      {/* 4. TODAY'S PRACTICE EXERCISE CARDS */}
-      <section className="mb-14">
-        {filteredPracticeList.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-[#2B3060] bg-[#141731]/50 p-12 text-center">
-            <Headphones className="mx-auto h-12 w-12 text-zinc-500 mb-3" />
-            <h3 className="text-base font-bold text-white mb-1">
-              Không tìm thấy bài nghe phù hợp
-            </h3>
-            <p className="text-xs text-zinc-400 mb-4">
-              Thử đặt lại bộ lọc hoặc tìm kiếm với từ khóa khác.
-            </p>
             <button
-              onClick={() => {
-                setActiveFilter("all");
-                setActiveBandRange("all");
-                setSearchQuery("");
-              }}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors"
+              onClick={() => handleOpenPracticeModal(allExercises[3] || allExercises[0])}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-white font-bold text-sm shadow-xl shadow-indigo-600/30 hover:scale-[1.02] active:scale-[0.98] transition-all shrink-0"
             >
-              Xem tất cả bài tập
+              <span>Vào thi thử Full Test</span>
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
-        ) : (
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {filteredPracticeList.map((item) => {
-              const isCurrentlyPlayingThis =
-                isPlaying && currentTrack.title === item.title;
+        </section>
 
-              return (
-                <article
-                  key={item.slug}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-[#2B3060] bg-[#141731] p-6 hover:bg-[#1B1F40] hover:border-indigo-500/50 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300"
-                >
-                  <div>
-                    {/* Header Badges */}
-                    <div className="flex items-start justify-between gap-2 mb-4">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="inline-flex items-center rounded-md bg-indigo-500/20 px-2.5 py-1 text-[10px] font-bold text-indigo-300 uppercase tracking-wider border border-indigo-500/30">
-                          {item.tag}
-                        </span>
-                        <span className="inline-flex items-center rounded-md bg-[#2B3060]/50 px-2 py-1 text-[10px] font-medium text-zinc-300">
-                          {item.accent}
-                        </span>
-                        <span className="inline-flex items-center rounded-md bg-emerald-500/15 px-2 py-1 text-[10px] font-semibold text-emerald-400 border border-emerald-500/20">
-                          {item.bandRange}
-                        </span>
+        {/* =========================================================
+            4. KHO BÀI LUYỆN NGHE THỰC CHIẾN (SMART EXERCISE LIBRARY)
+        ========================================================= */}
+        <section id="exercise-library" className="space-y-6 pt-2 scroll-mt-20">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2.5">
+                <Compass className="w-6 h-6 text-indigo-400" />
+                <h2 className="text-xl sm:text-2xl font-extrabold text-white">
+                  Kho Bài Luyện Nghe ({filteredExercises.length})
+                </h2>
+              </div>
+              <p className="text-xs sm:text-sm text-zinc-400 mt-1">
+                Đang lọc theo: <strong className="text-indigo-300">{selectedStage.name} (Band {selectedStage.bandRange})</strong> • Tích hợp từ vựng & giải thích Paraphrase
+              </p>
+            </div>
+
+            {/* Search & Only Uncompleted Button */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative flex-1 sm:w-72">
+                <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Tìm bài nghe, chủ đề, Section..."
+                  className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-[#141731] border border-[#2B3060] focus:border-indigo-400 text-xs sm:text-sm text-white placeholder-zinc-500 outline-none transition-colors"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              <button
+                onClick={() => setOnlyUncompleted(!onlyUncompleted)}
+                className={`px-3.5 py-2.5 rounded-2xl border text-xs font-semibold flex items-center gap-2 transition-colors ${
+                  onlyUncompleted
+                    ? "bg-indigo-600/25 border-indigo-400 text-indigo-200"
+                    : "bg-[#141731] border-[#2B3060] text-zinc-400 hover:text-white"
+                }`}
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Chưa làm</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Filter Chips */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+            {[
+              { id: "ALL", label: "Tất cả bài tập" },
+              { id: "UK", label: "🇬🇧 UK Accent" },
+              { id: "US", label: "🇺🇸 US Accent" },
+              { id: "AUS", label: "🇦🇺 AUS Accent" },
+              { id: "SPEED", label: "⚡ Speed Run (Ngắn)" },
+              { id: "BAND_LOW", label: "Band 4.5 - 6.5" },
+              { id: "BAND_MID", label: "Band 6.5 - 7.5" },
+              { id: "BAND_HIGH", label: "Band 7.5 - 9.0" }
+            ].map((chip) => (
+              <button
+                key={chip.id}
+                onClick={() => setActiveFilter(chip.id)}
+                className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap border transition-all ${
+                  activeFilter === chip.id
+                    ? "bg-indigo-600 border-indigo-400 text-white shadow-lg shadow-indigo-600/30"
+                    : "bg-[#141731] border-[#2B3060] text-zinc-300 hover:bg-[#1B1F40] hover:text-white"
+                }`}
+              >
+                {chip.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Exercise Grid */}
+          {filteredExercises.length === 0 ? (
+            <div className="rounded-3xl bg-[#141731] border border-[#2B3060] p-12 text-center space-y-3">
+              <Headphones className="w-10 h-10 text-zinc-500 mx-auto" />
+              <div className="text-base font-bold text-white">Không tìm thấy bài luyện nghe phù hợp</div>
+              <p className="text-xs text-zinc-400">Hãy thử xóa bộ lọc hoặc tìm kiếm bằng từ khóa khác.</p>
+              <button
+                onClick={() => {
+                  setActiveFilter("ALL");
+                  setSearchQuery("");
+                  setOnlyUncompleted(false);
+                }}
+                className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold shadow-md hover:bg-indigo-500"
+              >
+                Đặt lại bộ lọc
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filteredExercises.map((ex) => {
+                const isThisPlaying = currentTrack.id === ex.id && isPlaying;
+                const isBookmarked = bookmarkedIds.includes(ex.id);
+
+                return (
+                  <article
+                    key={ex.id}
+                    className={`group rounded-3xl p-6 flex flex-col justify-between border transition-all duration-300 relative ${
+                      isThisPlaying
+                        ? "bg-gradient-to-b from-[#181C45] to-[#111435] border-indigo-400 shadow-xl shadow-indigo-500/15"
+                        : "bg-[#141731] hover:bg-[#1B1F40] border-[#2B3060] hover:border-indigo-500/40"
+                    }`}
+                  >
+                    <div>
+                      {/* Top Badges & Actions */}
+                      <div className="flex items-center justify-between gap-2 mb-4">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span
+                            className={`px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase border bg-gradient-to-r ${ex.badgeColor}`}
+                          >
+                            {ex.badge}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-[#0C0E1D] text-zinc-300 border border-[#2B3060]">
+                            {ex.accentFlag} {ex.accent}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                            {ex.band}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            onClick={() => toggleBookmark(ex.id)}
+                            title={isBookmarked ? "Gỡ khỏi yêu thích" : "Lưu bài tập"}
+                            aria-label="Lưu bài tập"
+                            className={`w-8 h-8 rounded-xl border flex items-center justify-center transition-colors ${
+                              isBookmarked
+                                ? "bg-indigo-500/20 border-indigo-400 text-indigo-300"
+                                : "bg-[#0C0E1D] border-[#2B3060] text-zinc-400 hover:text-white"
+                            }`}
+                          >
+                            <Bookmark
+                              className={`w-3.5 h-3.5 ${isBookmarked ? "fill-indigo-400 text-indigo-400" : ""}`}
+                            />
+                          </button>
+
+                          <button
+                            onClick={() => handlePreviewExercise(ex)}
+                            title="Nghe thử"
+                            aria-label="Nghe thử âm thanh"
+                            className={`w-8 h-8 rounded-xl border flex items-center justify-center transition-colors ${
+                              isThisPlaying
+                                ? "bg-indigo-600 border-indigo-400 text-white shadow-lg shadow-indigo-500/40"
+                                : "bg-[#0C0E1D] border-[#2B3060] text-zinc-300 hover:bg-indigo-600 hover:text-white"
+                            }`}
+                          >
+                            <Headphones className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
 
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1B1F40] border border-[#2B3060] text-zinc-400 group-hover:text-white group-hover:bg-indigo-600 transition-colors">
-                        <Headphones size={18} />
+                      {/* Title & Subtitle */}
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors flex items-center gap-2">
+                          <span>{ex.title}</span>
+                          {ex.completed && (
+                            <span title="Đã hoàn thành">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                            </span>
+                          )}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-zinc-400 line-clamp-2 leading-relaxed">
+                          {ex.subtitle}
+                        </p>
                       </div>
+
+                      {/* Metadata */}
+                      <div className="mt-4 pt-3 border-t border-[#2B3060]/60 flex items-center justify-between text-xs text-zinc-400">
+                        <div className="flex items-center gap-3">
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5 text-zinc-500" />
+                            {ex.duration}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Layers className="w-3.5 h-3.5 text-zinc-500" />
+                            {ex.questionsCount} Câu hỏi
+                          </span>
+                        </div>
+                        <span className="text-[11px] font-semibold text-indigo-300/90">{ex.category}</span>
+                      </div>
+
+                      {/* Paraphrase & Vocab Trigger */}
+                      <div className="mt-2.5 flex items-center justify-between text-[11px] bg-[#0C0E1D] px-3 py-1.5 rounded-xl border border-[#2B3060]/60">
+                        <span className="text-amber-300/90 font-medium">
+                          🎯 {ex.paraphraseTraps} bẫy Paraphrase
+                        </span>
+                        <button
+                          onClick={() => setVocabPopoverId(vocabPopoverId === ex.id ? null : ex.id)}
+                          className="text-cyan-300 hover:underline font-semibold"
+                        >
+                          {vocabPopoverId === ex.id ? "Đóng từ vựng" : "+ Xem từ vựng key"}
+                        </button>
+                      </div>
+
+                      {/* Vocab Accordion */}
+                      {vocabPopoverId === ex.id && (
+                        <div className="mt-2 p-3 rounded-2xl bg-[#0C0E1D] border border-cyan-500/30 space-y-1.5 text-xs animate-fadeIn">
+                          {ex.vocab.map((v, idx) => (
+                            <div key={idx} className="flex items-center justify-between">
+                              <span className="font-bold text-white">{v.word}</span>
+                              <span className="text-zinc-400">{v.meaning}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
-                    {/* Title & Summary */}
-                    <h3 className="text-lg font-bold tracking-tight text-white mb-2 group-hover:text-indigo-300 transition-colors">
-                      {item.title}
-                    </h3>
-                    <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed mb-5">
-                      {item.summary}
-                    </p>
-                  </div>
-
-                  {/* Meta Stats & Actions */}
-                  <div>
-                    <div className="flex items-center gap-4 text-xs font-medium text-zinc-400 mb-5 pb-4 border-b border-[#2B3060]/50">
-                      <span className="flex items-center gap-1.5">
-                        <Clock size={14} className="text-indigo-400" />
-                        {Math.floor(item.durationSeconds / 60)}m {item.durationSeconds % 60}s
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <ListTodo size={14} className="text-indigo-400" />
-                        {item.questionCount} Câu hỏi
-                      </span>
-                      <span className="text-[11px] text-zinc-500 ml-auto">
-                        {item.category}
-                      </span>
-                    </div>
-
-                    {/* Action buttons */}
-                    <div className="flex items-center gap-2">
+                    {/* Bottom Action Buttons: Nghe thử & Làm bài */}
+                    <div className="mt-5 grid grid-cols-12 gap-2.5 pt-1">
                       <button
-                        onClick={() =>
-                          handlePreviewTrack({
-                            id: item.slug,
-                            title: item.title,
-                            subtitle: `${item.category} • ${item.bandRange}`,
-                            accent: item.accent,
-                            bandRange: item.bandRange,
-                            audioUrl: item.audioUrl
-                          })
-                        }
-                        className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all border ${
-                          isCurrentlyPlayingThis
-                            ? "bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/30"
-                            : "bg-[#1B1F40] hover:bg-[#252A56] text-zinc-200 border-[#2B3060]"
+                        onClick={() => handlePreviewExercise(ex)}
+                        className={`col-span-7 py-2.5 px-4 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-colors ${
+                          isThisPlaying
+                            ? "bg-indigo-600/30 border-indigo-400 text-indigo-200"
+                            : "bg-[#1B1F40] hover:bg-[#252A56] border-[#2B3060] text-zinc-200"
                         }`}
                       >
-                        {isCurrentlyPlayingThis ? (
+                        {isThisPlaying ? (
                           <>
-                            <Pause size={14} />
-                            Đang phát
+                            <Pause className="w-3.5 h-3.5 fill-current" />
+                            <span>Đang phát thử...</span>
                           </>
                         ) : (
                           <>
-                            <Play size={14} />
-                            Nghe thử
+                            <Play className="w-3.5 h-3.5 fill-current" />
+                            <span>Nghe thử</span>
                           </>
                         )}
                       </button>
 
-                      <Link
-                        href={`/practice/listening/${item.slug}`}
-                        className="py-2.5 px-4 rounded-xl text-xs font-bold bg-[#F6E85C] hover:bg-[#F6E85C]/90 text-[#0C0E1D] flex items-center justify-center gap-1.5 transition-all shadow-md hover:-translate-y-0.5"
+                      <button
+                        onClick={() => handleOpenPracticeModal(ex)}
+                        className="col-span-5 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500/25 to-orange-500/25 hover:from-amber-500 hover:to-orange-500 border border-amber-500/40 text-amber-300 hover:text-slate-950 text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all shadow-sm"
                       >
-                        Làm bài
-                        <ArrowRight size={14} />
-                      </Link>
+                        <span>Làm bài</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
                     </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      {/* 5. TOPICS & CATEGORIES SECTION */}
-      <section className="pt-6 border-t border-[#2B3060]/60">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#EEF0FF] flex items-center gap-2.5">
-              <BookOpen className="text-indigo-400" size={24} />
-              Chuyên Đề Luyện Nghe Theo Chủ Đề
-            </h2>
-            <p className="text-xs text-zinc-400 mt-1">
-              Bao quát toàn diện các ngữ cảnh Section 1, 2, 3 và 4
-            </p>
-          </div>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            {
-              title: "Daily Conversations",
-              vn: "Hội thoại đời sống (Section 1)",
-              lessons: 14,
-              progress: 85,
-              icon: "💬"
-            },
-            {
-              title: "Campus & Student Services",
-              vn: "Môi trường học thuật (Section 2)",
-              lessons: 12,
-              progress: 60,
-              icon: "🏫"
-            },
-            {
-              title: "Academic Group Discussions",
-              vn: "Thảo luận đề tài (Section 3)",
-              lessons: 10,
-              progress: 40,
-              icon: "👥"
-            },
-            {
-              title: "Academic Lectures",
-              vn: "Bài giảng học thuật (Section 4)",
-              lessons: 16,
-              progress: 30,
-              icon: "🔬"
-            },
-            {
-              title: "Maps & Diagram Labeling",
-              vn: "Bản đồ & Sơ đồ phương hướng",
-              lessons: 8,
-              progress: 75,
-              icon: "🗺️"
-            },
-            {
-              title: "Form & Table Completion",
-              vn: "Điền form thông tin cá nhân",
-              lessons: 15,
-              progress: 100,
-              isMastered: true,
-              icon: "📝"
-            }
-          ].map((cat, idx) => (
-            <div
-              key={idx}
-              className="rounded-2xl border border-[#2B3060] bg-[#141731] p-5 hover:bg-[#1B1F40] transition-colors"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1B1F40] text-xl border border-[#2B3060]">
-                  {cat.icon}
-                </div>
-                {cat.isMastered ? (
-                  <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/15 px-2.5 py-1 rounded-full border border-emerald-500/30">
-                    <CheckCircle2 size={13} /> Thành thạo
-                  </span>
-                ) : (
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-300 bg-indigo-500/15 px-2.5 py-1 rounded-full border border-indigo-500/25">
-                    Đang học
-                  </span>
-                )}
-              </div>
-
-              <h3 className="text-base font-bold text-white mb-0.5">
-                {cat.title}
-              </h3>
-              <p className="text-xs text-zinc-400 mb-4">{cat.vn}</p>
-
-              <div className="flex items-center justify-between text-xs text-zinc-400 mb-2">
-                <span>{cat.lessons} bài tập</span>
-                <span className="font-bold text-zinc-300">{cat.progress}%</span>
-              </div>
-              <div className="h-1.5 w-full bg-[#0C0E1D] rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-700 ${
-                    cat.isMastered ? "bg-emerald-400" : "bg-indigo-500"
-                  }`}
-                  style={{ width: `${cat.progress}%` }}
-                />
-              </div>
+                  </article>
+                );
+              })}
             </div>
-          ))}
-        </div>
-      </section>
+          )}
+        </section>
 
-      {/* 6. FLOATING MINI AUDIO PLAYER */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-3xl px-4 pointer-events-none">
-        <div className="pointer-events-auto listening-player-glass text-white rounded-3xl p-3 sm:px-5 sm:py-3.5 flex flex-col md:flex-row items-center gap-4 transition-all duration-300">
-          
-          {/* Track thumbnail & info */}
-          <div className="flex items-center gap-3.5 w-full md:w-auto shrink-0">
-            <div
-              onClick={togglePlayPause}
-              className="relative group cursor-pointer shrink-0"
-              title={isPlaying ? "Tạm dừng" : "Phát"}
-            >
-              <div className="h-12 w-12 rounded-2xl bg-indigo-600/30 flex items-center justify-center overflow-hidden border border-indigo-500/40 relative">
-                <Headphones
-                  size={20}
-                  className={`text-indigo-300 ${isPlaying ? "animate-pulse" : ""}`}
-                />
+        {/* =========================================================
+            5. CHUYÊN ĐỀ LUYỆN NGHE THEO CHỦ ĐỀ (TOPIC TRACKS)
+        ========================================================= */}
+        <section className="space-y-5 pt-4">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+            <div>
+              <div className="flex items-center gap-2.5">
+                <BookOpen className="w-6 h-6 text-indigo-400" />
+                <h2 className="text-xl sm:text-2xl font-extrabold text-white">
+                  Chuyên Đề Luyện Nghe Theo Chủ Đề
+                </h2>
               </div>
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl">
-                {isPlaying ? (
-                  <Pause size={18} className="text-white" />
-                ) : (
-                  <Play size={18} className="text-white" fill="currentColor" />
-                )}
-              </div>
-            </div>
-
-            <div className="flex-1 min-w-[130px] max-w-[200px]">
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <p className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest truncate">
-                  {isPlaying ? "Đang phát" : "Sẵn sàng"}
-                </p>
-                <span className="text-[10px] text-zinc-400">• {currentTrack.accent}</span>
-              </div>
-              <p className="text-xs sm:text-sm font-semibold tracking-tight truncate text-white">
-                {currentTrack.title}
+              <p className="text-xs sm:text-sm text-zinc-400 mt-1">
+                Bao quát toàn diện các ngữ cảnh Section 1, 2, 3 và 4 kèm lộ trình kỹ năng
               </p>
             </div>
           </div>
 
-          {/* Scrub Bar & Waveform Preview */}
-          <div className="flex-1 w-full flex items-center gap-3">
-            <span className="text-[11px] font-mono text-zinc-400 tabular-nums shrink-0">
-              {Math.floor(currentTime / 60)}:
-              {Math.floor(currentTime % 60)
-                .toString()
-                .padStart(2, "0")}
-            </span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {TOPIC_TRACKS.map((track) => {
+              const IconComponent = track.icon;
+              const isMastered = track.progress === 100;
 
-            {/* Interactive Progress Bar */}
-            <div
-              onClick={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const clickPos = (e.clientX - rect.left) / rect.width;
-                const newTime = clickPos * duration;
-                if (audioRef.current) {
-                  audioRef.current.currentTime = newTime;
-                }
-                setCurrentTime(newTime);
-              }}
-              className="flex-1 h-3 flex items-center cursor-pointer group relative"
-              title="Tua đến vị trí"
-            >
-              <div className="w-full h-1.5 bg-[#0C0E1D] rounded-full overflow-hidden relative">
+              return (
                 <div
-                  className="h-full bg-gradient-to-r from-indigo-500 to-[#F6E85C] rounded-full relative transition-all"
-                  style={{
-                    width: `${duration ? (currentTime / duration) * 100 : 0}%`
+                  key={track.id}
+                  onClick={() => {
+                    setSearchQuery(track.title.split(" ")[0]);
+                    document.getElementById("exercise-library")?.scrollIntoView({ behavior: "smooth" });
+                    showToast(`Lọc bài tập theo chuyên đề: ${track.title}`);
                   }}
-                />
-              </div>
+                  className="group cursor-pointer rounded-3xl bg-[#141731] hover:bg-[#1B1F40] border border-[#2B3060] hover:border-indigo-500/40 p-6 flex flex-col justify-between transition-all duration-300"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="w-11 h-11 rounded-2xl bg-[#0C0E1D] border border-[#2B3060] flex items-center justify-center text-indigo-300 group-hover:scale-110 transition-transform">
+                        <IconComponent className="w-5 h-5" />
+                      </div>
 
-              {/* Animated mini wave bars */}
-              {isPlaying && (
-                <div className="absolute inset-0 flex items-center justify-between px-1 pointer-events-none opacity-40">
-                  {Array.from({ length: 24 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-[2px] bg-indigo-300 wave-bar-anim"
-                      style={{
-                        animationDuration: `${0.6 + (i % 5) * 0.15}s`,
-                        animationDelay: `${i * 0.05}s`
-                      }}
-                    />
-                  ))}
+                      {isMastered ? (
+                        <span className="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 text-[11px] font-bold flex items-center gap-1">
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Thành thạo</span>
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-[11px] font-bold">
+                          {track.status}
+                        </span>
+                      )}
+                    </div>
+
+                    <div>
+                      <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-indigo-300 transition-colors">
+                        {track.title}
+                      </h3>
+                      <p className="text-xs text-zinc-400 mt-1">{track.subtitle}</p>
+                    </div>
+
+                    {/* Skills pills */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {track.skills.map((sk, idx) => (
+                        <span
+                          key={idx}
+                          className="text-[10px] px-2 py-0.5 rounded-md bg-[#0C0E1D] text-zinc-300 border border-[#2B3060]"
+                        >
+                          {sk}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="mt-6 space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-zinc-400 font-medium">{track.exercisesCount} bài tập</span>
+                      <span className={`font-bold ${isMastered ? "text-emerald-400" : "text-white"}`}>
+                        {track.progress}%
+                      </span>
+                    </div>
+                    <div className="h-2 w-full bg-[#0C0E1D] rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-700 ${
+                          isMastered
+                            ? "bg-gradient-to-r from-emerald-500 to-teal-400"
+                            : "bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-400"
+                        }`}
+                        style={{ width: `${track.progress}%` }}
+                      />
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
-
-            <span className="text-[11px] font-mono text-zinc-400 tabular-nums shrink-0">
-              {Math.floor(duration / 60)}:
-              {Math.floor(duration % 60)
-                .toString()
-                .padStart(2, "0")}
-            </span>
+              );
+            })}
           </div>
-
-          {/* Controls */}
-          <div className="flex items-center gap-2 sm:gap-3 w-full md:w-auto justify-between md:justify-end shrink-0">
-            {/* Rewind 5s */}
-            <button
-              onClick={() => seekRelative(-5)}
-              className="p-2 text-zinc-300 hover:text-white hover:bg-[#1B1F40] rounded-full transition-all"
-              title="Tua lùi 5s"
-              aria-label="Tua lùi 5 giây"
-            >
-              <RotateCcw size={16} />
-            </button>
-
-            {/* Play/Pause Button */}
-            <button
-              onClick={togglePlayPause}
-              aria-label={isPlaying ? "Tạm dừng" : "Phát âm thanh"}
-              className="h-10 w-10 bg-white text-[#0C0E1D] rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg font-bold"
-            >
-              {isPlaying ? (
-                <Pause size={18} fill="currentColor" />
-              ) : (
-                <Play size={18} fill="currentColor" className="ml-0.5" />
-              )}
-            </button>
-
-            {/* Forward 5s */}
-            <button
-              onClick={() => seekRelative(5)}
-              className="p-2 text-zinc-300 hover:text-white hover:bg-[#1B1F40] rounded-full transition-all"
-              title="Tua tới 5s"
-              aria-label="Tua tới 5 giây"
-            >
-              <RotateCw size={16} />
-            </button>
-
-            {/* Speed & Mute controls */}
-            <div className="flex items-center gap-1.5 ml-1 pl-3 border-l border-[#2B3060]">
-              <button
-                onClick={cycleSpeed}
-                aria-label={`Tốc độ phát ${playbackSpeed}x`}
-                className={`text-[11px] font-bold px-2 py-1 rounded-md transition-colors tabular-nums ${
-                  playbackSpeed > 1
-                    ? "bg-[#F6E85C] text-[#0C0E1D]"
-                    : "bg-[#1B1F40] text-zinc-300 hover:text-white"
-                }`}
-                title="Bấm để đổi tốc độ: 1.0x -> 1.25x -> 1.5x"
-              >
-                {playbackSpeed}x
-              </button>
-
-              <button
-                onClick={toggleMute}
-                aria-label={isMuted ? "Bật âm thanh" : "Tắt âm thanh"}
-                className="p-2 text-zinc-300 hover:text-white hover:bg-[#1B1F40] rounded-full transition-all"
-                title={isMuted ? "Bật tiếng" : "Tắt tiếng"}
-              >
-                {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-              </button>
-            </div>
-          </div>
-
-        </div>
+        </section>
       </div>
 
+      {/* =========================================================
+          6. FLOATING CYBER AUDIO DOCK PLAYER
+      ========================================================= */}
+      <FloatingAudioDock
+        currentTrack={currentTrack}
+        isPlaying={isPlaying}
+        currentTime={currentTime}
+        duration={currentTrack.durationSec}
+        playbackSpeed={playbackSpeed}
+        ambientNoise={ambientNoise}
+        isDockMinimized={isDockMinimized}
+        isMuted={isMuted}
+        abLoop={abLoop}
+        currentTranscriptLine={currentTranscriptLine}
+        onTogglePlay={handleTogglePlay}
+        onSeek={(sec) => {
+          const next = Math.max(0, Math.min(currentTrack.durationSec, currentTime + sec));
+          setCurrentTime(next);
+          if (audioRef.current) audioRef.current.currentTime = next;
+        }}
+        onSeekTo={(newTime) => {
+          setCurrentTime(newTime);
+          if (audioRef.current) audioRef.current.currentTime = newTime;
+        }}
+        onChangeSpeed={cycleSpeed}
+        onToggleMute={() => setIsMuted(!isMuted)}
+        onToggleAbLoop={() => {
+          setAbLoop(!abLoop);
+          showToast(abLoop ? "Đã tắt lặp A-B" : "Đã bật lặp câu A-B");
+        }}
+        onSetAmbientNoise={(noise) => {
+          setAmbientNoise(noise);
+          showToast(noise === "off" ? "Môi trường: Chuẩn" : `Môi trường: ${noise}`);
+        }}
+        onSetDockMinimized={setIsDockMinimized}
+      />
+
+      {/* =========================================================
+          7. QUICK PRACTICE MODAL (IN-PLACE TEST EXECUTION)
+      ========================================================= */}
+      {activePracticeExercise && (
+        <QuickPracticeModal
+          exercise={activePracticeExercise}
+          playbackSpeed={playbackSpeed}
+          onClose={() => setActivePracticeExercise(null)}
+          onSeekTo={(sec) => {
+            setCurrentTime(sec);
+            if (audioRef.current) audioRef.current.currentTime = sec;
+          }}
+          onSpeak={speakText}
+        />
+      )}
     </div>
   );
 }

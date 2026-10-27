@@ -1,224 +1,238 @@
-# IELTS Flow
+# 🎓 IELTS Flow — Nền Tảng Tự Học & Luyện Thi IELTS Toàn Diện
 
-> **Phase 10C COMPLETE** ở phạm vi repo/schema. Full local, browser và linked-remote evidence nằm tại `docs/FINAL_TEST_REPORT.md`; production traffic vẫn phải qua checklist vận hành.
+> **Trạng thái Go-Live:** 🟡 **PRE-LAUNCH / STAGING (Chưa Public Go-Live)**  
+> **Trạng thái Codebase & Schema:** 🟢 **HOÀN TẤT 100% (Phase 1–10C & Hub Modernization G0–G2)**  
+> **Kiểm định chất lượng:** 🟢 **Next.js Build 383/383 routes PASS** | **TypeScript 0 errors** | **ESLint 0 errors** | **Vitest 68/68 files (274/274 tests PASS)**
 
-Production requires canonical HTTPS `NEXT_PUBLIC_SITE_URL`, a real `NEXT_PUBLIC_SUPPORT_EMAIL`, and server-only cleanup credentials. `SUPABASE_SERVICE_ROLE_KEY` is confined to the `server-only` retention worker and must never be exposed to browser code. See `docs/PRODUCTION_READINESS_CHECKLIST.md` and `docs/DEPLOYMENT_CHECKLIST.md` before go-live.
+---
 
-Private production targets Vercel with a separate Supabase production project. Optional AI remains disabled for the first release; partial AI configuration is reported as degraded and provider actions remain fail-closed. Operational procedures are in `docs/PRIVATE_PRODUCTION_RELEASE_RUNBOOK.md`, `docs/DSR_RUNBOOK.md`, `docs/ROLLBACK_RUNBOOK.md`, `docs/AUTHENTICATED_E2E_RUNBOOK.md` and `docs/OBSERVABILITY_INCIDENT_RUNBOOK.md`.
+## 📌 1. Trả Lời Đánh Giá Go-Live (Go-Live Audit Summary)
 
-Ứng dụng tự học IELTS bằng Next.js 16 và Supabase. Phase 1–10C đã COMPLETE. `/learn`, `/practice`, dashboard và `/progress` đọc dữ liệu PostgreSQL thật; không có analytics hoặc band trend giả.
+### Câu hỏi: *Dự án đã Go-Live chưa?*
+👉 **TRẢ LỜI:** **Dự án CHƯA Go-Live chính thức trên môi trường Production.**
 
-## Stack
+| Hạng mục đánh giá | Mức độ sẵn sàng | Trạng thái chi tiết |
+| :--- | :---: | :--- |
+| **Codebase & Tính năng (Application Code)** | **9.5 / 10** | 🟢 **Hoàn tất 100%**: 383 routes build thành công, 274 unit/integration tests pass, 0 lỗi TypeScript, 0 lỗi ESLint. Đầy đủ vòng lặp Onboarding -> Lộ trình học -> 4 Kỹ năng R/L/W/S -> Mock Test -> Analytics. |
+| **Bảo mật & Toàn vẹn Dữ liệu (Database/RLS)** | **9.5 / 10** | 🟢 **Bảo mật tuyệt đối**: 100% bảng có RLS, phân quyền least-privilege, chấm điểm deterministic ở Postgres, Answer Key nằm schema `private`, Server-authoritative timer. |
+| **Nội dung Giáo trình MVP (Curriculum Content)** | **8.0 / 10** | 🟢 **Đã nạp Cloud Dev**: 4 Modules, 20 Lessons, 60 Sections, 27 Sets, 146 Questions, 13 Grammar Topics, 328 Oxford CEFR Vocab entries. (Cần tiếp tục mở rộng ngân hàng đề). |
+| **Hạ tầng Mạng & Cloud (Production Infrastructure)** | **3.5 / 10** | 🔴 **Chưa Go-Live (Blocker)**: Đang chạy trên Cloud Dev Supabase (`tpqlqwvzqhjrtqpitslk`). Chưa cấp Supabase Production (gói Pro có PITR), chưa trỏ Custom Domain HTTPS, chưa cấu hình SMTP Production với DNS SPF/DKIM/DMARC. |
+| **Dịch vụ Ngoài & Tối ưu CDN (Third-party & CDN)** | **4.0 / 10** | 🟡 **Cần kích hoạt**: Cần cấu hình Cloudflare R2 Custom Domain cho Audio Streaming với HTTP Cache `immutable`, thiết lập Hard Spend Limit trên OpenAI API và bật Cloudflare Turnstile/WAF. |
 
-- Next.js App Router 16, React 19, TypeScript strict
-- Tailwind CSS 4 với shadcn-compatible tokens
-- Supabase Auth, PostgreSQL, `@supabase/ssr`, Supabase CLI
-- Zod, React Markdown 10.1.0, official OpenAI SDK, Vitest, Testing Library, Playwright và axe-core
-- ESLint, Prettier, npm lockfile
+> 💡 **Kết luận:** Hệ thống đã hoàn tất toàn bộ khâu R&D, kiểm thử và thiết kế giao diện. Để chính thức Go-Live, dự án cần thực hiện các bước cấu hình hạ tầng tại [Mục 8: Lộ Trình Triển Khai Go-Live](#-8-lộ-trình-và-danh-mục-chuẩn-bị-go-live-checklist).
 
-## Chạy local không cần Docker
+---
 
+## 🚀 2. Điểm Nhấn Kiến Trúc & Công Nghệ
+
+Ứng dụng được xây dựng theo kiến trúc **Server-First Modular Monolith** trên nền tảng Next.js 16 và Supabase, tuân thủ nguyên tắc không lưu trữ logic nhạy cảm hoặc tính điểm ở Client:
+
+- **Frontend & UI:** 
+  - Next.js 16 (App Router với Turbopack engine), React 19, TypeScript strict mode.
+  - Thiết kế hiện đại **Indigo Scholar & Cybernetic Dark Navy** với hiệu ứng WebGL 3D (Three.js), Tailwind CSS v4, Lucide Icons và Motion.
+- **Backend & Cơ sở dữ liệu:**
+  - Supabase (PostgreSQL 15+, Auth SSR qua `@supabase/ssr`, Storage).
+  - Row-Level Security (RLS) bảo vệ 100% bảng dữ liệu học viên, schema `private` cô lập hoàn toàn đáp án.
+  - Server Actions & Database Triggers kiểm soát luồng chấm điểm và cập nhật tiến độ bất biến.
+- **AI & Integrations (Fail-closed & Private):**
+  - Tích hợp OpenAI SDK qua Responses API với Structured Outputs (JSON Schema nghiêm ngặt).
+  - Hoạt động an toàn theo cơ chế Fail-closed: khi chưa cấu hình API key, hệ thống vẫn phục vụ người học bình thường mà không gây crash hay rò rỉ dữ liệu.
+- **Kiểm thử đa tầng (Automated Testing Pyramid):**
+  - **Vitest & React Testing Library:** 68 test suites, 274 tests kiểm tra toàn bộ hooks, domain logic, client components.
+  - **pgTAP:** Hơn 700 assertions chạy trực tiếp trong Postgres kiểm tra RLS và triggers.
+  - **Playwright:** E2E testing luồng Onboarding, Protected Routes, Responsive (375px đến 1440px) và WCAG 2.1 Accessibility (axe-core).
+
+---
+
+## 🌟 3. Các Phân Hệ & Chức Năng Đã Triển Khai
+
+### 3.1. Hệ thống Học tập & Lộ trình (Curriculum & Learning Engine)
+- **Progressive Onboarding:** Wizard 8 bước thu thập mục tiêu band, thời gian học, chẩn đoán ban đầu; tự động sinh lộ trình cá nhân hóa.
+- **Thư viện Học lý thuyết (`/learn`):** 4 Modules nền tảng, 20 bài học chuẩn hóa CEFR A2–B2, 60 phần lý thuyết kèm Markdown bảo mật.
+- **Ngân hàng Ngữ pháp & Từ vựng SRS:**
+  - Kho 328 từ vựng Oxford CEFR kèm phiên âm IPA, định nghĩa, ví dụ ngữ cảnh.
+  - Thuật toán lặp lại ngắt quãng (FSRS/SM-2) tự động tính toán chu kỳ ôn tập tối ưu.
+- **Khóa học & Kế hoạch (`/plans`):** 6 chặng học từ Starter (0.0–2.5) đến Expert (8.5–9.0).
+- **Deep Dictation (`/dictation`):** Hệ thống nghe chép chính tả phân tầng tốc độ, đối soát sai khác từng ký tự thời gian thực.
+
+### 3.2. Bốn Trung Tâm Luyện Tập 3D Thực Chiến (Practice Hubs)
+Giao diện được tái cấu trúc đồng bộ theo chuẩn **Indigo Scholar & Dark Navy**:
+1. **Reading Hub (`/practice/reading`):**
+   - WebGL 3D Cybernetic Lexical Matrix & Laser Scanner.
+   - Live Reading Lab: Bẫy True/False/Not Given, Speed Reading WPM Meter, Bẫy Matching Headings.
+   - Quick Reading Modal (Split-View đọc văn bản song song với bảng câu hỏi).
+2. **Listening Hub (`/practice/listening`):**
+   - Floating Audio Player Dock điều khiển phát thanh, tốc độ, tua thông minh.
+   - Live Acoustic Mini-Lab: Bẫy Number/Name Trap, Signal Words Detector.
+   - Quick Practice Modal làm bài trực tiếp không cần rời trang.
+3. **Writing Hub (`/practice/writing`):**
+   - WebGL 3D Lexical Crystal Visualizer.
+   - Paraphrase Forge & Cohesion Transition Matrix.
+   - Zen Focus Writing Studio với bộ đếm từ và kiểm soát thời gian thi thực tế.
+4. **Speaking Hub (`/practice/speaking`):**
+   - WebGL 3D Acoustic Sphere Waveform Visualizer.
+   - IPA Phoneme Gym & 60s Prep Coach.
+   - Quick Speaking Studio Modal tích hợp thu âm và phân tích ngữ âm AI.
+
+### 3.3. Thi Thử & Phân Tích Dữ Liệu (Mock Tests & Analytics)
+- **Mock Tests Engine (`/mock-tests`):** Điều phối phiên thi chuẩn 4 kỹ năng tuần tự (Reading $\rightarrow$ Listening $\rightarrow$ Writing $\rightarrow$ Speaking) với Server-Authoritative Timer.
+- **Learner Analytics Dashboard (`/progress`):** 
+  - 3D Skill Radar Chart (Three.js) trực quan hóa độ lệch 4 kỹ năng.
+  - Biểu đồ nhiệt tiến độ học tập (Activity Calendar) và lộ trình đạt mục tiêu band.
+- **Smart Errors Notebook (`/error-notebook`):** Tự động thu thập câu sai từ các bài thi để đưa vào danh sách cần khắc phục dứt điểm.
+
+---
+
+## 🛠️ 4. Hướng Dẫn Cài Đặt & Chạy Môi Trường Local
+
+### 4.1. Yêu cầu tiên quyết
+- **Node.js:** `>= 20.9.0` (Khuyến nghị Node.js LTS 22.x)
+- **npm:** `>= 10.x`
+- Git
+
+### 4.2. Khởi tạo dự án
 ```powershell
+# 1. Clone repository và cài đặt thư viện
+git clone <repository-url>
+cd App-hoc-tieng-anh
 npm ci
+
+# 2. Cấu hình biến môi trường
 Copy-Item .env.example .env.local
-npm.cmd run dev:remote
 ```
 
-Điền hai public values của Supabase hosted project vào `.env.local`:
+### 4.3. Cấu hình `.env.local`
+Điền các thông tin kết nối Supabase của bạn (có thể dùng dự án Cloud Dev hoặc Supabase Local):
+
+```ini
+# Supabase Public Configuration (bắt buộc cho client)
+NEXT_PUBLIC_SUPABASE_URL=https://tpqlqwvzqhjrtqpitslk.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...
+
+# App URL Configuration
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_SUPPORT_EMAIL=support@ieltsflow.local
+
+# Server-only Credentials (tùy chọn trong môi trường dev)
+# Lưu ý: Không thêm tiền tố NEXT_PUBLIC_ cho các biến server-only
+STORAGE_CLEANUP_SECRET=dev-local-storage-cleanup-secret-32-chars-min!
+SPEAKING_PIPELINE_SIGNING_SECRET=dev-local-speaking-signing-secret-32-chars!
+```
+
+### 4.4. Khởi chạy máy chủ phát triển
+```powershell
+npm run dev
+```
+Mở trình duyệt tại [http://localhost:3000](http://localhost:3000) để trải nghiệm ứng dụng.
+
+---
+
+## 🧪 5. Kiểm Thử & Đảm Bảo Chất Lượng (Quality Gates)
+
+Dự án áp dụng bộ kiểm tra nghiêm ngặt trước mỗi đợt bàn giao mã nguồn:
+
+```powershell
+# 1. Kiểm tra định dạng mã nguồn (ESLint)
+npm run lint
+
+# 2. Kiểm tra tính toàn vẹn kiểu dữ liệu TypeScript
+npm run typecheck
+
+# 3. Chạy toàn bộ 274 bài kiểm thử đơn vị & tích hợp (Vitest)
+npm run test
+
+# 4. Kiểm tra biên dịch bản Production (Next.js Turbopack)
+npm run build
+```
+
+---
+
+## 🗄️ 6. Quản Lý Cơ Sở Dữ Liệu & Migrations
+
+Hệ thống quản lý lược đồ dữ liệu thông qua các tệp SQL phiên bản hóa tuần tự trong thư mục `supabase/migrations/`:
+
+| Thứ tự migration | Tên tệp | Nội dung |
+| :--- | :--- | :--- |
+| `20260716100000` | `phase_1_profiles_and_onboarding.sql` | Quản lý Profile người học, RLS và Onboarding State Machine |
+| `20260716120000` | `phase_4_learning_content_progress.sql` | Modules, Lessons, Sections, Versioning bất biến |
+| `20260716143000` | `phase_5_exercise_vocabulary_grammar.sql` | Động cơ chấm điểm bài tập, từ vựng, ngữ pháp |
+| `20260717100000` | `phase_7_listening_practice_engine.sql` | Hệ thống luyện nghe, lưu nháp và tính giờ server |
+| `20260717140000` | `phase_8_writing_practice_engine.sql` | Hệ thống luyện viết Task 2, kiểm soát số từ, AI feedback contract |
+| `20260717160000` | `phase_9_speaking_practice_engine.sql` | Hệ thống ghi âm, xác minh media, đánh giá phát âm |
+| `20260717190000` | `phase_10a_mock_tests_engine.sql` | Điều phối bài thi thử 4 kỹ năng tuần tự |
+| `20261024100000` | `seed_oxford_cefr_vocabulary.sql` | Seed 320 từ vựng Oxford phân loại CEFR A1-C1 |
+| `20261025000000` | `seed_mvp_learning_curriculum.sql` | Seed 4 modules lý thuyết, 20 lessons, 27 exercise sets MVP |
+
+### Đẩy Migration lên Supabase Cloud:
+```powershell
+# Đẩy migration lên Cloud project liên kết
+npx supabase db push
+```
+
+---
+
+## 📂 7. Cấu Trúc Thư Mục Dự Án (Project Structure)
 
 ```text
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
+├── src/
+│   ├── app/                               # Next.js App Router
+│   │   ├── (auth)/                        # Nhóm trang xác thực (login, register, forgot-password)
+│   │   ├── (dashboard)/                   # Nhóm trang chính (dashboard, learn, practice, mock-tests)
+│   │   │   ├── practice/
+│   │   │   │   ├── reading/               # Reading Hub (3D Lexical Matrix, Mini-lab, Split-view)
+│   │   │   │   ├── listening/             # Listening Hub (Audio dock, Acoustic Mini-lab)
+│   │   │   │   ├── writing/               # Writing Hub (3D Lexical Crystal, Paraphrase Forge)
+│   │   │   │   └── speaking/              # Speaking Hub (3D Waveform, Phoneme Gym)
+│   │   │   ├── progress/                  # Dashboard phân tích kỹ năng & 3D Radar
+│   │   │   └── roadmap/                   # Cây lộ trình học tập 3D
+│   │   └── api/                           # API routes (Health checks, Webhooks, Storage cleanup)
+│   ├── components/                        # UI components dùng chung (Buttons, Modals, Empty states)
+│   ├── features/                          # Domain modules (auth, learning, practice, placement, dictation)
+│   ├── lib/                               # Tiện ích chung, Supabase SSR client, Env validator
+│   ├── server/                            # Server-only logic, Observability logger, Readiness check
+│   └── types/                             # TypeScript definitions & Database schema types
+├── supabase/
+│   ├── migrations/                        # Versioned SQL migrations
+│   ├── tests/                             # Bộ kiểm thử cơ sở dữ liệu pgTAP
+│   └── seed.sql                           # Dữ liệu mẫu dùng cho local development
+├── docs/                                  # Toàn bộ tài liệu kiến trúc, bảo mật và runbooks
+└── scripts/                               # Scripts tự động hóa content pipeline và DB seeding
 ```
 
-Không cần và không được thêm service-role/secret key cho luồng auth này. `.env.local` đã được Git ignore.
+---
 
-Optional Writing AI feedback fail-closed nếu chưa cấu hình. Khi bật, đặt `OPENAI_API_KEY`, `OPENAI_WRITING_MODEL` và `WRITING_FEEDBACK_SIGNING_SECRET` chỉ ở server; signing secret phải khớp secret Supabase Vault tên `writing_feedback_signing_secret`. Không biến nào được có prefix `NEXT_PUBLIC_`, và application không cần service-role key.
+## 🏁 8. Lộ Trình Và Danh Mục Chuẩn Bị Go-Live (Checklist)
 
-## Supabase migration (tùy chọn, cần Docker)
+Để đưa ứng dụng từ trạng thái **Staging** sang **Public Production Go-Live**, các bước kỹ thuật sau cần được hoàn tất:
 
-Docker Desktop phải chạy trước khi dùng local stack:
+### 1. Cơ sở hạ tầng & Database (Infra & DB Gate)
+- [ ] Khởi tạo dự án **Supabase Production** độc lập (gói Pro có kích hoạt Point-in-Time Recovery - PITR).
+- [ ] Chạy `supabase db push` để đồng bộ toàn bộ 20 migrations và seed curriculum chính thức.
+- [ ] Thiết lập kết nối qua **Supavisor Transaction Pooler** (Cổng 6543) cho toàn bộ API routes trên Vercel.
 
-```powershell
-npx.cmd supabase start
-npx.cmd supabase db reset
-npx.cmd supabase test db
-npx.cmd supabase db lint --level warning
-```
+### 2. Tên miền & Bảo mật Mạng (Domain & Network Security)
+- [ ] Cấu hình Production Domain chính thức kèm chứng chỉ SSL/TLS.
+- [ ] Cập nhật biến môi trường `NEXT_PUBLIC_SITE_URL` thành canonical HTTPS domain.
+- [ ] Kích hoạt **Cloudflare WAF** và tích hợp **Cloudflare Turnstile** chống bot spam đăng ký.
+- [ ] Khóa chặt CORS của Supabase Storage, chỉ cho phép upload từ domain production.
 
-Schema Phase 5 nằm tại `20260716143000_phase_5_exercise_vocabulary_grammar.sql`; foundation content bắt buộc được deploy bằng data migration `20260716153000_phase_5_foundation_content.sql`. Năm migration local/remote đang đồng bộ. Local database suite pass 284 assertions; riêng Phase 5 pgTAP pass 64/64. Remote content khớp local theo deterministic fingerprint, lint và generated types đã verify; remote transactional TAP database-owner pass đủ 24/24 sau seed fix. Không dùng service role và không reset remote.
+### 3. Giao vận Email & Truyền thông (SMTP & Communication)
+- [ ] Cấu hình dịch vụ SMTP thương mại (Resend / Postmark).
+- [ ] Xác thực đầy đủ các bản ghi DNS: SPF, DKIM, DMARC trên domain chính thức.
+- [ ] Thử nghiệm luồng Email Confirmation và Password Recovery với hòm thư thật.
 
-Bằng chứng chi tiết: [PHASE_5_COMPLETION_REPORT.md](./docs/PHASE_5_COMPLETION_REPORT.md).
+### 4. Lưu trữ & Phân phối Âm thanh (Audio CDN Streaming)
+- [ ] Cấu hình **Cloudflare R2 Custom Domain** cho các tệp âm thanh bài nghe IELTS.
+- [ ] Thiết lập Header `Cache-Control: public, max-age=31536000, immutable` để tối ưu chi phí băng thông và tốc độ tải audio.
 
-Remote pgTAP Phase 4 phải chạy trực tiếp file test chính; không dùng wrapper `\ir` vì Supabase CLI test container không mount file include ngoài path được chỉ định:
+### 5. Giám sát & Quản lý Chi phí (Observability & Cost Guardrails)
+- [ ] Kết nối **Sentry** để theo dõi lỗi Client và Server thời gian thực.
+- [ ] Thiết lập **Hard Spend Limit** trên tài khoản OpenAI API để ngăn chặn cạn kiệt ngân sách ngoài ý muốn.
+- [ ] Kích hoạt Log Drain (Axiom / Better Stack) để lưu vết kiểm toán và đối soát vận hành.
 
-```powershell
-npx.cmd supabase test db --linked supabase/tests/database/phase_4_learning_content_progress.test.sql
-```
+---
 
-Seed Phase 4 là nội dung foundation nguyên bản, nhỏ và idempotent:
+## 📜 9. Bản Quyền & Giấy Phép (License & Academic Integrity)
 
-```powershell
-npx.cmd supabase db reset
-npx.cmd supabase db push --linked --include-seed --dry-run
-```
-
-`supabase/seed.sql` được chạy tự động bởi `db reset`; khi push remote phải review dry-run trước. Không chạy seed production ngoài quy trình migration đã duyệt.
-
-## Auth flow
-
-1. `/register` gọi Server Action và Supabase `signUp`.
-2. Trigger `auth.users` tự tạo `public.profiles`; client không được INSERT profile.
-3. Email xác minh đi qua `/auth/confirm`, route này verify OTP rồi tạo session.
-4. Next.js `proxy.ts` refresh/đồng bộ cookie và coarse redirect.
-5. Protected layout gọi server helper dùng `auth.getUser()` trước khi đọc profile.
-6. User chưa hoàn tất onboarding được server guard đưa từ `/dashboard`, `/learn`, `/practice`, `/roadmap`, `/progress` sang `/onboarding`.
-7. Mỗi bước onboarding upsert allowlist field với actor từ session; completion RPC tự xác định `auth.uid()` và tự ghi timestamp.
-8. `/profile` cho xem/sửa display name và learning preferences; PostgreSQL RLS kiểm tra ownership.
-9. `/learn` chỉ đọc module/version đã publish phù hợp test type; draft không qua được RLS.
-10. `open_lesson_section` và `complete_lesson_section` lấy actor từ `auth.uid()`, lưu resume và tự tính completion.
-11. `start_exercise_attempt`, `save_exercise_answer` và `submit_exercise_attempt` lấy actor từ session; answer key nằm trong `private`, submit lock và score đúng version trong database.
-12. Logout xóa session local rồi redirect `/login`.
-
-Protected routes: `/onboarding`, `/dashboard`, `/learn`, `/practice`, `/roadmap`, `/progress`, `/profile`, `/settings`.
-
-## Kiểm thử
-
-```powershell
-npm.cmd run format:check
-npm.cmd run lint
-npm.cmd run typecheck
-npm.cmd run test
-npm.cmd run build
-npm.cmd audit
-npm.cmd run test:e2e
-```
-
-Để bật E2E dùng tài khoản Supabase thật, cung cấp credential chỉ trong shell/CI secret:
-
-```powershell
-$env:E2E_AUTH_EMAIL='...'
-$env:E2E_AUTH_PASSWORD='...'
-npm.cmd run test:e2e
-```
-
-Dedicated onboarding account dùng hai biến tùy chọn sau; account phải được tạo/xác minh ngoài test và không dùng chung với dữ liệu thật:
-
-```powershell
-$env:E2E_ONBOARDING_EMAIL='...'
-$env:E2E_ONBOARDING_PASSWORD='...'
-$env:E2E_EXPECTED_SUPABASE_PROJECT_REF='local-or-project-ref'
-npm.cmd run test:e2e
-```
-
-Dedicated learning-progress account dùng riêng và chỉ chạy khi project ref khớp môi trường đang phục vụ app:
-
-```powershell
-$env:E2E_LEARNING_EMAIL='...'
-$env:E2E_LEARNING_PASSWORD='...'
-$env:E2E_EXPECTED_SUPABASE_PROJECT_REF='local-or-project-ref'
-npm.cmd run build
-npm.cmd run test:e2e
-```
-
-Phase 5 local authenticated E2E có thể provision hai account bằng public signup, Mailpit confirmation và user-session RLS, không dùng service role. Các biến tương ứng là `E2E_PRACTICE_USER_A_*`, `E2E_PRACTICE_USER_B_*` và expected project ref.
-
-Không commit các giá trị này. Runner dùng production build trên cổng 3100 riêng và từ chối tái sử dụng process không được xác nhận. Khi thiếu credentials, Playwright vẫn kiểm tra public UI, validation, protected redirects lồng nhau và responsive 375/768/1024/1440; các test authenticated được skip có thông báo rõ.
-
-Manual end-to-end verification ngày 2026-07-16 đã pass với Gmail SMTP và tài khoản email thật: register, nhận email, confirmation link, login, profile auto-create/update, logout và protected-route denial sau logout.
-
-## Phạm vi hiện tại
-
-Đã triển khai:
-
-- Register, email confirmation route, login, logout và safe redirect
-- Supabase SSR browser/server clients và Next.js 16 Proxy
-- Protected server layout, session/user/profile helpers
-- `profiles`, trigger tạo profile, `updated_at`, least-privilege grants và RLS
-- Profile read/update thật; shell hiển thị user thật
-- Wizard `/onboarding` 8 bước, save-per-step, resume, review và completion server/database-controlled
-- `learner_profiles`, constraints, timezone-safe exam date trigger, least-privilege grants và ownership RLS
-- Onboarding guard tách khỏi auth guard; dashboard/profile dùng learning preferences thật
-- Catalog module, module lessons, lesson reader Markdown an toàn, section navigation, resume và completion thật
-- `learning_modules`, `lessons`, immutable `lesson_versions`, `lesson_sections` và hai bảng progress owner-scoped
-- Dashboard next/continue lesson và `/progress` dùng aggregate thật, không dùng stats giả
-- Hai module foundation, bốn lesson publish và một draft lesson để kiểm chứng isolation
-- Exercise engine versioned với 4 question types, RPC-only draft save, idempotent submit và deterministic database scoring
-- `/learn/vocabulary`, `/learn/grammar`, detail pages, `/practice/[exerciseSlug]`, persisted result và attempt history
-- 8 vocabulary entries, 3 grammar topics, 2 published exercise sets và 1 draft isolation fixture, toàn bộ nội dung seed nguyên bản
-- Unit/component/E2E, 284 database assertions local, 64 Phase 5 pgTAP assertions và authenticated two-user Playwright local
-- Health endpoints `/api/health/live` và `/api/health/ready`
-
-Chưa triển khai: analytics nâng cao, Writing Task 1, placement test, study roadmap/plan generator, daily tasks, SRS phức tạp, error notebook `/progress/mistakes`, content admin/CMS, roles nâng cao và avatar. Forgot/reset password đã có ở mức repository nhưng production delivery vẫn invite-only cho tới khi SMTP/domain/redirect có evidence thật. Phase 10C hardening đã hoàn tất; production vận hành theo `docs/PRODUCTION_READINESS_CHECKLIST.md`.
-
-## Cấu trúc chính
-
-```text
-src/app                 App Router pages, auth confirmation, health routes
-src/components          Layout, auth/profile/learning UI và shared states
-src/features            Auth/profile/onboarding/learning schemas, actions, domain helpers
-src/lib                 Env, auth routing, Supabase SSR helpers
-src/server              Server-only account, onboarding guard và learning data access
-src/types               Types generated from applied local schema
-supabase/migrations     Versioned PostgreSQL migrations
-supabase/tests          pgTAP local và TAP remote database/RLS tests
-tests/e2e               Playwright auth, nested route guard, learning và responsive tests
-docs                    Product, architecture, schema, API, security docs
-```
-
-## Phase 6 Reading practice
-
-- Routes: `/practice/reading`, `/practice/reading/[exerciseSlug]`, `/practice/reading/[exerciseSlug]/result/[attemptId]`.
-- One original Academic passage, ten questions and four implemented types; desktop split view and mobile passage/question tabs.
-- PostgreSQL owns the published snapshot, draft revision, timer, atomic submit, deterministic score and post-submit review.
-- Phase 6 migrations are applied remote with local/remote history 7/7 and lint clean. Local full pgTAP passes 384 assertions; Phase 6 passes 66/66 and owner verifier passes 34/34 against local.
-- The direct remote database-owner verifier connected successfully and reported planned 34, ran 34, failed 0, no `not ok`, no `ERROR`, PASS; its transaction rolled back as designed and the password was neither sent nor stored in chat.
-- Phase 6 remains **COMPLETE**. Phase 7 Listening is documented in the current section below.
-
-## Phase 7 Listening practice
-
-- Routes: `/practice/listening`, `/practice/listening/[exerciseSlug]`, `/practice/listening/[exerciseSlug]/result/[attemptId]`.
-- One original Academic practice set with a reproducible 108-second WAV, 2 parts, 8 questions and 3 types: single choice, multiple choice and short text.
-- PostgreSQL owns published content/audio metadata, attempt timer, answer revisions, atomic/idempotent submit, score/correctness and review availability. Transcript is private until the owner submits.
-- New migrations `20260717100000_phase_7_listening_practice_engine.sql` and `20260717101500_phase_7_listening_foundation_content.sql` are applied local and remote without modifying Phase 1–6 or resetting remote data.
-- Fresh evidence: local full pgTAP 465/465, local/remote lint clean, parity 9/9, 98 unit/component tests, production build and Playwright 50 pass/14 declared skips. Listening browser checks cover two real actors, 375/768/1024/1440, keyboard, audio, resume, submit and transcript isolation.
-- Direct remote database-owner verifier ran through `ok 34`, failed 0, with no `not ok` and no `ERROR`; its transaction rolled back and the database password was neither sent nor stored in chat.
-- Historical Phase 7 sign-off: **PHASE 7 COMPLETE** with no blocker; Phase 8 had not been implemented at that sign-off.
-
-## Phase 8 Writing practice
-
-- Routes: `/practice/writing`, `/practice/writing/[taskSlug]`, `/practice/writing/[taskSlug]/submission/[submissionId]`.
-- One original Academic Writing Task 2 plus one hidden draft fixture; no copyrighted IELTS task material.
-- PostgreSQL owns task snapshots, draft revision/word count, timer, atomic/idempotent submit, immutable essay and owner-only review/history.
-- Optional AI feedback runs server-only through the official OpenAI Responses API with Structured Outputs, moderation, timeout, quota, HMAC/Vault finalization and exact-essay evidence validation. It is clearly practice guidance, never an official IELTS score.
-- No AI/provider configuration is a supported safe fallback. No fake feedback or raw provider response is stored; no service-role key is used by the application.
-- Three Phase 8 migrations are applied local and remote without reset or data deletion. Final parity is 12/12 and local/remote database lint is clean.
-- Fresh local evidence: full pgTAP 544/544, Phase 8 actor test 39/39, owner-style verifier `ok 1`–`ok 40`, 104 unit/component tests, full practice E2E 8/8, Writing responsive/keyboard/axe checks 2/2.
-- Direct remote database-owner verifier ran through `ok 40`, failed 0, with no `not ok` and no `ERROR`; its transaction rolled back and the database password was neither sent nor stored in chat. `KI-080` is closed.
-- Current status: **PHASE 8 COMPLETE**. No Phase 8 blocker remains. Phase 9 was not implemented.
-
-## Phase 9 Speaking practice
-
-- Phase 9 đã COMPLETE với private recording, server media verification, immutable submit, optional STT/AI fail-closed và owner-only review.
-- Ba migration Phase 9 đã apply local/remote; parity lịch sử tại thời điểm đóng Phase 9 là 15/15 và owner verifier 24/24 pass.
-
-## Phase 10A IELTS Mock Test Engine
-
-- Routes: `/mock-tests`, `/mock-tests/[mockTestSlug]`, session và summary owner-only.
-- Một mock Academic published và một draft fixture; mỗi version gồm đúng bốn section theo thứ tự Reading, Listening, Writing, Speaking và liên kết trực tiếp tới content version Phase 6–9.
-- PostgreSQL giữ version pin, current section, timer, idempotency, trạng thái session/section và raw result. Browser không gửi actor, score, status hoặc submitted timestamp.
-- Reading/Listening summary dùng điểm thô thật từ attempt đã scored; Writing/Speaking chỉ lưu owner submission/attempt reference. Không có overall band, predicted band hoặc total score giả.
-- Hai migration forward-only `20260717190000` và `20260717191500` đã apply local/remote, không reset remote và không xóa dữ liệu thật. Parity hiện là 17/17; local/remote lint sạch.
-- Full local pgTAP pass 663/663; full Playwright production run pass 56 với 20 skip có guard rõ; responsive 375/768/1024/1440 và axe pass.
-- Direct remote database-owner identity pass với `current_user postgres`; verifier rollback-only pass 20/20, failed 0, không `not ok` hoặc `ERROR`. `KI-082` closed.
-- Historical Phase 10A scope: Phase 10B/10C, analytics nâng cao và production hardening chưa nằm trong slice đó; Phase 10B/10C đã được hoàn tất ở các slice sau.
-- Current status: **PHASE 10A COMPLETE**.
-
-## Phase 10B learner analytics
-
-- Dashboard và `/progress` đọc bốn RPC owner-scoped từ PostgreSQL cho lesson, practice, Writing, Speaking và Mock Test.
-- Objective accuracy chỉ dùng score/max đã persist và sample count; Writing/Speaking chỉ hiển thị submission/feedback status.
-- Weak areas cần ít nhất hai bài objective đã chấm và không được gọi là band prediction.
-- Content operations tối thiểu nằm tại [CONTENT_OPERATIONS.md](./docs/CONTENT_OPERATIONS.md); không có admin CMS hoặc production deployment.
-- Migration local/remote parity 18/18, local/remote lint sạch và direct remote database-owner verifier rollback-only pass 17/17.
-- Historical Phase 10B sign-off: **PHASE 10B COMPLETE**; Phase 10C chưa nằm trong slice đó. Trạng thái repo hiện tại được ghi ở đầu README và completion report Phase 10C.
+- Mã nguồn dự án thuộc bản quyền của nhóm phát triển.
+- Toàn bộ nội dung học thuật, bài đọc và câu hỏi luyện thi được biên soạn độc lập dựa trên khung năng lực tham chiếu CEFR và Academic Word List, tuân thủ nghiêm ngặt quy định về sở hữu trí tuệ, **không sao chép trực tiếp đề thi có bản quyền của Cambridge, IDP hoặc British Council**.

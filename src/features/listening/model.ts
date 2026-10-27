@@ -4,6 +4,8 @@ export const listeningQuestionTypes = [
   "single_choice",
   "multiple_choice",
   "short_text",
+  "matching",
+  "map_labelling",
 ] as const satisfies readonly QuestionType[];
 
 export type ListeningQuestionType = (typeof listeningQuestionTypes)[number];
@@ -19,6 +21,8 @@ export function formatListeningQuestionType(type: ListeningQuestionType) {
     single_choice: "Single choice",
     multiple_choice: "Multiple choice",
     short_text: "Form / note completion",
+    matching: "Matching / Classification",
+    map_labelling: "Map / Plan Labelling",
   };
   return labels[type];
 }

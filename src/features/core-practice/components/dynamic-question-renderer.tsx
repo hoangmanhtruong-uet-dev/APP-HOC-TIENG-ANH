@@ -4,6 +4,8 @@ import React from "react";
 import { TrueFalseButtonGroup, type QuestionOption } from "./question-registry/true-false-button-group";
 import { InlineBlankInput } from "./question-registry/inline-blank-input";
 import { MatchingHeadingsSelector } from "./question-registry/matching-headings-selector";
+import { MatchingPillSelector } from "./question-registry/matching-pill-selector";
+import { MapLabellingRenderer } from "./question-registry/map-labelling-renderer";
 import { MultipleChoiceCard } from "./question-registry/multiple-choice-card";
 
 export interface DynamicQuestion {
@@ -72,7 +74,42 @@ export function DynamicQuestionRenderer({
     );
   }
 
-  // 3. Matching headings / Matching features
+  // 3. Map & Diagram Labelling
+  if (
+    qType === "map_labelling" ||
+    qType === "diagram_labelling" ||
+    qType === "plan_labelling"
+  ) {
+    return (
+      <MapLabellingRenderer
+        questionId={question.id}
+        promptMarkdown={question.promptMarkdown}
+        options={options}
+        selectedOptionIds={draft.selectedOptionIds}
+        answerText={draft.answerText}
+        onChange={onChange}
+      />
+    );
+  }
+
+  // 4. Matching classification / 1-touch pill selection
+  if (
+    qType === "matching" ||
+    qType === "matching_classification" ||
+    qType === "classification"
+  ) {
+    return (
+      <MatchingPillSelector
+        questionId={question.id}
+        options={options}
+        selectedOptionIds={draft.selectedOptionIds}
+        answerText={draft.answerText}
+        onChange={onChange}
+      />
+    );
+  }
+
+  // 5. Matching headings / Matching features (Reading style dropdowns)
   if (
     qType === "matching_headings" ||
     qType === "matching_features" ||

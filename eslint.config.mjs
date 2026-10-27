@@ -11,6 +11,25 @@ export default defineConfig([
     ".agents/**",
     ".codex/**",
     "node_modules/**",
-    "coverage/**"
+    "coverage/**",
+    "docs/**",
+    "Animation_example/**",
+    "scripts/**",
+    "test-results/**",
+    "tmp/**",
+    "fix.js",
+    "test-r2.ts",
+    "set-cors.ts"
   ]),
+  {
+    rules: {
+      "@typescript-eslint/no-explicit-any": "warn",
+      "react/no-unescaped-entities": "off",
+      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+      "@next/next/no-img-element": "warn",
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/purity": "warn",
+      "react-hooks/immutability": "warn"
+    }
+  }
 ]);

@@ -173,7 +173,7 @@ export function SkillRadar3D({
 
     // Animation Loop
     let frameId: number;
-    let clock = new THREE.Clock();
+    const clock = new THREE.Clock();
     const animate = () => {
       frameId = requestAnimationFrame(animate);
       const t = clock.getElapsedTime();

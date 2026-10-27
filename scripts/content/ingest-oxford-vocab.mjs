@@ -26,9 +26,9 @@ function mapPos(type) {
   if (!type) return "noun";
   const t = type.toLowerCase().trim();
   if (t === "noun") return "noun";
+  if (t.includes("adverb") || t === "adv") return "adverb";
+  if (t === "adjective" || t === "ordinal number" || t === "adj") return "adjective";
   if (t.includes("verb")) return "verb";
-  if (t === "adjective" || t === "ordinal number") return "adjective";
-  if (t === "adverb") return "adverb";
   if (t === "preposition") return "preposition";
   if (t === "conjunction") return "conjunction";
   if (t === "pronoun") return "pronoun";

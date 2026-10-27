@@ -8,6 +8,8 @@ export const questionTypes = [
   "true_false_not_given",
   "matching_headings",
   "summary_completion",
+  "matching",
+  "map_labelling",
 ] as const;
 
 export type QuestionType = (typeof questionTypes)[number];
